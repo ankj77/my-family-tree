@@ -350,7 +350,7 @@
   gender: male
   relation: father
   relation_id: netram
-  note: son of Netram (heads the left section of the chart)
+  note: son of Netram; heads the left section (4 sons)
 - id: kanwarsen
   name: Kanwarsen
   gender: male
@@ -397,14 +397,12 @@
   name: Surajbhan
   gender: male
   relation: father
-  relation_id: jugmandardas
-  note: 'GUESS: verify parent'
+  relation_id: chandgiram
 - id: ramratan
   name: Ramratan
   gender: male
   relation: father
-  relation_id: jugmandardas
-  note: 'GUESS: verify parent'
+  relation_id: chandgiram
 - id: rajesh
   name: Rajesh
   gender: male
