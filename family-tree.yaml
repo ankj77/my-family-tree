@@ -150,8 +150,7 @@
   name: Subhash Chand
   gender: male
   relation: father
-  relation_id: satyaprakash
-  note: 'GUESS: attaches to right section via a fold-crossing line — verify parent'
+  relation_id: pooranchand
 - id: anshul
   name: Anshul
   gender: male
@@ -161,8 +160,7 @@
   name: Narendra
   gender: male
   relation: father
-  relation_id: satyaprakash
-  note: 'GUESS: verify parent'
+  relation_id: pooranchand
 - id: hardik
   name: Hardik
   gender: male
@@ -289,12 +287,10 @@
   relation: father
   relation_id: rajiv
 - id: jaibhagvan
-  name: Jai Bhagvan
+  name: Jai Bhagwan
   gender: male
   relation: father
-  relation_id: jaiprakash
-  note: GUESS parent; name could be Jai Bhagvar — verify
-  status: uncertain
+  relation_id: pooranchand
 - id: abhinandan
   name: Abhinandan
   gender: male
@@ -324,8 +320,7 @@
   name: Jawahar Lal
   gender: male
   relation: father
-  relation_id: shribhagwan
-  note: 'GUESS: attaches to middle section via fold-crossing line — verify parent'
+  relation_id: pooranchand
 - id: nishant_j
   name: Nishant
   gender: male
@@ -528,8 +523,7 @@
   name: Gulab Chand
   gender: male
   relation: father
-  relation_id: pawan
-  note: 'GUESS: verify parent'
+  relation_id: pooranchand
 - id: sreyans
   name: Sreyans
   gender: male
@@ -544,8 +538,7 @@
   name: Mahavir Prasad
   gender: male
   relation: father
-  relation_id: deepak
-  note: 'GUESS: verify parent'
+  relation_id: pooranchand
 - id: rishabh
   name: Rishabh
   gender: male
@@ -557,8 +550,7 @@
   name: Ram Nivas
   gender: male
   relation: father
-  relation_id: mukesh_l
-  note: 'GUESS: verify parent'
+  relation_id: pooranchand
 - id: vikas
   name: Vikas
   gender: male
