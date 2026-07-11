@@ -426,12 +426,11 @@
   relation: father
   relation_id: ramratan
 - id: parveen
-  name: Parveen
+  name: Praveen
   gender: male
   relation: father
   relation_id: jugmandardas
-  note: son of Jugmandar das (name still uncertain)
-  status: uncertain
+  note: son of Jugmandar das
 - id: pushkar
   name: Pushkar
   gender: male
