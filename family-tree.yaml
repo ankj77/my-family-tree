@@ -1,6 +1,6 @@
 # Family tree data — the single source of truth. See README.md for fields.
 # Each person has ONE relation: relation (father|mother|husband|wife) + relation_id.
-# The single root (sevakram) has no relation. gender: male|female.
+# The single root (sevakram) has no relation. gender: male|female. order: sibling order (lower=left).
 # Flags: status: uncertain | needs-parent.  note: "GUESS: ..." marks links to verify.
 
 - id: sevakram
@@ -349,6 +349,7 @@
   gender: male
   relation: father
   relation_id: chandgiram
+  order: 1
 - id: jugmandardas
   name: Jugmandar das
   gender: male
