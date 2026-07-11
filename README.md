@@ -22,6 +22,7 @@ person — a `relation` type plus the `relation_id` it points to:
   gender: male             # male | female (optional but recommended)
   relation: father         # father | mother | husband | wife
   relation_id: parent_id   # the id of the related person
+  order: 1                 # optional: sibling order, lower = further left
   born: "free text"        # optional
   note: "free text"        # optional
   status: uncertain        # optional: uncertain | needs-parent
@@ -37,6 +38,8 @@ person — a `relation` type plus the `relation_id` it points to:
 - `status: uncertain` = the name can't be read yet. `status: needs-parent` = the name is
   known but the parent is not (they also have no relation); the viewer parks them in an
   "Unlinked" panel.
+- `order`: to arrange a person's children left-to-right, give each child an `order` number
+  (lower = further left). Children without `order` appear to the right in file order.
 
 ## Viewer
 

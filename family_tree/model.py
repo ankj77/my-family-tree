@@ -5,7 +5,7 @@ import yaml
 
 ALLOWED_KEYS = {
     "id", "name", "name_hi", "gender", "relation", "relation_id",
-    "born", "note", "status",
+    "order", "born", "note", "status",
 }
 ALLOWED_STATUS = {"uncertain", "needs-parent"}
 ALLOWED_RELATION = {"father", "mother", "husband", "wife"}
@@ -30,6 +30,7 @@ class Person:
     gender: Optional[str] = None
     relation: Optional[str] = None
     relation_id: Optional[str] = None
+    order: Optional[int] = None
     born: Optional[str] = None
     note: Optional[str] = None
     status: Optional[str] = None
@@ -67,6 +68,9 @@ def load_people(path: str) -> List[Person]:
         gender = entry.get("gender")
         if gender is not None and gender not in ALLOWED_GENDER:
             raise LoadError("Person '%s' has invalid gender '%s'" % (pid, gender))
+        order = entry.get("order")
+        if order is not None and not isinstance(order, int):
+            raise LoadError("Person '%s' has non-integer order '%r'" % (pid, order))
         people.append(
             Person(
                 id=str(pid),
@@ -75,6 +79,7 @@ def load_people(path: str) -> List[Person]:
                 gender=gender,
                 relation=relation,
                 relation_id=entry.get("relation_id"),
+                order=order,
                 born=entry.get("born"),
                 note=entry.get("note"),
                 status=status,

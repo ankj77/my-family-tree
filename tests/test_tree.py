@@ -46,6 +46,19 @@ class TestBuildTree(unittest.TestCase):
         _, unlinked, _ = build_tree(self._people())
         self.assertEqual([p.id for p in unlinked], ["floating"])
 
+    def test_children_sorted_by_order_then_file_order(self):
+        people = [
+            Person(id="root", name="Root", gender="male"),
+            # file order: a, b, c, d — but b has order 1, c has order 2, a/d unordered
+            Person(id="a", name="A", relation="father", relation_id="root"),
+            Person(id="b", name="B", relation="father", relation_id="root", order=1),
+            Person(id="c", name="C", relation="father", relation_id="root", order=2),
+            Person(id="d", name="D", relation="father", relation_id="root"),
+        ]
+        root, _, _ = build_tree(people)
+        # ordered (b=1, c=2) come first left-to-right, then unordered a, d in file order
+        self.assertEqual([c["person"].id for c in root["children"]], ["b", "c", "a", "d"])
+
     def test_summary_counts(self):
         _, _, summary = build_tree(self._people())
         self.assertEqual(summary.total, 8)

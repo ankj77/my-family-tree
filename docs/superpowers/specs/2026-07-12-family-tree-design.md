@@ -100,6 +100,7 @@ Top-level YAML list of people. One entry per person.
 | `gender`      | no       | `male` or `female`. |
 | `relation`    | with `relation_id` | `father` \| `mother` \| `husband` \| `wife`. How this person relates to `relation_id`. |
 | `relation_id` | with `relation`     | `id` of the related person (this person's parent or spouse). |
+| `order`       | no       | Integer sibling order (lower = further left). Unset children sort after, in file order. |
 | `born`        | no       | Free-text birth/date info (e.g. `"1884 (Samvat 1941)"`). |
 | `note`        | no       | Free-text: location on chart, ambiguity, "Till 1945", etc. |
 | `status`      | no       | `uncertain` (name unreadable) or `needs-parent` (parent unknown). |

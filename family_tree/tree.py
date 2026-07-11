@@ -31,6 +31,7 @@ def _depth(node) -> int:
 
 
 def build_tree(people: List[Person]) -> Tuple[dict, List[Person], Summary]:
+    index = {p.id: i for i, p in enumerate(people)}
     children_by_parent: Dict[str, List[Person]] = {}
     spouses_by_person: Dict[str, List[Person]] = {}
     for p in people:
@@ -40,6 +41,12 @@ def build_tree(people: List[Person]) -> Tuple[dict, List[Person], Summary]:
             children_by_parent.setdefault(p.relation_id, []).append(p)
         elif p.relation in SPOUSE_RELATIONS:
             spouses_by_person.setdefault(p.relation_id, []).append(p)
+
+    # Order siblings left-to-right by `order` (lower first); those without an
+    # `order` fall after, keeping their original file order (stable sort).
+    NO_ORDER = 10 ** 9
+    for siblings in children_by_parent.values():
+        siblings.sort(key=lambda p: (p.order if p.order is not None else NO_ORDER, index[p.id]))
 
     root_person = next(
         p for p in people
