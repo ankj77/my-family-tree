@@ -27,14 +27,14 @@
 - id: kannu
   name: Kannu
   name_hi: कन्नू
-  father: udmi
+  father: sevakram
 
 # Dada Lakshman heads the whole MIDDLE section of the chart.
 - id: lakshman
   name: Dada Lakshman
   name_hi: दादा लक्ष्मण
   father: sevakram
-  note: "GUESS: shown as a son of Sevakram (sibling of Udmi) — verify"
+  note: "confirmed: son of Sevak Ram (siblings: Udmi, Kannu)"
 
 # ============================================================
 # KANNU's sons (right-hand Devanagari group)
