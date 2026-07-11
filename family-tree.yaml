@@ -2,9 +2,506 @@
 # One entry per person. See README.md for the field reference.
 # Blood descendants use `father:`; wives use `spouse:`.
 # Flags: status: uncertain (name unreadable) | needs-parent (father unknown).
+#
+# NOTE: This is a best-effort first-pass transcription from the photographed
+# chart. Local parent->child chains within each column are read directly from
+# the arrows. Links marked `note: "GUESS: ..."` are my best guess for how the
+# major branches / handwritten-Hindi ancestors connect — please verify these.
+# Names in Devanagari that were hard to read are marked `status: uncertain`.
 
+# ============================================================
+# ROOT + oldest ancestors (top-right, handwritten Devanagari)
+# ============================================================
 - id: sevakram
   name: Sevak Ram
   name_hi: सेवकराम
   born: "1884 (Samvat 1941)"
   note: "root ancestor — all descend from him"
+
+- id: udmi
+  name: Udmi
+  name_hi: उदमी
+  father: sevakram
+  note: "'Till' annotation on chart"
+
+- id: kannu
+  name: Kannu
+  name_hi: कन्नू
+  father: udmi
+
+# Dada Lakshman heads the whole MIDDLE section of the chart.
+- id: lakshman
+  name: Dada Lakshman
+  name_hi: दादा लक्ष्मण
+  father: sevakram
+  note: "GUESS: shown as a son of Sevakram (sibling of Udmi) — verify"
+
+# ============================================================
+# KANNU's sons (right-hand Devanagari group)
+# ============================================================
+- id: gaurishankar
+  name: Dada Gaurishankar
+  name_hi: दादा गौरीशंकर
+  father: kannu
+
+- id: ramjilal
+  name: Ramjilal
+  name_hi: रामजीलाल
+  father: kannu
+
+- id: siddho
+  name: Siddho
+  name_hi: सिद्धो
+  father: kannu
+  status: uncertain
+  note: "Devanagari hard to read — could be Riddho"
+
+- id: rajaram
+  name: Rajaram
+  name_hi: राजाराम
+  father: kannu
+  status: uncertain
+
+- id: panmeshwar
+  name: Panmeshwar
+  name_hi: पनमेश्वर
+  father: kannu
+  status: uncertain
+
+# --- Gaurishankar line ---
+- id: moladhrnal
+  name: Moladhrnal
+  father: gaurishankar
+
+- id: ramnarayan
+  name: Ram Narayan
+  father: moladhrnal
+
+- id: ramlal
+  name: Ram Lal
+  father: moladhrnal
+
+- id: jagdishchand
+  name: Jagdish Chand
+  father: ramnarayan
+
+- id: naveen
+  name: Naveen
+  father: ramnarayan
+
+- id: ravi
+  name: Ravi
+  father: jagdishchand
+
+- id: sanjay
+  name: Sanjay
+  father: ramlal
+
+- id: sandeep
+  name: Sandeep
+  father: ramlal
+
+- id: guddu
+  name: Guddu
+  father: sanjay
+
+- id: bhanuprakash
+  name: Bhanu Prakash
+  father: naveen
+  note: "GUESS: Bhanu/Satya Prakash shown under Naveen's line — verify"
+
+- id: satyaprakash
+  name: Satya Prakash
+  father: naveen
+  note: "GUESS: verify parent"
+
+- id: kamal
+  name: Kamal
+  father: bhanuprakash
+
+- id: ankit
+  name: Ankit
+  father: bhanuprakash
+
+- id: ashish
+  name: Ashish
+  father: satyaprakash
+
+- id: saurabh
+  name: Saurabh
+  father: satyaprakash
+
+- id: satyam
+  name: Satyam
+  father: kamal
+  note: "GUESS: verify parent"
+
+- id: tejas
+  name: Tejas
+  father: ankit
+  note: "GUESS: verify parent"
+
+# Bottom-of-chart people under the right section (connect via long fold-crossing lines)
+- id: subhashchand
+  name: Subhash Chand
+  father: satyaprakash
+  note: "GUESS: attaches to right section via a fold-crossing line — verify parent"
+
+- id: anshul
+  name: Anshul
+  father: subhashchand
+
+- id: narendra
+  name: Narendra
+  father: satyaprakash
+  note: "GUESS: verify parent"
+
+- id: hardik
+  name: Hardik
+  father: narendra
+
+# --- Ramjilal / Siddho line ---
+- id: mamchand
+  name: Mamchand
+  name_hi: मामचन्द
+  father: ramjilal
+
+- id: nisar
+  name: Nisar
+  name_hi: निसार
+  father: siddho
+  status: uncertain
+
+- id: lorvaram
+  name: Lorvaram
+  name_hi: लोरवराम
+  father: siddho
+  status: uncertain
+
+# ============================================================
+# LAKSHMAN's line (MIDDLE section)
+# ============================================================
+- id: bhagmal
+  name: Dada Bhagmal
+  name_hi: दादा भागमल
+  father: lakshman
+  note: "'Till 1925'; handwritten word nearby (नवरात्नी?) may be a wife — verify"
+
+- id: pooranchand
+  name: Pooranchand
+  father: bhagmal
+  note: "GUESS: verify parent"
+
+- id: netram
+  name: Netram
+  father: bhagmal
+  note: "'Till 1945'; GUESS: son of Bhagmal — verify"
+
+- id: khushiram
+  name: Khushiram
+  father: bhagmal
+  note: "GUESS: son of Bhagmal — verify"
+
+- id: jainarayan
+  name: Jai Narayan
+  father: bhagmal
+  note: "GUESS: verify parent"
+
+- id: mayachand
+  name: Mayachand
+  father: khushiram
+  note: "GUESS: diagonal line from Khushiram — verify (could be Netram)"
+
+# Pooranchand -> Ramesh -> Manish -> Aayush
+- id: ramesh
+  name: Ramesh
+  father: pooranchand
+
+- id: manish
+  name: Manish
+  father: ramesh
+
+- id: aayush
+  name: Aayush
+  father: manish
+
+# Mayachand -> Mukesh -> Akshay
+- id: mukesh_m
+  name: Mukesh
+  father: mayachand
+
+- id: akshay
+  name: Akshay
+  father: mukesh_m
+
+# Jai Narayan -> Jai Prakash / Shri Bhagwan
+- id: jaiprakash
+  name: Jai Prakash
+  father: jainarayan
+  note: "GUESS: verify parent"
+
+- id: shribhagwan
+  name: Shri Bhagwan
+  father: jainarayan
+  note: "GUESS: verify parent"
+
+- id: rajiv
+  name: Rajiv
+  father: jaiprakash
+
+- id: sanjiv
+  name: Sanjiv
+  father: jaiprakash
+
+- id: girish
+  name: Girish
+  father: shribhagwan
+
+- id: kanishka
+  name: Kanishka
+  father: sanjiv
+
+- id: kartik
+  name: Kartik
+  father: rajiv
+
+- id: vinayak
+  name: Vinayak
+  father: rajiv
+
+# Bottom-of-chart people under the middle section
+- id: jaibhagvan
+  name: Jai Bhagvan
+  father: jaiprakash
+  status: uncertain
+  note: "GUESS parent; name could be Jai Bhagvar — verify"
+
+- id: abhinandan
+  name: Abhinandan
+  father: jaibhagvan
+
+- id: surender
+  name: Surender
+  father: jaibhagvan
+
+- id: pankaj
+  name: Pankaj
+  father: jaibhagvan
+
+- id: harsh
+  name: Harsh
+  father: abhinandan
+
+- id: anand
+  name: Anand
+  father: abhinandan
+
+- id: jawaharlal
+  name: Jawahar Lal
+  father: shribhagwan
+  note: "GUESS: attaches to middle section via fold-crossing line — verify parent"
+
+- id: nishant_j
+  name: Nishant
+  father: jawaharlal
+
+- id: aadit
+  name: Aadit
+  father: nishant_j
+
+- id: agrim
+  name: Agrim
+  father: nishant_j
+
+# ============================================================
+# CHANDGIRAM's line (LEFT section)
+# How this whole section joins Sevakram's tree is UNCLEAR.
+# ============================================================
+- id: chandgiram
+  name: Chandgiram
+  father: kannu
+  note: "GUESS: entire left section attached under Kannu as a placeholder — TRUE PARENT UNKNOWN, please tell me"
+
+- id: kanwarsen
+  name: Kanwarsen
+  father: chandgiram
+
+- id: jugmandardas
+  name: Jugmandar das
+  father: chandgiram
+
+- id: naresh
+  name: Naresh
+  father: kanwarsen
+  note: "GUESS: verify parent"
+
+- id: arun
+  name: Arun
+  father: naresh
+
+- id: varun
+  name: Varun
+  father: naresh
+
+- id: prashan
+  name: Prashan
+  father: arun
+
+- id: arham
+  name: Arham
+  father: varun
+
+- id: kapoorchand
+  name: Kapoorchand
+  father: jugmandardas
+  note: "chart says '(no son)'; GUESS: son of Jugmandar das — verify"
+
+- id: surajbhan
+  name: Surajbhan
+  father: jugmandardas
+  note: "GUESS: verify parent"
+
+- id: ramratan
+  name: Ramratan
+  father: jugmandardas
+  note: "GUESS: verify parent"
+
+- id: rajesh
+  name: Rajesh
+  father: surajbhan
+
+- id: vipul
+  name: Vipul
+  father: rajesh
+
+- id: dinesh
+  name: Dinesh
+  father: vipul
+  note: "GUESS: verify parent"
+
+- id: abhishek
+  name: Abhishek
+  father: dinesh
+
+- id: mukesh_l
+  name: Mukesh
+  father: ramratan
+  note: "GUESS: verify parent"
+
+- id: vinay
+  name: Vinay
+  father: ramratan
+  note: "GUESS: verify parent (labelled 'Vinny' on chart)"
+
+- id: parveen
+  name: Parveen
+  father: kanwarsen
+  status: uncertain
+  note: "GUESS parent; position on chart unclear — verify"
+
+- id: pushkar
+  name: Pushkar
+  father: parveen
+
+# Bottom generation, left section
+- id: rajendra
+  name: Rajendra
+  father: naresh
+  note: "GUESS: verify parent"
+
+- id: sachin
+  name: Sachin
+  father: rajendra
+
+- id: nishant_r
+  name: Nishant
+  father: rajendra
+
+- id: aaditya
+  name: Aaditya
+  father: sachin
+
+- id: kannav
+  name: Kannav
+  father: nishant_r
+
+- id: anil
+  name: Anil
+  father: naresh
+  note: "GUESS: verify parent"
+
+- id: sunny
+  name: Sunny
+  father: anil
+
+- id: rahul
+  name: Rahul
+  father: anil
+
+- id: aarav
+  name: Aarav
+  father: sunny
+
+- id: vijay
+  name: Vijay
+  father: parveen
+  note: "GUESS: verify parent"
+
+- id: ankur
+  name: Ankur
+  father: vijay
+
+- id: pawan
+  name: Pawan
+  father: dinesh
+  note: "GUESS: verify parent"
+
+- id: abhinav
+  name: Abhinav
+  father: pawan
+
+- id: deepak
+  name: Deepak
+  father: mukesh_l
+  note: "GUESS: verify parent"
+
+- id: jinendra
+  name: Jinendra
+  father: deepak
+
+- id: gulabchand
+  name: Gulab Chand
+  father: pawan
+  note: "GUESS: verify parent"
+
+- id: sreyans
+  name: Sreyans
+  father: gulabchand
+
+- id: shaurya
+  name: Shaurya
+  father: sreyans
+
+- id: mahavirprasad
+  name: Mahavir Prasad
+  father: deepak
+  note: "GUESS: verify parent"
+
+- id: rishabh
+  name: Rishabh
+  father: mahavirprasad
+  status: uncertain
+  note: "name partly taped — could be Kishan/Rishabh"
+
+- id: ramnivas
+  name: Ram Nivas
+  father: mukesh_l
+  note: "GUESS: verify parent"
+
+- id: vikas
+  name: Vikas
+  father: ramnivas
+
+- id: sanyam
+  name: Sanyam
+  father: vikas
