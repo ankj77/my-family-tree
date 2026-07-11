@@ -195,8 +195,8 @@
   name: Pooranchand
   gender: male
   relation: father
-  relation_id: bhagmal
-  note: 'GUESS: verify parent'
+  relation_id: netram
+  note: son of Netram
 - id: netram
   name: Netram
   gender: male
@@ -208,7 +208,7 @@
   gender: male
   relation: father
   relation_id: bhagmal
-  note: son of Dada Bhagmal; no biological son — adopted Mayachand
+  note: son of Dada Bhagmal; no biological son — adopted Mayachand (Netram's son)
 - id: jainarayan
   name: Jai Narayan
   gender: male
@@ -219,8 +219,8 @@
   name: Mayachand
   gender: male
   relation: father
-  relation_id: khushiram
-  note: adopted son of Khushiram
+  relation_id: netram
+  note: biological son of Netram; adopted by Khushiram
 - id: ramesh
   name: Ramesh
   gender: male
