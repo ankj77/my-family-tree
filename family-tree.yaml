@@ -28,6 +28,7 @@
   gender: male
   relation: father
   relation_id: sevakram
+  order: 1
   note: son of Sevak Ram
 - id: gaurishankar
   name: Dada Gaurishankar
@@ -192,6 +193,7 @@
   gender: male
   relation: father
   relation_id: lakshman
+  order: 1
   note: '''Till 1925''; handwritten word nearby (नवरात्नी?) may be a wife — verify'
 - id: pooranchand
   name: Pooranchand
@@ -204,6 +206,7 @@
   gender: male
   relation: father
   relation_id: bhagmal
+  order: 1
   note: son of Dada Bhagmal ('Till 1945')
 - id: khushiram
   name: Khushiram
@@ -343,6 +346,7 @@
   gender: male
   relation: father
   relation_id: netram
+  order: 1
   note: son of Netram; 4 sons (Kanwarsen, Jugmandar das, Surajbhan, Ramratan)
 - id: kanwarsen
   name: Kanwarsen
