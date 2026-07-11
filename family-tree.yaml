@@ -381,8 +381,8 @@
   name: Kapoorchand
   gender: male
   relation: father
-  relation_id: jugmandardas
-  note: 'chart says ''(no son)''; GUESS: son of Jugmandar das — verify'
+  relation_id: netram
+  note: brother of Chandgiram (son of Netram); no son
 - id: surajbhan
   name: Surajbhan
   gender: male
@@ -484,8 +484,7 @@
   name: Vijay
   gender: male
   relation: father
-  relation_id: parveen
-  note: 'GUESS: verify parent'
+  relation_id: kanwarsen
 - id: ankur
   name: Ankur
   gender: male
@@ -495,8 +494,7 @@
   name: Pawan
   gender: male
   relation: father
-  relation_id: dinesh
-  note: 'GUESS: verify parent'
+  relation_id: kanwarsen
 - id: abhinav
   name: Abhinav
   gender: male
@@ -506,8 +504,7 @@
   name: Deepak
   gender: male
   relation: father
-  relation_id: mukesh_l
-  note: 'GUESS: verify parent'
+  relation_id: kanwarsen
 - id: jinendra
   name: Jinendra
   gender: male
