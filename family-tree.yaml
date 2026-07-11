@@ -1,0 +1,10 @@
+# Family tree data — the single source of truth.
+# One entry per person. See README.md for the field reference.
+# Blood descendants use `father:`; wives use `spouse:`.
+# Flags: status: uncertain (name unreadable) | needs-parent (father unknown).
+
+- id: sevakram
+  name: Sevak Ram
+  name_hi: सेवकराम
+  born: "1884 (Samvat 1941)"
+  note: "root ancestor — all descend from him"
