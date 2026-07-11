@@ -108,14 +108,12 @@
   name: Bhanu Prakash
   gender: male
   relation: father
-  relation_id: naveen
-  note: 'GUESS: Bhanu/Satya Prakash shown under Naveen''s line — verify'
+  relation_id: jainarayan
 - id: satyaprakash
   name: Satya Prakash
   gender: male
   relation: father
-  relation_id: naveen
-  note: 'GUESS: verify parent'
+  relation_id: jainarayan
 - id: kamal
   name: Kamal
   gender: male
@@ -255,13 +253,11 @@
   gender: male
   relation: father
   relation_id: jainarayan
-  note: 'GUESS: verify parent'
 - id: shribhagwan
   name: Shri Bhagwan
   gender: male
   relation: father
   relation_id: jainarayan
-  note: 'GUESS: verify parent'
 - id: rajiv
   name: Rajiv
   gender: male
