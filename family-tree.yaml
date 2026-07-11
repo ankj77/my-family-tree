@@ -1,13 +1,7 @@
-# Family tree data — the single source of truth.
-# One entry per person. See README.md for the field reference.
-#
-# Each person has ONE relation to another person:
-#   relation: father|mother  + relation_id  -> that person is this person's parent
-#   relation: husband|wife    + relation_id  -> that person is this person's spouse (married in)
+# Family tree data — the single source of truth. See README.md for fields.
+# Each person has ONE relation: relation (father|mother|husband|wife) + relation_id.
 # The single root (sevakram) has no relation. gender: male|female.
-# Flags: status: uncertain (name unreadable) | needs-parent (parent unknown).
-#
-# NOTE: best-effort transcription. `note: "GUESS: ..."` marks links to verify.
+# Flags: status: uncertain | needs-parent.  note: "GUESS: ..." marks links to verify.
 
 - id: sevakram
   name: Sevak Ram
@@ -18,14 +12,14 @@
 - id: udmi
   name: Udmi
   name_hi: उदमी
-  gender: male
+  gender: female
   relation: father
   relation_id: sevakram
-  note: '''Till'' annotation on chart'
+  note: daughter of Sevak Ram (Till annotation on chart)
 - id: kannu
   name: Kannu
   name_hi: कन्नू
-  gender: male
+  gender: female
   relation: father
   relation_id: sevakram
 - id: lakshman
@@ -34,41 +28,37 @@
   gender: male
   relation: father
   relation_id: sevakram
-  note: 'confirmed: son of Sevak Ram (siblings: Udmi, Kannu)'
+  note: son of Sevak Ram
 - id: gaurishankar
   name: Dada Gaurishankar
   name_hi: दादा गौरीशंकर
   gender: male
   relation: father
-  relation_id: kannu
+  relation_id: lakshman
 - id: ramjilal
   name: Ramjilal
   name_hi: रामजीलाल
   gender: male
-  relation: father
-  relation_id: kannu
-- id: siddho
-  name: Siddho
-  name_hi: सिद्धो
-  gender: male
-  relation: father
-  relation_id: kannu
-  note: Devanagari hard to read — could be Riddho
-  status: uncertain
+  relation: mother
+  relation_id: udmi
+- id: richa
+  name: Richa
+  gender: female
+  relation: mother
+  relation_id: udmi
+  note: daughter of Udmi (was read as 'Siddho' — reinterpreted per correction)
 - id: rajaram
   name: Rajaram
   name_hi: राजाराम
   gender: male
-  relation: father
+  relation: mother
   relation_id: kannu
-  status: uncertain
 - id: panmeshwar
   name: Panmeshwar
   name_hi: पनमेश्वर
   gender: male
-  relation: father
+  relation: mother
   relation_id: kannu
-  status: uncertain
 - id: moladhrnal
   name: Moladhrnal
   gender: male
@@ -186,20 +176,18 @@
   gender: male
   relation: father
   relation_id: ramjilal
-- id: nisar
-  name: Nisar
-  name_hi: निसार
+- id: niyadar
+  name: Niyadar
   gender: male
-  relation: father
-  relation_id: siddho
-  status: uncertain
-- id: lorvaram
-  name: Lorvaram
-  name_hi: लोरवराम
+  relation: mother
+  relation_id: richa
+  note: child of Richa (was read as 'Nisar')
+- id: lekhram
+  name: Lekhram
   gender: male
-  relation: father
-  relation_id: siddho
-  status: uncertain
+  relation: mother
+  relation_id: richa
+  note: child of Richa (was read as 'Lorvaram')
 - id: bhagmal
   name: Dada Bhagmal
   name_hi: दादा भागमल
