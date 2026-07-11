@@ -206,13 +206,13 @@
   gender: male
   relation: father
   relation_id: bhagmal
-  note: '''Till 1945''; GUESS: son of Bhagmal — verify'
+  note: son of Dada Bhagmal ('Till 1945')
 - id: khushiram
   name: Khushiram
   gender: male
   relation: father
   relation_id: bhagmal
-  note: 'GUESS: son of Bhagmal — verify'
+  note: son of Dada Bhagmal; no biological son — adopted Mayachand
 - id: jainarayan
   name: Jai Narayan
   gender: male
@@ -224,7 +224,7 @@
   gender: male
   relation: father
   relation_id: khushiram
-  note: 'GUESS: diagonal line from Khushiram — verify (could be Netram)'
+  note: adopted son of Khushiram
 - id: ramesh
   name: Ramesh
   gender: male
@@ -349,8 +349,8 @@
   name: Chandgiram
   gender: male
   relation: father
-  relation_id: kannu
-  note: 'GUESS: entire left section attached under Kannu as a placeholder — TRUE PARENT UNKNOWN, please tell me'
+  relation_id: netram
+  note: son of Netram (heads the left section of the chart)
 - id: kanwarsen
   name: Kanwarsen
   gender: male
