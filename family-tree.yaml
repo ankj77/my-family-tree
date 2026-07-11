@@ -225,7 +225,7 @@
   name: Ramesh
   gender: male
   relation: father
-  relation_id: pooranchand
+  relation_id: mayachand
 - id: manish
   name: Manish
   gender: male
@@ -341,7 +341,7 @@
   gender: male
   relation: father
   relation_id: netram
-  note: son of Netram; heads the left section (4 sons)
+  note: son of Netram; 4 sons (Kanwarsen, Jugmandar das, Surajbhan, Ramratan)
 - id: kanwarsen
   name: Kanwarsen
   gender: male
@@ -356,8 +356,7 @@
   name: Naresh
   gender: male
   relation: father
-  relation_id: kanwarsen
-  note: 'GUESS: verify parent'
+  relation_id: jugmandardas
 - id: arun
   name: Arun
   gender: male
@@ -409,7 +408,6 @@
   gender: male
   relation: father
   relation_id: vipul
-  note: 'GUESS: verify parent'
 - id: abhishek
   name: Abhishek
   gender: male
@@ -420,19 +418,17 @@
   gender: male
   relation: father
   relation_id: ramratan
-  note: 'GUESS: verify parent'
 - id: vinay
   name: Vinay
   gender: male
   relation: father
   relation_id: ramratan
-  note: 'GUESS: verify parent (labelled ''Vinny'' on chart)'
 - id: parveen
   name: Parveen
   gender: male
   relation: father
-  relation_id: kanwarsen
-  note: GUESS parent; position on chart unclear — verify
+  relation_id: jugmandardas
+  note: son of Jugmandar das (name still uncertain)
   status: uncertain
 - id: pushkar
   name: Pushkar
@@ -443,8 +439,7 @@
   name: Rajendra
   gender: male
   relation: father
-  relation_id: naresh
-  note: 'GUESS: verify parent'
+  relation_id: kanwarsen
 - id: sachin
   name: Sachin
   gender: male
@@ -469,8 +464,7 @@
   name: Anil
   gender: male
   relation: father
-  relation_id: naresh
-  note: 'GUESS: verify parent'
+  relation_id: kanwarsen
 - id: sunny
   name: Sunny
   gender: male
