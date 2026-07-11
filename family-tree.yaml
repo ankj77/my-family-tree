@@ -213,8 +213,8 @@
   name: Jai Narayan
   gender: male
   relation: father
-  relation_id: bhagmal
-  note: 'GUESS: verify parent'
+  relation_id: moladhrnal
+  note: son of Moladhrnal
 - id: mayachand
   name: Mayachand
   gender: male
