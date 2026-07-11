@@ -35,6 +35,7 @@
   gender: male
   relation: father
   relation_id: lakshman
+  note: no children
 - id: ramjilal
   name: Ramjilal
   name_hi: रामजीलाल
@@ -63,7 +64,8 @@
   name: Moladhrnal
   gender: male
   relation: father
-  relation_id: gaurishankar
+  relation_id: bhagmal
+  note: son of Dada Bhagmal
 - id: ramnarayan
   name: Ram Narayan
   gender: male
