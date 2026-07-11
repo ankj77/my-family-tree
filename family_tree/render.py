@@ -55,12 +55,13 @@ _TEMPLATE = r"""<!doctype html>
 <title>Family Tree</title>
 <style>
   html,body{margin:0;height:100%;font-family:system-ui,Arial,"Noto Sans Devanagari",sans-serif;}
-  #toolbar{position:fixed;top:0;left:0;right:0;height:44px;display:flex;gap:8px;align-items:center;
-    padding:0 12px;background:#f4f4f4;border-bottom:1px solid #ccc;z-index:10;box-sizing:border-box;}
-  #toolbar input{padding:4px 8px;}
-  #toolbar button{padding:4px 8px;cursor:pointer;}
-  #toolbar .summary{margin-left:auto;font-size:12px;color:#555;}
-  #stage{position:absolute;top:44px;left:0;right:0;bottom:0;overflow:hidden;background:#fff;cursor:grab;}
+  body{display:flex;flex-direction:column;}
+  #toolbar{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+    padding:6px 12px;background:#f4f4f4;border-bottom:1px solid #ccc;z-index:10;box-sizing:border-box;}
+  #toolbar input{padding:6px 8px;flex:1 1 140px;min-width:0;max-width:260px;font-size:16px;}
+  #toolbar button{padding:6px 10px;cursor:pointer;font-size:14px;}
+  #toolbar .summary{width:100%;font-size:12px;color:#555;}
+  #stage{flex:1 1 auto;position:relative;overflow:hidden;background:#fff;cursor:grab;touch-action:none;}
   #stage.grabbing{cursor:grabbing;}
   svg{width:100%;height:100%;display:block;}
   .edge{fill:none;stroke:#bbb;stroke-width:1.5px;}
@@ -75,7 +76,7 @@ _TEMPLATE = r"""<!doctype html>
   .marriage{stroke:#b56b8f;stroke-width:1.5px;}
   .toggle{fill:#6b8fb5;cursor:pointer;}
   .badge{font-size:12px;fill:#c0392b;font-weight:bold;pointer-events:none;}
-  #unlinked{position:fixed;right:0;top:44px;width:230px;max-height:45%;overflow:auto;background:#fffaf0;
+  #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:#fffaf0;
     border-left:1px solid #ddd;border-bottom:1px solid #ddd;padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
   #unlinked h4{margin:0 0 6px;}
   #unlinked.empty{display:none;}
@@ -207,6 +208,30 @@ _TEMPLATE = r"""<!doctype html>
     var mx=e.clientX-r.left, my=e.clientY-r.top;
     tx=mx-(mx-tx)*f; ty=my-(my-ty)*f; scale*=f; apply();
   }, {passive:false});
+
+  // touch: one finger pans, two fingers pinch-zoom
+  function tdist(t){ var dx=t[0].clientX-t[1].clientX, dy=t[0].clientY-t[1].clientY; return Math.sqrt(dx*dx+dy*dy); }
+  var touch=null;
+  stage.addEventListener('touchstart',function(e){
+    if(e.touches.length===1){ touch={mode:'pan', x:e.touches[0].clientX, y:e.touches[0].clientY}; }
+    else if(e.touches.length===2){ touch={mode:'pinch', d:tdist(e.touches),
+      cx:(e.touches[0].clientX+e.touches[1].clientX)/2, cy:(e.touches[0].clientY+e.touches[1].clientY)/2}; }
+  }, {passive:false});
+  stage.addEventListener('touchmove',function(e){
+    if(!touch) return;
+    e.preventDefault();
+    if(touch.mode==='pan' && e.touches.length===1){
+      tx+=e.touches[0].clientX-touch.x; ty+=e.touches[0].clientY-touch.y;
+      touch.x=e.touches[0].clientX; touch.y=e.touches[0].clientY; apply();
+    } else if(touch.mode==='pinch' && e.touches.length===2){
+      var nd=tdist(e.touches); if(!touch.d){ touch.d=nd; return; }
+      var f=nd/touch.d, r=stage.getBoundingClientRect();
+      var mx=touch.cx-r.left, my=touch.cy-r.top;
+      tx=mx-(mx-tx)*f; ty=my-(my-ty)*f; scale*=f; touch.d=nd; apply();
+    }
+  }, {passive:false});
+  stage.addEventListener('touchend',function(e){ if(e.touches.length===0) touch=null; });
+
   function resetView(){ tx=40; ty=20; scale=1; apply(); }
 
   document.getElementById('search').addEventListener('keydown',function(e){

@@ -40,10 +40,11 @@ person — a `relation` type plus the `relation_id` it points to:
 
 ## Viewer
 
-Open `family-tree.html` in any browser (works offline). Drag to pan, scroll to zoom,
-click a person to highlight their line up to the root, click the small circle under a
-node to collapse/expand, use the search box (press Enter) to jump to a name, and the
-EN / हिं / EN+हिं buttons to switch languages.
+Open `family-tree.html` in any browser (works offline). On desktop: drag to pan, scroll
+to zoom. On mobile/touch: one finger pans, two fingers pinch-zoom. Tap/click a person to
+highlight their line up to the root, tap the small circle under a node to collapse/expand,
+use the search box (press Enter) to jump to a name, and the EN / हिं / EN+हिं buttons to
+switch languages. The toolbar wraps to fit small screens.
 
 ## Limitations
 
