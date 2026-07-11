@@ -27,15 +27,20 @@ class TestLoadPeople(unittest.TestCase):
             "- id: sevakram\n"
             "  name: Sevak Ram\n"
             "  name_hi: सेवकराम\n"
+            "  gender: male\n"
             "  born: \"1884\"\n"
             "- id: kannu\n"
             "  name: Kannu\n"
-            "  father: sevakram\n"
+            "  gender: male\n"
+            "  relation: father\n"
+            "  relation_id: sevakram\n"
         )
         people = load_people(path)
         self.assertEqual(len(people), 2)
         self.assertEqual(people[0].name_hi, "सेवकराम")
-        self.assertEqual(people[1].father, "sevakram")
+        self.assertEqual(people[0].gender, "male")
+        self.assertEqual(people[1].relation, "father")
+        self.assertEqual(people[1].relation_id, "sevakram")
 
     def test_empty_file_returns_empty_list(self):
         self.assertEqual(load_people(_write("")), [])
@@ -55,6 +60,19 @@ class TestLoadPeople(unittest.TestCase):
     def test_invalid_status_raises(self):
         with self.assertRaises(LoadError):
             load_people(_write("- id: x\n  name: X\n  status: dead\n"))
+
+    def test_invalid_relation_raises(self):
+        with self.assertRaises(LoadError):
+            load_people(_write("- id: x\n  name: X\n  relation: cousin\n  relation_id: y\n"))
+
+    def test_invalid_gender_raises(self):
+        with self.assertRaises(LoadError):
+            load_people(_write("- id: x\n  name: X\n  gender: alien\n"))
+
+    def test_malformed_yaml_raises_loaderror(self):
+        # unbalanced bracket -> a raw yaml error, surfaced as a clean LoadError
+        with self.assertRaises(LoadError):
+            load_people(_write("- id: x\n  name: [unclosed\n"))
 
 
 if __name__ == "__main__":

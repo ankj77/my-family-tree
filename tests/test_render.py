@@ -8,9 +8,9 @@ from family_tree.render import render_html
 class TestRender(unittest.TestCase):
     def _html(self):
         people = [
-            Person(id="sevakram", name="Sevak Ram", name_hi="सेवकराम"),
-            Person(id="kannu", name="Kannu", father="sevakram"),
-            Person(id="sev_w", name="Wife One", spouse="sevakram"),
+            Person(id="sevakram", name="Sevak Ram", name_hi="सेवकराम", gender="male"),
+            Person(id="kannu", name="Kannu", gender="male", relation="father", relation_id="sevakram"),
+            Person(id="sev_w", name="Wife One", gender="female", relation="husband", relation_id="sevakram"),
             Person(id="floating", name="Floaty", status="needs-parent", note="taped"),
         ]
         root, unlinked, summary = build_tree(people)

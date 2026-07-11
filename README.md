@@ -12,24 +12,31 @@ open family-tree.html
 
 ## Adding a person
 
-Append one entry to `family-tree.yaml`:
+Append one entry to `family-tree.yaml`. Each person has **one relation** to another
+person — a `relation` type plus the `relation_id` it points to:
 
 ```yaml
 - id: unique_slug          # required, lowercase, _-separated
   name: English Name       # English name (name and/or name_hi required)
   name_hi: देवनागरी नाम      # Devanagari name
-  father: parent_id        # for a blood descendant
-  # OR
-  spouse: husband_id       # for a wife (married in)
+  gender: male             # male | female (optional but recommended)
+  relation: father         # father | mother | husband | wife
+  relation_id: parent_id   # the id of the related person
   born: "free text"        # optional
   note: "free text"        # optional
   status: uncertain        # optional: uncertain | needs-parent
 ```
 
-- Every person attaches by exactly one of `father` or `spouse` (the root ancestor
-  `sevakram` has neither).
-- `status: uncertain` = the name can't be read yet. `status: needs-parent` = the
-  name is known but the father is not; the viewer parks them in an "Unlinked" panel.
+- `relation: father` or `mother` → `relation_id` is this person's **parent** (they hang
+  under that parent in the tree). Link a child to whichever parent is *in* the tree
+  (the blood descendant) — for the male line that's the `father`.
+- `relation: husband` or `wife` → `relation_id` is this person's **spouse** (they married
+  in and render beside their spouse).
+- `relation` and `relation_id` must both be present or both absent. The single root
+  ancestor `sevakram` has neither.
+- `status: uncertain` = the name can't be read yet. `status: needs-parent` = the name is
+  known but the parent is not (they also have no relation); the viewer parks them in an
+  "Unlinked" panel.
 
 ## Viewer
 

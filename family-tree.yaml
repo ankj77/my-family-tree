@@ -1,507 +1,589 @@
 # Family tree data — the single source of truth.
 # One entry per person. See README.md for the field reference.
-# Blood descendants use `father:`; wives use `spouse:`.
-# Flags: status: uncertain (name unreadable) | needs-parent (father unknown).
 #
-# NOTE: This is a best-effort first-pass transcription from the photographed
-# chart. Local parent->child chains within each column are read directly from
-# the arrows. Links marked `note: "GUESS: ..."` are my best guess for how the
-# major branches / handwritten-Hindi ancestors connect — please verify these.
-# Names in Devanagari that were hard to read are marked `status: uncertain`.
+# Each person has ONE relation to another person:
+#   relation: father|mother  + relation_id  -> that person is this person's parent
+#   relation: husband|wife    + relation_id  -> that person is this person's spouse (married in)
+# The single root (sevakram) has no relation. gender: male|female.
+# Flags: status: uncertain (name unreadable) | needs-parent (parent unknown).
+#
+# NOTE: best-effort transcription. `note: "GUESS: ..."` marks links to verify.
 
-# ============================================================
-# ROOT + oldest ancestors (top-right, handwritten Devanagari)
-# ============================================================
 - id: sevakram
   name: Sevak Ram
   name_hi: सेवकराम
-  born: "1884 (Samvat 1941)"
-  note: "root ancestor — all descend from him"
-
+  gender: male
+  born: 1884 (Samvat 1941)
+  note: root ancestor — all descend from him
 - id: udmi
   name: Udmi
   name_hi: उदमी
-  father: sevakram
-  note: "'Till' annotation on chart"
-
+  gender: male
+  relation: father
+  relation_id: sevakram
+  note: '''Till'' annotation on chart'
 - id: kannu
   name: Kannu
   name_hi: कन्नू
-  father: sevakram
-
-# Dada Lakshman heads the whole MIDDLE section of the chart.
+  gender: male
+  relation: father
+  relation_id: sevakram
 - id: lakshman
   name: Dada Lakshman
   name_hi: दादा लक्ष्मण
-  father: sevakram
-  note: "confirmed: son of Sevak Ram (siblings: Udmi, Kannu)"
-
-# ============================================================
-# KANNU's sons (right-hand Devanagari group)
-# ============================================================
+  gender: male
+  relation: father
+  relation_id: sevakram
+  note: 'confirmed: son of Sevak Ram (siblings: Udmi, Kannu)'
 - id: gaurishankar
   name: Dada Gaurishankar
   name_hi: दादा गौरीशंकर
-  father: kannu
-
+  gender: male
+  relation: father
+  relation_id: kannu
 - id: ramjilal
   name: Ramjilal
   name_hi: रामजीलाल
-  father: kannu
-
+  gender: male
+  relation: father
+  relation_id: kannu
 - id: siddho
   name: Siddho
   name_hi: सिद्धो
-  father: kannu
+  gender: male
+  relation: father
+  relation_id: kannu
+  note: Devanagari hard to read — could be Riddho
   status: uncertain
-  note: "Devanagari hard to read — could be Riddho"
-
 - id: rajaram
   name: Rajaram
   name_hi: राजाराम
-  father: kannu
+  gender: male
+  relation: father
+  relation_id: kannu
   status: uncertain
-
 - id: panmeshwar
   name: Panmeshwar
   name_hi: पनमेश्वर
-  father: kannu
+  gender: male
+  relation: father
+  relation_id: kannu
   status: uncertain
-
-# --- Gaurishankar line ---
 - id: moladhrnal
   name: Moladhrnal
-  father: gaurishankar
-
+  gender: male
+  relation: father
+  relation_id: gaurishankar
 - id: ramnarayan
   name: Ram Narayan
-  father: moladhrnal
-
+  gender: male
+  relation: father
+  relation_id: moladhrnal
 - id: ramlal
   name: Ram Lal
-  father: moladhrnal
-
+  gender: male
+  relation: father
+  relation_id: moladhrnal
 - id: jagdishchand
   name: Jagdish Chand
-  father: ramnarayan
-
+  gender: male
+  relation: father
+  relation_id: ramnarayan
 - id: naveen
   name: Naveen
-  father: ramnarayan
-
+  gender: male
+  relation: father
+  relation_id: ramnarayan
 - id: ravi
   name: Ravi
-  father: jagdishchand
-
+  gender: male
+  relation: father
+  relation_id: jagdishchand
 - id: sanjay
   name: Sanjay
-  father: ramlal
-
+  gender: male
+  relation: father
+  relation_id: ramlal
 - id: sandeep
   name: Sandeep
-  father: ramlal
-
+  gender: male
+  relation: father
+  relation_id: ramlal
 - id: guddu
   name: Guddu
-  father: sanjay
-
+  gender: male
+  relation: father
+  relation_id: sanjay
 - id: bhanuprakash
   name: Bhanu Prakash
-  father: naveen
-  note: "GUESS: Bhanu/Satya Prakash shown under Naveen's line — verify"
-
+  gender: male
+  relation: father
+  relation_id: naveen
+  note: 'GUESS: Bhanu/Satya Prakash shown under Naveen''s line — verify'
 - id: satyaprakash
   name: Satya Prakash
-  father: naveen
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: naveen
+  note: 'GUESS: verify parent'
 - id: kamal
   name: Kamal
-  father: bhanuprakash
-
+  gender: male
+  relation: father
+  relation_id: bhanuprakash
 - id: ankit
   name: Ankit
-  father: bhanuprakash
-
+  gender: male
+  relation: father
+  relation_id: bhanuprakash
 - id: ashish
   name: Ashish
-  father: satyaprakash
-
+  gender: male
+  relation: father
+  relation_id: satyaprakash
 - id: saurabh
   name: Saurabh
-  father: satyaprakash
-
+  gender: male
+  relation: father
+  relation_id: satyaprakash
 - id: satyam
   name: Satyam
-  father: kamal
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: kamal
+  note: 'GUESS: verify parent'
 - id: tejas
   name: Tejas
-  father: ankit
-  note: "GUESS: verify parent"
-
-# Bottom-of-chart people under the right section (connect via long fold-crossing lines)
+  gender: male
+  relation: father
+  relation_id: ankit
+  note: 'GUESS: verify parent'
 - id: subhashchand
   name: Subhash Chand
-  father: satyaprakash
-  note: "GUESS: attaches to right section via a fold-crossing line — verify parent"
-
+  gender: male
+  relation: father
+  relation_id: satyaprakash
+  note: 'GUESS: attaches to right section via a fold-crossing line — verify parent'
 - id: anshul
   name: Anshul
-  father: subhashchand
-
+  gender: male
+  relation: father
+  relation_id: subhashchand
 - id: narendra
   name: Narendra
-  father: satyaprakash
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: satyaprakash
+  note: 'GUESS: verify parent'
 - id: hardik
   name: Hardik
-  father: narendra
-
-# --- Ramjilal / Siddho line ---
+  gender: male
+  relation: father
+  relation_id: narendra
 - id: mamchand
   name: Mamchand
   name_hi: मामचन्द
-  father: ramjilal
-
+  gender: male
+  relation: father
+  relation_id: ramjilal
 - id: nisar
   name: Nisar
   name_hi: निसार
-  father: siddho
+  gender: male
+  relation: father
+  relation_id: siddho
   status: uncertain
-
 - id: lorvaram
   name: Lorvaram
   name_hi: लोरवराम
-  father: siddho
+  gender: male
+  relation: father
+  relation_id: siddho
   status: uncertain
-
-# ============================================================
-# LAKSHMAN's line (MIDDLE section)
-# ============================================================
 - id: bhagmal
   name: Dada Bhagmal
   name_hi: दादा भागमल
-  father: lakshman
-  note: "'Till 1925'; handwritten word nearby (नवरात्नी?) may be a wife — verify"
-
+  gender: male
+  relation: father
+  relation_id: lakshman
+  note: '''Till 1925''; handwritten word nearby (नवरात्नी?) may be a wife — verify'
 - id: pooranchand
   name: Pooranchand
-  father: bhagmal
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: bhagmal
+  note: 'GUESS: verify parent'
 - id: netram
   name: Netram
-  father: bhagmal
-  note: "'Till 1945'; GUESS: son of Bhagmal — verify"
-
+  gender: male
+  relation: father
+  relation_id: bhagmal
+  note: '''Till 1945''; GUESS: son of Bhagmal — verify'
 - id: khushiram
   name: Khushiram
-  father: bhagmal
-  note: "GUESS: son of Bhagmal — verify"
-
+  gender: male
+  relation: father
+  relation_id: bhagmal
+  note: 'GUESS: son of Bhagmal — verify'
 - id: jainarayan
   name: Jai Narayan
-  father: bhagmal
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: bhagmal
+  note: 'GUESS: verify parent'
 - id: mayachand
   name: Mayachand
-  father: khushiram
-  note: "GUESS: diagonal line from Khushiram — verify (could be Netram)"
-
-# Pooranchand -> Ramesh -> Manish -> Aayush
+  gender: male
+  relation: father
+  relation_id: khushiram
+  note: 'GUESS: diagonal line from Khushiram — verify (could be Netram)'
 - id: ramesh
   name: Ramesh
-  father: pooranchand
-
+  gender: male
+  relation: father
+  relation_id: pooranchand
 - id: manish
   name: Manish
-  father: ramesh
-
+  gender: male
+  relation: father
+  relation_id: ramesh
 - id: aayush
   name: Aayush
-  father: manish
-
-# Mayachand -> Mukesh -> Akshay
+  gender: male
+  relation: father
+  relation_id: manish
 - id: mukesh_m
   name: Mukesh
-  father: mayachand
-
+  gender: male
+  relation: father
+  relation_id: mayachand
 - id: akshay
   name: Akshay
-  father: mukesh_m
-
-# Jai Narayan -> Jai Prakash / Shri Bhagwan
+  gender: male
+  relation: father
+  relation_id: mukesh_m
 - id: jaiprakash
   name: Jai Prakash
-  father: jainarayan
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: jainarayan
+  note: 'GUESS: verify parent'
 - id: shribhagwan
   name: Shri Bhagwan
-  father: jainarayan
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: jainarayan
+  note: 'GUESS: verify parent'
 - id: rajiv
   name: Rajiv
-  father: jaiprakash
-
+  gender: male
+  relation: father
+  relation_id: jaiprakash
 - id: sanjiv
   name: Sanjiv
-  father: jaiprakash
-
+  gender: male
+  relation: father
+  relation_id: jaiprakash
 - id: girish
   name: Girish
-  father: shribhagwan
-
+  gender: male
+  relation: father
+  relation_id: shribhagwan
 - id: kanishka
   name: Kanishka
-  father: sanjiv
-
+  gender: male
+  relation: father
+  relation_id: sanjiv
 - id: kartik
   name: Kartik
-  father: rajiv
-
+  gender: male
+  relation: father
+  relation_id: rajiv
 - id: vinayak
   name: Vinayak
-  father: rajiv
-
-# Bottom-of-chart people under the middle section
+  gender: male
+  relation: father
+  relation_id: rajiv
 - id: jaibhagvan
   name: Jai Bhagvan
-  father: jaiprakash
+  gender: male
+  relation: father
+  relation_id: jaiprakash
+  note: GUESS parent; name could be Jai Bhagvar — verify
   status: uncertain
-  note: "GUESS parent; name could be Jai Bhagvar — verify"
-
 - id: abhinandan
   name: Abhinandan
-  father: jaibhagvan
-
+  gender: male
+  relation: father
+  relation_id: jaibhagvan
 - id: surender
   name: Surender
-  father: jaibhagvan
-
+  gender: male
+  relation: father
+  relation_id: jaibhagvan
 - id: pankaj
   name: Pankaj
-  father: jaibhagvan
-
+  gender: male
+  relation: father
+  relation_id: jaibhagvan
 - id: harsh
   name: Harsh
-  father: abhinandan
-
+  gender: male
+  relation: father
+  relation_id: abhinandan
 - id: anand
   name: Anand
-  father: abhinandan
-
+  gender: male
+  relation: father
+  relation_id: abhinandan
 - id: jawaharlal
   name: Jawahar Lal
-  father: shribhagwan
-  note: "GUESS: attaches to middle section via fold-crossing line — verify parent"
-
+  gender: male
+  relation: father
+  relation_id: shribhagwan
+  note: 'GUESS: attaches to middle section via fold-crossing line — verify parent'
 - id: nishant_j
   name: Nishant
-  father: jawaharlal
-
+  gender: male
+  relation: father
+  relation_id: jawaharlal
 - id: aadit
   name: Aadit
-  father: nishant_j
-
+  gender: male
+  relation: father
+  relation_id: nishant_j
 - id: agrim
   name: Agrim
-  father: nishant_j
-
-# ============================================================
-# CHANDGIRAM's line (LEFT section)
-# How this whole section joins Sevakram's tree is UNCLEAR.
-# ============================================================
+  gender: male
+  relation: father
+  relation_id: nishant_j
 - id: chandgiram
   name: Chandgiram
-  father: kannu
-  note: "GUESS: entire left section attached under Kannu as a placeholder — TRUE PARENT UNKNOWN, please tell me"
-
+  gender: male
+  relation: father
+  relation_id: kannu
+  note: 'GUESS: entire left section attached under Kannu as a placeholder — TRUE PARENT UNKNOWN, please tell me'
 - id: kanwarsen
   name: Kanwarsen
-  father: chandgiram
-
+  gender: male
+  relation: father
+  relation_id: chandgiram
 - id: jugmandardas
   name: Jugmandar das
-  father: chandgiram
-
+  gender: male
+  relation: father
+  relation_id: chandgiram
 - id: naresh
   name: Naresh
-  father: kanwarsen
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: kanwarsen
+  note: 'GUESS: verify parent'
 - id: arun
   name: Arun
-  father: naresh
-
+  gender: male
+  relation: father
+  relation_id: naresh
 - id: varun
   name: Varun
-  father: naresh
-
+  gender: male
+  relation: father
+  relation_id: naresh
 - id: prashan
   name: Prashan
-  father: arun
-
+  gender: male
+  relation: father
+  relation_id: arun
 - id: arham
   name: Arham
-  father: varun
-
+  gender: male
+  relation: father
+  relation_id: varun
 - id: kapoorchand
   name: Kapoorchand
-  father: jugmandardas
-  note: "chart says '(no son)'; GUESS: son of Jugmandar das — verify"
-
+  gender: male
+  relation: father
+  relation_id: jugmandardas
+  note: 'chart says ''(no son)''; GUESS: son of Jugmandar das — verify'
 - id: surajbhan
   name: Surajbhan
-  father: jugmandardas
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: jugmandardas
+  note: 'GUESS: verify parent'
 - id: ramratan
   name: Ramratan
-  father: jugmandardas
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: jugmandardas
+  note: 'GUESS: verify parent'
 - id: rajesh
   name: Rajesh
-  father: surajbhan
-
+  gender: male
+  relation: father
+  relation_id: surajbhan
 - id: vipul
   name: Vipul
-  father: rajesh
-
+  gender: male
+  relation: father
+  relation_id: rajesh
 - id: dinesh
   name: Dinesh
-  father: vipul
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: vipul
+  note: 'GUESS: verify parent'
 - id: abhishek
   name: Abhishek
-  father: dinesh
-
+  gender: male
+  relation: father
+  relation_id: dinesh
 - id: mukesh_l
   name: Mukesh
-  father: ramratan
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: ramratan
+  note: 'GUESS: verify parent'
 - id: vinay
   name: Vinay
-  father: ramratan
-  note: "GUESS: verify parent (labelled 'Vinny' on chart)"
-
+  gender: male
+  relation: father
+  relation_id: ramratan
+  note: 'GUESS: verify parent (labelled ''Vinny'' on chart)'
 - id: parveen
   name: Parveen
-  father: kanwarsen
+  gender: male
+  relation: father
+  relation_id: kanwarsen
+  note: GUESS parent; position on chart unclear — verify
   status: uncertain
-  note: "GUESS parent; position on chart unclear — verify"
-
 - id: pushkar
   name: Pushkar
-  father: parveen
-
-# Bottom generation, left section
+  gender: male
+  relation: father
+  relation_id: parveen
 - id: rajendra
   name: Rajendra
-  father: naresh
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: naresh
+  note: 'GUESS: verify parent'
 - id: sachin
   name: Sachin
-  father: rajendra
-
+  gender: male
+  relation: father
+  relation_id: rajendra
 - id: nishant_r
   name: Nishant
-  father: rajendra
-
+  gender: male
+  relation: father
+  relation_id: rajendra
 - id: aaditya
   name: Aaditya
-  father: sachin
-
+  gender: male
+  relation: father
+  relation_id: sachin
 - id: kannav
   name: Kannav
-  father: nishant_r
-
+  gender: male
+  relation: father
+  relation_id: nishant_r
 - id: anil
   name: Anil
-  father: naresh
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: naresh
+  note: 'GUESS: verify parent'
 - id: sunny
   name: Sunny
-  father: anil
-
+  gender: male
+  relation: father
+  relation_id: anil
 - id: rahul
   name: Rahul
-  father: anil
-
+  gender: male
+  relation: father
+  relation_id: anil
 - id: aarav
   name: Aarav
-  father: sunny
-
+  gender: male
+  relation: father
+  relation_id: sunny
 - id: vijay
   name: Vijay
-  father: parveen
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: parveen
+  note: 'GUESS: verify parent'
 - id: ankur
   name: Ankur
-  father: vijay
-
+  gender: male
+  relation: father
+  relation_id: vijay
 - id: pawan
   name: Pawan
-  father: dinesh
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: dinesh
+  note: 'GUESS: verify parent'
 - id: abhinav
   name: Abhinav
-  father: pawan
-
+  gender: male
+  relation: father
+  relation_id: pawan
 - id: deepak
   name: Deepak
-  father: mukesh_l
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: mukesh_l
+  note: 'GUESS: verify parent'
 - id: jinendra
   name: Jinendra
-  father: deepak
-
+  gender: male
+  relation: father
+  relation_id: deepak
 - id: gulabchand
   name: Gulab Chand
-  father: pawan
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: pawan
+  note: 'GUESS: verify parent'
 - id: sreyans
   name: Sreyans
-  father: gulabchand
-
+  gender: male
+  relation: father
+  relation_id: gulabchand
 - id: shaurya
   name: Shaurya
-  father: sreyans
-
+  gender: male
+  relation: father
+  relation_id: sreyans
 - id: mahavirprasad
   name: Mahavir Prasad
-  father: deepak
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: deepak
+  note: 'GUESS: verify parent'
 - id: rishabh
   name: Rishabh
-  father: mahavirprasad
+  gender: male
+  relation: father
+  relation_id: mahavirprasad
+  note: name partly taped — could be Kishan/Rishabh
   status: uncertain
-  note: "name partly taped — could be Kishan/Rishabh"
-
 - id: ramnivas
   name: Ram Nivas
-  father: mukesh_l
-  note: "GUESS: verify parent"
-
+  gender: male
+  relation: father
+  relation_id: mukesh_l
+  note: 'GUESS: verify parent'
 - id: vikas
   name: Vikas
-  father: ramnivas
-
+  gender: male
+  relation: father
+  relation_id: ramnivas
 - id: sanyam
   name: Sanyam
-  father: vikas
+  gender: male
+  relation: father
+  relation_id: vikas
