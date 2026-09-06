@@ -1,11 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 import yaml
 
 ALLOWED_KEYS = {
     "id", "name", "name_hi", "gender", "relation", "relation_id",
-    "order", "born", "note", "status",
+    "order", "born", "note", "status", "address",
 }
 ALLOWED_STATUS = {"uncertain", "needs-parent"}
 ALLOWED_RELATION = {"father", "mother", "husband", "wife"}
@@ -22,6 +22,45 @@ class LoadError(Exception):
     pass
 
 
+ADDRESS_KEYS = {"line", "locality", "city", "state", "country"}
+
+
+@dataclass
+class Address:
+    line: Optional[str] = None
+    locality: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+
+    def is_empty(self) -> bool:
+        return not any([self.line, self.locality, self.city, self.state, self.country])
+
+    def as_dict(self) -> dict:
+        return {
+            k: v
+            for k, v in (
+                ("line", self.line),
+                ("locality", self.locality),
+                ("city", self.city),
+                ("state", self.state),
+                ("country", self.country),
+            )
+            if v
+        }
+
+
+def _parse_address(pid: str, raw) -> Address:
+    if raw is None:
+        return Address()
+    if not isinstance(raw, dict):
+        raise LoadError("Person '%s' has a non-mapping 'address'" % pid)
+    unknown = set(raw) - ADDRESS_KEYS
+    if unknown:
+        raise LoadError("Person '%s' has unknown address keys: %s" % (pid, sorted(unknown)))
+    return Address(**{k: (None if v is None else str(v)) for k, v in raw.items()})
+
+
 @dataclass
 class Person:
     id: str
@@ -34,6 +73,7 @@ class Person:
     born: Optional[str] = None
     note: Optional[str] = None
     status: Optional[str] = None
+    address: Address = field(default_factory=Address)
 
     def display_name(self) -> str:
         return self.name or self.name_hi or self.id
@@ -71,6 +111,7 @@ def load_people(path: str) -> List[Person]:
         order = entry.get("order")
         if order is not None and not isinstance(order, int):
             raise LoadError("Person '%s' has non-integer order '%r'" % (pid, order))
+        address = _parse_address(str(pid), entry.get("address"))
         people.append(
             Person(
                 id=str(pid),
@@ -83,6 +124,7 @@ def load_people(path: str) -> List[Person]:
                 born=entry.get("born"),
                 note=entry.get("note"),
                 status=status,
+                address=address,
             )
         )
     return people

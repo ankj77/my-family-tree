@@ -75,5 +75,54 @@ class TestLoadPeople(unittest.TestCase):
             load_people(_write("- id: x\n  name: [unclosed\n"))
 
 
+class TestAddress(unittest.TestCase):
+    def test_parses_all_address_keys(self):
+        people = load_people(
+            _write(
+                "- id: x\n"
+                "  name: X\n"
+                "  address:\n"
+                "    line: House 214\n"
+                "    locality: Sector 14\n"
+                "    city: Rohtak\n"
+                "    state: Haryana\n"
+                "    country: India\n"
+            )
+        )
+        addr = people[0].address
+        self.assertEqual(addr.line, "House 214")
+        self.assertEqual(addr.locality, "Sector 14")
+        self.assertEqual(addr.city, "Rohtak")
+        self.assertEqual(addr.state, "Haryana")
+        self.assertEqual(addr.country, "India")
+        self.assertFalse(addr.is_empty())
+
+    def test_partial_address_is_allowed(self):
+        people = load_people(
+            _write("- id: x\n  name: X\n  address:\n    city: Rohtak\n")
+        )
+        self.assertEqual(people[0].address.city, "Rohtak")
+        self.assertIsNone(people[0].address.line)
+
+    def test_missing_address_is_empty_not_none(self):
+        people = load_people(_write("- id: x\n  name: X\n"))
+        self.assertTrue(people[0].address.is_empty())
+        self.assertIsNone(people[0].address.city)
+
+    def test_unknown_address_key_raises(self):
+        with self.assertRaises(LoadError):
+            load_people(_write("- id: x\n  name: X\n  address:\n    citty: Rohtak\n"))
+
+    def test_non_mapping_address_raises(self):
+        with self.assertRaises(LoadError):
+            load_people(_write("- id: x\n  name: X\n  address: Rohtak\n"))
+
+    def test_numeric_address_value_is_stringified(self):
+        people = load_people(
+            _write("- id: x\n  name: X\n  address:\n    line: 214\n")
+        )
+        self.assertEqual(people[0].address.line, "214")
+
+
 if __name__ == "__main__":
     unittest.main()
