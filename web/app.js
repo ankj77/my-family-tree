@@ -45,6 +45,23 @@ var FT = { views: {} };
     var view = FT.views[FT.state.viewId];
     return !!(view && view.stack);
   };
+  FT.leafShaped = function () {
+    var view = FT.views[FT.state.viewId];
+    return !!(view && view.nodeShape === 'leaf');
+  };
+  FT.hash01 = function (s) {
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return ((h >>> 0) % 10000) / 10000;
+  };
+  FT.leafCount = function (n) {
+    var kids = FT.visibleChildren(n);
+    if (!kids.length) return 1;
+    return kids.reduce(function (sum, c) { return sum + FT.leafCount(c); }, 0);
+  };
   FT.nodeW = function (n) {
     if (FT.stacked(n)) return FT.SELF_W;
     return FT.hasPartner(n) ? FT.SELF_W + FT.BAR + FT.SPOUSE_W : FT.SELF_W;
@@ -55,10 +72,12 @@ var FT = { views: {} };
     return FT.NODE_H + (rows - 1) * (FT.NODE_H + 6);
   };
   FT.jointX = function (n) {
+    if (FT.leafShaped()) return 0;
     if (FT.stacked(n)) return FT.SELF_W;
     return FT.hasPartner(n) ? FT.SELF_W + FT.BAR / 2 : FT.SELF_W / 2;
   };
   FT.jointY = function (n) {
+    if (FT.leafShaped()) return 0;
     return FT.stacked(n) ? FT.nodeH(n) / 2 : FT.nodeH(n);
   };
 
@@ -217,7 +236,24 @@ var FT = { views: {} };
     return g;
   }
 
+  FT.drawLeaf = function (parent, n) {
+    var g = el('g', {
+      'class': 'leafnode' + (FT.hasPartner(n) ? ' paired' : ''),
+      'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
+    }, parent);
+    var r = 7 + Math.min(6, Math.sqrt(FT.leafCount(n)));
+    el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf' }, g);
+    if (FT.hasPartner(n)) {
+      el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
+    }
+    var t = el('text', { y: -r - 5, 'text-anchor': 'middle', 'class': 'leaflabel' }, g);
+    t.textContent = FT.label(n)[0];
+    g.addEventListener('click', function () { FT.select(n.id, n); });
+    return g;
+  };
+
   FT.drawNode = function (parent, n) {
+    if (FT.leafShaped()) return FT.drawLeaf(parent, n);
     var g = el('g', {
       'class': 'node' + (n.status === 'uncertain' ? ' uncertain' : ''),
       'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
@@ -272,23 +308,26 @@ var FT = { views: {} };
   };
 
   function clearHl(){
-    var hl=document.querySelectorAll('.node.hl,.edge.hl');
+    var hl=vp.querySelectorAll('.hl');
     for(var i=0;i<hl.length;i++) hl[i].classList.remove('hl');
   }
   function highlight(id){
     clearHl();
     var cur=id;
     while(cur){
-      var node=document.querySelector('.node[data-id="'+cur+'"]');
+      var node=vp.querySelector('[data-id="'+cur+'"]');
       if(node) node.classList.add('hl');
-      var edge=document.querySelector('.edge[data-edge="'+cur+'"]');
+      var edge=vp.querySelector('.edge[data-edge="'+cur+'"]');
       if(edge) edge.classList.add('hl');
       cur=FT.parentOf[cur]?FT.parentOf[cur].id:null;
     }
   }
 
   var tx=40, ty=20, scale=1, dragging=false, lx=0, ly=0;
-  function apply(){ vp.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')'); }
+  function apply(){
+    vp.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')');
+    stage.classList.toggle('hide-labels', scale < 1.2);
+  }
   stage.addEventListener('mousedown',function(e){ dragging=true; lx=e.clientX; ly=e.clientY; stage.classList.add('grabbing'); });
   window.addEventListener('mousemove',function(e){ if(!dragging) return; tx+=e.clientX-lx; ty+=e.clientY-ly; lx=e.clientX; ly=e.clientY; apply(); });
   window.addEventListener('mouseup',function(){ dragging=false; stage.classList.remove('grabbing'); });

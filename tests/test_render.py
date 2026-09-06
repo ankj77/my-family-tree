@@ -82,5 +82,26 @@ class TestHorizontalView(unittest.TestCase):
         self.assertIn("FT.views.horizontal", _payload_html())
 
 
+class TestOrganicView(unittest.TestCase):
+    def test_organic_view_is_registered(self):
+        self.assertIn("FT.views.organic", _payload_html())
+
+    def test_stable_hash_and_leaf_shape_live_in_the_shared_core(self):
+        html = _payload_html()
+        self.assertIn("FT.hash01", html)
+        self.assertIn("FT.leafCount", html)
+        self.assertIn("nodeShape === 'leaf'", html)
+
+    def test_branches_keep_the_edge_class_so_highlighting_still_finds_them(self):
+        html = _payload_html()
+        self.assertIn("'edge branch'", html)
+        self.assertNotIn("'branch'", html)
+
+    def test_labels_are_hidden_below_the_zoom_threshold(self):
+        html = _payload_html()
+        self.assertIn("hide-labels", html)
+        self.assertIn(".hide-labels .leaflabel", html)
+
+
 if __name__ == "__main__":
     unittest.main()

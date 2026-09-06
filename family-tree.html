@@ -18,6 +18,14 @@
   .edge.hl{stroke:#d35400;stroke-width:2.5px;}
   .node text{font-size:12px;fill:#222;pointer-events:none;}
   .node text.hi{font-size:11px;fill:#555;}
+  .branch{fill:none;stroke:#8b6b4a;stroke-linecap:round;}
+  .branch.trunk{stroke-width:16px;}
+  .branch.hl{stroke:#d35400;}
+  .leaf{fill:#cfe3c9;stroke:#8aa87f;stroke-width:1px;cursor:pointer;}
+  .leaf.spouseleaf{fill:#f0dbe6;stroke:#b56b8f;}
+  .leafnode.hl .leaf{stroke:#d35400;stroke-width:2.5px;}
+  .leaflabel{font-size:11px;fill:#2c4a2c;pointer-events:none;}
+  #stage.hide-labels .leaflabel{display:none;}
   .marriage{stroke:#b56b8f;stroke-width:1.5px;}
   .toggle{fill:#6b8fb5;cursor:pointer;}
   .badge{font-size:12px;fill:#c0392b;font-weight:bold;pointer-events:none;}
@@ -121,6 +129,23 @@
     var view = FT.views[FT.state.viewId];
     return !!(view && view.stack);
   };
+  FT.leafShaped = function () {
+    var view = FT.views[FT.state.viewId];
+    return !!(view && view.nodeShape === 'leaf');
+  };
+  FT.hash01 = function (s) {
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return ((h >>> 0) % 10000) / 10000;
+  };
+  FT.leafCount = function (n) {
+    var kids = FT.visibleChildren(n);
+    if (!kids.length) return 1;
+    return kids.reduce(function (sum, c) { return sum + FT.leafCount(c); }, 0);
+  };
   FT.nodeW = function (n) {
     if (FT.stacked(n)) return FT.SELF_W;
     return FT.hasPartner(n) ? FT.SELF_W + FT.BAR + FT.SPOUSE_W : FT.SELF_W;
@@ -131,10 +156,12 @@
     return FT.NODE_H + (rows - 1) * (FT.NODE_H + 6);
   };
   FT.jointX = function (n) {
+    if (FT.leafShaped()) return 0;
     if (FT.stacked(n)) return FT.SELF_W;
     return FT.hasPartner(n) ? FT.SELF_W + FT.BAR / 2 : FT.SELF_W / 2;
   };
   FT.jointY = function (n) {
+    if (FT.leafShaped()) return 0;
     return FT.stacked(n) ? FT.nodeH(n) / 2 : FT.nodeH(n);
   };
 
@@ -293,7 +320,24 @@
     return g;
   }
 
+  FT.drawLeaf = function (parent, n) {
+    var g = el('g', {
+      'class': 'leafnode' + (FT.hasPartner(n) ? ' paired' : ''),
+      'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
+    }, parent);
+    var r = 7 + Math.min(6, Math.sqrt(FT.leafCount(n)));
+    el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf' }, g);
+    if (FT.hasPartner(n)) {
+      el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
+    }
+    var t = el('text', { y: -r - 5, 'text-anchor': 'middle', 'class': 'leaflabel' }, g);
+    t.textContent = FT.label(n)[0];
+    g.addEventListener('click', function () { FT.select(n.id, n); });
+    return g;
+  };
+
   FT.drawNode = function (parent, n) {
+    if (FT.leafShaped()) return FT.drawLeaf(parent, n);
     var g = el('g', {
       'class': 'node' + (n.status === 'uncertain' ? ' uncertain' : ''),
       'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
@@ -348,23 +392,26 @@
   };
 
   function clearHl(){
-    var hl=document.querySelectorAll('.node.hl,.edge.hl');
+    var hl=vp.querySelectorAll('.hl');
     for(var i=0;i<hl.length;i++) hl[i].classList.remove('hl');
   }
   function highlight(id){
     clearHl();
     var cur=id;
     while(cur){
-      var node=document.querySelector('.node[data-id="'+cur+'"]');
+      var node=vp.querySelector('[data-id="'+cur+'"]');
       if(node) node.classList.add('hl');
-      var edge=document.querySelector('.edge[data-edge="'+cur+'"]');
+      var edge=vp.querySelector('.edge[data-edge="'+cur+'"]');
       if(edge) edge.classList.add('hl');
       cur=FT.parentOf[cur]?FT.parentOf[cur].id:null;
     }
   }
 
   var tx=40, ty=20, scale=1, dragging=false, lx=0, ly=0;
-  function apply(){ vp.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')'); }
+  function apply(){
+    vp.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')');
+    stage.classList.toggle('hide-labels', scale < 1.2);
+  }
   stage.addEventListener('mousedown',function(e){ dragging=true; lx=e.clientX; ly=e.clientY; stage.classList.add('grabbing'); });
   window.addEventListener('mousemove',function(e){ if(!dragging) return; tx+=e.clientX-lx; ty+=e.clientY-ly; lx=e.clientX; ly=e.clientY; apply(); });
   window.addEventListener('mouseup',function(){ dragging=false; stage.classList.remove('grabbing'); });
@@ -534,6 +581,52 @@ FT.views.horizontal = {
                  ' V' + Math.max.apply(null, ys));
       kids.forEach(function (c) {
         FT.edge(g, 'M' + busX + ',' + (c.y + FT.jointY(c)) + ' H' + c.x, c.id);
+        walk(c);
+      });
+    })(root);
+  }
+};
+
+FT.views.organic = {
+  id: 'organic',
+  label: 'Tree (organic)',
+  nodeShape: 'leaf',
+  layout: function (root) {
+    var SPREAD = 150 * Math.PI / 180;
+    var TRUNK = 120;
+    var RING = 115;
+    (function place(n, a0, a1, depth) {
+      n.depth = depth;
+      var mid = (a0 + a1) / 2;
+      var wobble = (FT.hash01(n.id) - 0.5) * (a1 - a0) * 0.25;
+      var ang = mid + wobble;
+      var r = TRUNK + depth * RING;
+      n.ang = ang;
+      n.x = r * Math.sin(ang);
+      n.y = -r * Math.cos(ang);
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) return;
+      var total = kids.reduce(function (s, c) { return s + FT.leafCount(c); }, 0);
+      var cur = a0;
+      kids.forEach(function (c) {
+        var share = (a1 - a0) * (FT.leafCount(c) / total);
+        place(c, cur, cur + share, depth + 1);
+        cur += share;
+      });
+    })(root, -SPREAD / 2, SPREAD / 2, 0);
+  },
+  drawEdges: function (g, root) {
+    FT.edge(g, 'M0,40 L' + root.x + ',' + root.y).setAttribute(
+      'class', 'branch trunk'
+    );
+    (function walk(n) {
+      FT.visibleChildren(n).forEach(function (c) {
+        var cx = n.x + (c.x - n.x) * 0.35 + Math.sin(n.ang) * 20;
+        var cy = n.y + (c.y - n.y) * 0.35 - Math.cos(n.ang) * 20;
+        var p = FT.edge(g,
+          'M' + n.x + ',' + n.y + ' Q' + cx + ',' + cy + ' ' + c.x + ',' + c.y, c.id);
+        p.setAttribute('class', 'edge branch');
+        p.style.strokeWidth = Math.max(1.5, Math.sqrt(FT.leafCount(c)) * 1.8) + 'px';
         walk(c);
       });
     })(root);

@@ -12,6 +12,14 @@
   .edge.hl{stroke:#d35400;stroke-width:2.5px;}
   .node text{font-size:12px;fill:#222;pointer-events:none;}
   .node text.hi{font-size:11px;fill:#555;}
+  .branch{fill:none;stroke:#8b6b4a;stroke-linecap:round;}
+  .branch.trunk{stroke-width:16px;}
+  .branch.hl{stroke:#d35400;}
+  .leaf{fill:#cfe3c9;stroke:#8aa87f;stroke-width:1px;cursor:pointer;}
+  .leaf.spouseleaf{fill:#f0dbe6;stroke:#b56b8f;}
+  .leafnode.hl .leaf{stroke:#d35400;stroke-width:2.5px;}
+  .leaflabel{font-size:11px;fill:#2c4a2c;pointer-events:none;}
+  #stage.hide-labels .leaflabel{display:none;}
   .marriage{stroke:#b56b8f;stroke-width:1.5px;}
   .toggle{fill:#6b8fb5;cursor:pointer;}
   .badge{font-size:12px;fill:#c0392b;font-weight:bold;pointer-events:none;}
