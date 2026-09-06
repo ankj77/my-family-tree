@@ -21,7 +21,8 @@
   .leaflabel{font-size:11px;fill:#2c4a2c;pointer-events:none;}
   #stage.hide-labels .leaflabel{display:none;}
   .marriage{stroke:#b56b8f;stroke-width:1.5px;}
-  .toggle{fill:#6b8fb5;cursor:pointer;}
+  .toggle{fill:#6b8fb5;cursor:pointer;pointer-events:none;}
+  .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
   .badge{font-size:12px;fill:#c0392b;font-weight:bold;pointer-events:none;}
   #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:#fffaf0;
     border-left:1px solid #ddd;border-bottom:1px solid #ddd;padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
@@ -51,8 +52,15 @@
   .sheet-rel{margin-top:12px;padding-top:10px;border-top:1px solid #eee;line-height:1.9;}
   .sheet-rel span{color:#888;margin-right:4px;}
   .sheet-rel a{color:#3a6ea5;text-decoration:none;}
+  #view-picker{padding:8px;font-size:16px;min-height:44px;max-width:180px;}
+  #toolbar button{min-height:44px;min-width:44px;}
+  #more{display:none;}
   @media (max-width:768px){
     #sheet{right:0;left:0;top:auto;bottom:0;width:auto;max-height:60%;
       border-left:0;border-top:1px solid #ddd;border-radius:12px 12px 0 0;
       box-shadow:0 -2px 12px rgba(0,0,0,.12);}
+    #more{display:inline-block;}
+    #extras{display:none;width:100%;}
+    #toolbar.show-extras #extras{display:flex;gap:8px;flex-wrap:wrap;}
+    #toolbar .summary{font-size:11px;}
   }

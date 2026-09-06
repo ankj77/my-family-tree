@@ -82,6 +82,15 @@ class TestHorizontalView(unittest.TestCase):
         self.assertIn("FT.views.horizontal", _payload_html())
 
 
+class TestViewPicker(unittest.TestCase):
+    def test_picker_and_all_three_labels_present(self):
+        html = _payload_html()
+        self.assertIn('id="view-picker"', html)
+        self.assertIn("Classic (top-down)", html)
+        self.assertIn("Left to right", html)
+        self.assertIn("Tree (organic)", html)
+
+
 class TestOrganicView(unittest.TestCase):
     def test_organic_view_is_registered(self):
         self.assertIn("FT.views.organic", _payload_html())

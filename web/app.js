@@ -279,11 +279,11 @@ var FT = { views: {} };
       sg.setAttribute('data-spouse-of', n.id);
     });
     if ((n.children || []).length) {
-      var t = el('circle', {
-        'class': 'toggle', cx: FT.jointX(n) + (FT.stacked(n) ? 14 : 0),
-        cy: FT.stacked(n) ? FT.jointY(n) : FT.jointY(n) + 10, r: 11
-      }, g);
-      t.addEventListener('click', function (ev) {
+      var toggleCx = FT.jointX(n) + (FT.stacked(n) ? 14 : 0);
+      var toggleCy = FT.stacked(n) ? FT.jointY(n) : FT.jointY(n) + 10;
+      var hit = el('circle', { 'class': 'toggle-hit', cx: toggleCx, cy: toggleCy, r: 22 }, g);
+      el('circle', { 'class': 'toggle', cx: toggleCx, cy: toggleCy, r: 11 }, g);
+      hit.addEventListener('click', function (ev) {
         ev.stopPropagation();
         FT.state.collapsed[n.id] = !FT.state.collapsed[n.id];
         FT.render();
@@ -362,7 +362,60 @@ var FT = { views: {} };
   }, {passive:false});
   stage.addEventListener('touchend',function(e){ if(e.touches.length===0) touch=null; });
 
-  function resetView(){ tx=40; ty=20; scale=1; apply(); }
+  var VIEW_ORDER = ['classic', 'horizontal', 'organic'];
+
+  FT.setView = function (id) {
+    if (!FT.views[id]) return;
+    FT.state.viewId = id;
+    try { localStorage.setItem('ft-view', id); } catch (e) {}
+    document.getElementById('view-picker').value = id;
+    FT.render();
+    FT.fit();
+  };
+
+  FT.fit = function () {
+    var view = FT.views[FT.state.viewId];
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    (function walk(n) {
+      var w = view.nodeShape === 'leaf' ? 30 : FT.nodeW(n);
+      var h = view.nodeShape === 'leaf' ? 30 : FT.nodeH(n);
+      minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
+      minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
+      FT.visibleChildren(n).forEach(walk);
+    })(tree);
+    if (view.nodeShape === 'leaf') {
+      minX = Math.min(minX, -10); maxX = Math.max(maxX, 10);
+      minY = Math.min(minY, 30); maxY = Math.max(maxY, 50);
+    }
+    var r = stage.getBoundingClientRect();
+    var stageW = r.width > 0 ? r.width : window.innerWidth;
+    var stageH = r.height > 0 ? r.height : window.innerHeight;
+    var pad = 40;
+    scale = Math.min(
+      (stageW - pad * 2) / Math.max(1, maxX - minX),
+      (stageH - pad * 2) / Math.max(1, maxY - minY)
+    );
+    scale = Math.max(0.05, Math.min(scale, 1.2));
+    tx = pad - minX * scale + (stageW - pad * 2 - (maxX - minX) * scale) / 2;
+    ty = pad - minY * scale + (stageH - pad * 2 - (maxY - minY) * scale) / 2;
+    apply();
+  };
+
+  function populateViewPicker() {
+    var sel = document.getElementById('view-picker');
+    VIEW_ORDER.forEach(function (id) {
+      if (!FT.views[id]) return;
+      var o = document.createElement('option');
+      o.value = id;
+      o.textContent = FT.views[id].label;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', function () { FT.setView(sel.value); });
+  }
+
+  document.getElementById('more').addEventListener('click', function () {
+    document.getElementById('toolbar').classList.toggle('show-extras');
+  });
 
   document.getElementById('search').addEventListener('keydown',function(e){
     if(e.key!=='Enter') return;
@@ -381,7 +434,7 @@ var FT = { views: {} };
   for(var i=0;i<langBtns.length;i++){
     langBtns[i].addEventListener('click', (function(b){ return function(){ FT.state.lang=b.getAttribute('data-lang'); FT.render(); }; })(langBtns[i]));
   }
-  document.getElementById('reset').addEventListener('click', resetView);
+  document.getElementById('reset').addEventListener('click', FT.fit);
 
   document.getElementById('summary').textContent=
     'People '+summary.total+' · Generations '+summary.generations+
@@ -398,5 +451,13 @@ var FT = { views: {} };
     up.className='empty';
   }
 
-  FT.init = function () { FT.render(); resetView(); };
+  FT.init = function () {
+    populateViewPicker();
+    var saved = null;
+    try { saved = localStorage.getItem('ft-view'); } catch (e) {}
+    var preferred = saved && FT.views[saved]
+      ? saved
+      : (window.innerWidth < 768 ? 'horizontal' : 'classic');
+    FT.setView(preferred);
+  };
 })();
