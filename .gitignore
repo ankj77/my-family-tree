@@ -6,3 +6,6 @@ __pycache__/
 
 # Brainstorm session artifacts
 .superpowers/brainstorm/
+
+# Worktrees
+.claude/worktrees/
