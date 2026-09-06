@@ -1,35 +1,11 @@
 var FT = { views: {} };
 (function () {
   var NS="http://www.w3.org/2000/svg";
-  var NODE_W=170, NODE_H=46, H_GAP=170, V_GAP=100, WIFE_W=110, WIFE_H=38;
   var tree=JSON.parse(document.getElementById('tree-data').textContent);
   var unlinked=JSON.parse(document.getElementById('unlinked-data').textContent);
   var summary=JSON.parse(document.getElementById('summary-data').textContent);
   var vp=document.getElementById('viewport');
   var stage=document.getElementById('stage');
-  var lang='both';
-
-  var parentOf={};
-  (function walk(n){ (n.children||[]).forEach(function(c){ parentOf[c.id]=n; walk(c); }); })(tree);
-  var all=[]; (function walk(n){ all.push(n); (n.children||[]).forEach(walk); })(tree);
-
-  function label(p){
-    if(lang==='en') return [p.name||p.name_hi||p.id];
-    if(lang==='hi') return [p.name_hi||p.name||p.id];
-    var out=[]; if(p.name) out.push(p.name); if(p.name_hi) out.push(p.name_hi);
-    return out.length?out:[p.id];
-  }
-
-  var leaf=0;
-  function layout(n, depth){
-    n.depth=depth; n.y=depth*V_GAP;
-    var kids=n._collapsed?[]:(n.children||[]);
-    if(!kids.length){ n.x=leaf*(NODE_W+H_GAP); leaf++; }
-    else {
-      kids.forEach(function(c){ layout(c, depth+1); });
-      n.x=(kids[0].x + kids[kids.length-1].x)/2;
-    }
-  }
 
   function el(tag, attrs, parent){
     var e=document.createElementNS(NS, tag);
@@ -38,49 +14,152 @@ var FT = { views: {} };
     return e;
   }
 
-  function textLines(g, lines, cx, y){
-    lines.forEach(function(t,i){
-      var te=el('text', {x:cx, y:y+i*14, 'text-anchor':'middle'}, g);
-      if(i>0) te.setAttribute('class','hi');
-      te.textContent=t;
+  FT.edge = function (g, d, childId) {
+    var attrs = { 'class': 'edge', d: d };
+    if (childId) attrs['data-edge'] = childId;
+    return el('path', attrs, g);
+  };
+
+  FT.SELF_W = 150; FT.SPOUSE_W = 120; FT.NODE_H = 46;
+  FT.BAR = 22; FT.H_GAP = 40; FT.V_GAP = 100;
+
+  FT.state = { lang: 'both', viewId: 'classic', collapsed: {}, selected: null };
+  FT.nodes = []; FT.byId = {}; FT.parentOf = {};
+
+  (function walk(n, parent) {
+    FT.nodes.push(n);
+    FT.byId[n.id] = n;
+    if (parent) FT.parentOf[n.id] = parent;
+    (n.children || []).forEach(function (c) { walk(c, n); });
+  })(tree, null);
+
+  FT.hasPartner = function (n) {
+    return (n.spouses && n.spouses.length > 0) || !!n.placeholder;
+  };
+  FT.partners = function (n) {
+    if (n.spouses && n.spouses.length) return n.spouses;
+    if (n.placeholder) return [{ id: null, placeholder: true, gender: n.placeholder }];
+    return [];
+  };
+  FT.nodeW = function (n) {
+    return FT.hasPartner(n) ? FT.SELF_W + FT.BAR + FT.SPOUSE_W : FT.SELF_W;
+  };
+  FT.nodeH = function (n) {
+    var rows = Math.max(1, FT.partners(n).length);
+    return FT.NODE_H + (rows - 1) * (FT.NODE_H + 6);
+  };
+  FT.jointX = function (n) {
+    return FT.hasPartner(n) ? FT.SELF_W + FT.BAR / 2 : FT.SELF_W / 2;
+  };
+  FT.jointY = function (n) { return FT.nodeH(n); };
+
+  FT.visibleChildren = function (n) {
+    return FT.state.collapsed[n.id] ? [] : (n.children || []);
+  };
+
+  FT.label = function (p) {
+    var lang = FT.state.lang;
+    if (lang === 'en') return [p.name || p.name_hi || p.id];
+    if (lang === 'hi') return [p.name_hi || p.name || p.id];
+    var out = [];
+    if (p.name) out.push(p.name);
+    if (p.name_hi) out.push(p.name_hi);
+    return out.length ? out : [p.id];
+  };
+
+  FT.select = function (id) { highlight(id); };
+
+  function textLines(g, lines, cx, y) {
+    lines.forEach(function (t, i) {
+      var te = el('text', { x: cx, y: y + i * 14, 'text-anchor': 'middle' }, g);
+      if (i > 0) te.setAttribute('class', 'hi');
+      te.textContent = t;
     });
   }
 
-  function render(){
-    while(vp.firstChild) vp.removeChild(vp.firstChild);
-    leaf=0; layout(tree,0);
-    var edges=el('g', {}, vp);
-    var nodes=el('g', {}, vp);
-    (function draw(n){
-      var kids=n._collapsed?[]:(n.children||[]);
-      kids.forEach(function(c){
-        var midY=(n.y+NODE_H+c.y)/2;
-        el('path', {'class':'edge','data-edge':c.id,
-          d:'M'+(n.x+NODE_W/2)+','+(n.y+NODE_H)+' C'+(n.x+NODE_W/2)+','+midY+' '+(c.x+NODE_W/2)+','+midY+' '+(c.x+NODE_W/2)+','+c.y
-        }, edges);
-        draw(c);
+  function drawBox(parent, p, x, y, w, role, owner) {
+    var cls = role + (p.status === 'uncertain' ? ' uncertain' : '') +
+      (p.placeholder ? ' placeholder' : '');
+    var g = el('g', { 'class': cls, transform: 'translate(' + x + ',' + y + ')' }, parent);
+    el('rect', { width: w, height: FT.NODE_H, rx: 6 }, g);
+    var textX = w / 2, thumb = 0;
+    if (p.photo) {
+      thumb = 16;
+      var img = el('image', {
+        href: p.photo, x: 6, y: FT.NODE_H / 2 - thumb, width: thumb * 2, height: thumb * 2,
+        preserveAspectRatio: 'xMidYMid slice', 'clip-path': 'inset(0 round 50%)', 'class': 'thumb'
+      }, g);
+      img.addEventListener('error', function () { g.removeChild(img); });
+      textX = (w + thumb * 2 + 6) / 2;
+    }
+    textLines(g, p.placeholder ? ['Unknown'] : FT.label(p), textX, 18);
+    if (p.status === 'uncertain') {
+      var b = el('text', { x: w - 12, y: 15, 'class': 'badge' }, g);
+      b.textContent = '?';
+    }
+    if (!p.placeholder) {
+      g.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(p.id, owner); });
+    }
+    return g;
+  }
+
+  FT.drawNode = function (parent, n) {
+    var g = el('g', {
+      'class': 'node' + (n.status === 'uncertain' ? ' uncertain' : ''),
+      'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
+    }, parent);
+    var self = el('g', { 'class': 'self' }, g);
+    el('rect', { width: FT.SELF_W, height: FT.NODE_H, rx: 6 }, self);
+    var textX = FT.SELF_W / 2;
+    if (n.photo) {
+      var img = el('image', {
+        href: n.photo, x: 6, y: FT.NODE_H / 2 - 16, width: 32, height: 32,
+        preserveAspectRatio: 'xMidYMid slice', 'clip-path': 'inset(0 round 50%)', 'class': 'thumb'
+      }, self);
+      img.addEventListener('error', function () { self.removeChild(img); });
+      textX = (FT.SELF_W + 38) / 2;
+    }
+    textLines(self, FT.label(n), textX, 18);
+    if (n.status === 'uncertain') {
+      var b = el('text', { x: FT.SELF_W - 12, y: 15, 'class': 'badge' }, self);
+      b.textContent = '?';
+    }
+    FT.partners(n).forEach(function (p, i) {
+      var y = i * (FT.NODE_H + 6);
+      el('line', {
+        'class': 'marriage', x1: FT.SELF_W, y1: FT.NODE_H / 2,
+        x2: FT.SELF_W + FT.BAR, y2: y + FT.NODE_H / 2
+      }, g);
+      var sg = drawBox(g, p, FT.SELF_W + FT.BAR, y, FT.SPOUSE_W, 'spouse', n);
+      sg.setAttribute('data-spouse-of', n.id);
+    });
+    if ((n.children || []).length) {
+      var t = el('circle', {
+        'class': 'toggle', cx: FT.jointX(n), cy: FT.jointY(n) + 10, r: 11
+      }, g);
+      t.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        FT.state.collapsed[n.id] = !FT.state.collapsed[n.id];
+        FT.render();
       });
-      var cls='node'+(n.status==='uncertain'?' uncertain':'');
-      var g=el('g', {'class':cls, 'data-id':n.id, transform:'translate('+n.x+','+n.y+')'}, nodes);
-      el('rect', {width:NODE_W, height:NODE_H}, g);
-      textLines(g, label(n), NODE_W/2, 18);
-      if(n.status==='uncertain'){ var b=el('text',{x:NODE_W-12,y:15,'class':'badge'},g); b.textContent='?'; }
-      (n.spouses||[]).forEach(function(w,i){
-        var wx=NODE_W+30, wy=i*(WIFE_H+6);
-        el('line',{'class':'marriage',x1:NODE_W,y1:NODE_H/2,x2:NODE_W+30,y2:wy+WIFE_H/2},g);
-        var wcls='wife'+(w.status==='uncertain'?' uncertain':'');
-        var wg=el('g',{'class':wcls, transform:'translate('+wx+','+wy+')'},g);
-        el('rect',{width:WIFE_W,height:WIFE_H},wg);
-        textLines(wg, label(w), WIFE_W/2, 16);
-      });
-      if((n.children||[]).length){
-        var tg=el('circle',{'class':'toggle',cx:NODE_W/2,cy:NODE_H+2,r:6},g);
-        tg.addEventListener('click',function(ev){ ev.stopPropagation(); n._collapsed=!n._collapsed; render(); });
-      }
-      g.addEventListener('click',function(){ highlight(n.id); });
+    }
+    g.addEventListener('click', function () { FT.select(n.id, n); });
+    return g;
+  };
+
+  FT.render = function () {
+    while (vp.firstChild) vp.removeChild(vp.firstChild);
+    var view = FT.views[FT.state.viewId] || FT.views.classic;
+    view.layout(tree);
+    var edges = el('g', {}, vp);
+    var nodes = el('g', {}, vp);
+    view.drawEdges(edges, tree);
+    (function walk(n) {
+      FT.drawNode(nodes, n);
+      FT.visibleChildren(n).forEach(walk);
     })(tree);
     apply();
-  }
+  };
 
   function clearHl(){
     var hl=document.querySelectorAll('.node.hl,.edge.hl');
@@ -94,7 +173,7 @@ var FT = { views: {} };
       if(node) node.classList.add('hl');
       var edge=document.querySelector('.edge[data-edge="'+cur+'"]');
       if(edge) edge.classList.add('hl');
-      cur=parentOf[cur]?parentOf[cur].id:null;
+      cur=FT.parentOf[cur]?FT.parentOf[cur].id:null;
     }
   }
 
@@ -140,21 +219,21 @@ var FT = { views: {} };
     if(e.key!=='Enter') return;
     var q=e.target.value.trim().toLowerCase(); if(!q) return;
     var hit=null;
-    for(var i=0;i<all.length;i++){
-      var n=all[i];
+    for(var i=0;i<FT.nodes.length;i++){
+      var n=FT.nodes[i];
       if(((n.name||'')+(n.name_hi||'')).toLowerCase().indexOf(q)>=0){ hit=n; break; }
     }
     if(!hit) return;
-    var c=parentOf[hit.id]; while(c){ c._collapsed=false; c=parentOf[c.id]; }
-    render();
+    var c=FT.parentOf[hit.id]; while(c){ FT.state.collapsed[c.id]=false; c=FT.parentOf[c.id]; }
+    FT.render();
     var r=stage.getBoundingClientRect();
-    scale=1; tx=r.width/2-(hit.x+NODE_W/2); ty=r.height/2-(hit.y+NODE_H/2); apply();
+    scale=1; tx=r.width/2-(hit.x+FT.jointX(hit)); ty=r.height/2-(hit.y+FT.nodeH(hit)/2); apply();
     highlight(hit.id);
   });
 
   var langBtns=document.querySelectorAll('#toolbar [data-lang]');
   for(var i=0;i<langBtns.length;i++){
-    langBtns[i].addEventListener('click', (function(b){ return function(){ lang=b.getAttribute('data-lang'); render(); }; })(langBtns[i]));
+    langBtns[i].addEventListener('click', (function(b){ return function(){ FT.state.lang=b.getAttribute('data-lang'); FT.render(); }; })(langBtns[i]));
   }
   document.getElementById('reset').addEventListener('click', resetView);
 
@@ -173,5 +252,5 @@ var FT = { views: {} };
     up.className='empty';
   }
 
-  FT.init = function () { render(); resetView(); };
+  FT.init = function () { FT.render(); resetView(); };
 })();

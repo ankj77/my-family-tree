@@ -1,6 +1,6 @@
 import unittest
 
-from family_tree.model import Person
+from family_tree.model import Address, Person
 from family_tree.tree import build_tree
 from family_tree.render import render_html
 
@@ -46,6 +46,28 @@ class TestAssetInlining(unittest.TestCase):
         html = TestRender()._html()
         self.assertNotIn('type="module"', html)
         self.assertNotIn("\nexport ", html)
+
+
+def _payload_html():
+    people = [
+        Person(id="root", name="Root", gender="male"),
+        Person(id="w", name="Wife", gender="female", relation="wife", relation_id="root"),
+        Person(id="kid", name="Kid", gender="male", relation="father", relation_id="root",
+               address=Address(city="Rohtak", country="India")),
+    ]
+    root, unlinked, summary = build_tree(people)
+    return render_html(root, unlinked, summary)
+
+
+class TestPayload(unittest.TestCase):
+    def test_payload_carries_address_and_couple_structure(self):
+        html = _payload_html()
+        self.assertIn("Rohtak", html)
+        self.assertIn("child_groups", html)
+        self.assertIn("placeholder", html)
+
+    def test_classic_view_is_registered(self):
+        self.assertIn("FT.views.classic", _payload_html())
 
 
 if __name__ == "__main__":
