@@ -5,7 +5,7 @@ import yaml
 
 ALLOWED_KEYS = {
     "id", "name", "name_hi", "gender", "relation", "relation_id",
-    "order", "born", "note", "status", "address",
+    "order", "born", "note", "status", "address", "mother_id",
 }
 ALLOWED_STATUS = {"uncertain", "needs-parent"}
 ALLOWED_RELATION = {"father", "mother", "husband", "wife"}
@@ -69,6 +69,7 @@ class Person:
     gender: Optional[str] = None
     relation: Optional[str] = None
     relation_id: Optional[str] = None
+    mother_id: Optional[str] = None
     order: Optional[int] = None
     born: Optional[str] = None
     note: Optional[str] = None
@@ -112,6 +113,9 @@ def load_people(path: str) -> List[Person]:
         if order is not None and not isinstance(order, int):
             raise LoadError("Person '%s' has non-integer order '%r'" % (pid, order))
         address = _parse_address(str(pid), entry.get("address"))
+        mother_id = entry.get("mother_id")
+        if mother_id is not None and not isinstance(mother_id, (str, int)):
+            raise LoadError("Person '%s' has a non-scalar mother_id" % pid)
         people.append(
             Person(
                 id=str(pid),
@@ -120,6 +124,7 @@ def load_people(path: str) -> List[Person]:
                 gender=gender,
                 relation=relation,
                 relation_id=entry.get("relation_id"),
+                mother_id=None if mother_id is None else str(mother_id),
                 order=order,
                 born=entry.get("born"),
                 note=entry.get("note"),
