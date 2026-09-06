@@ -18,7 +18,9 @@ def _person_json(p: Person) -> dict:
 
 def _node_json(node: dict) -> dict:
     d = _person_json(node["person"])
-    d["wives"] = [_person_json(w) for w in node["wives"]]
+    d["spouses"] = [_person_json(s) for s in node["spouses"]]
+    d["placeholder"] = node["placeholder"]
+    d["child_groups"] = node["child_groups"]
     d["children"] = [_node_json(c) for c in node["children"]]
     return d
 
@@ -163,7 +165,7 @@ _TEMPLATE = r"""<!doctype html>
       el('rect', {width:NODE_W, height:NODE_H}, g);
       textLines(g, label(n), NODE_W/2, 18);
       if(n.status==='uncertain'){ var b=el('text',{x:NODE_W-12,y:15,'class':'badge'},g); b.textContent='?'; }
-      (n.wives||[]).forEach(function(w,i){
+      (n.spouses||[]).forEach(function(w,i){
         var wx=NODE_W+30, wy=i*(WIFE_H+6);
         el('line',{'class':'marriage',x1:NODE_W,y1:NODE_H/2,x2:NODE_W+30,y2:wy+WIFE_H/2},g);
         var wcls='wife'+(w.status==='uncertain'?' uncertain':'');
