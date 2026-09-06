@@ -35,5 +35,18 @@ class TestRender(unittest.TestCase):
         self.assertIn("unlinked-data", html)
 
 
+class TestAssetInlining(unittest.TestCase):
+    def test_css_and_js_are_inlined_not_linked(self):
+        html = TestRender()._html()
+        self.assertNotIn("<link", html)
+        self.assertNotIn("<script src=", html)
+        self.assertIn("FT.init();", html)
+
+    def test_no_es_module_syntax(self):
+        html = TestRender()._html()
+        self.assertNotIn('type="module"', html)
+        self.assertNotIn("\nexport ", html)
+
+
 if __name__ == "__main__":
     unittest.main()
