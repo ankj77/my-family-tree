@@ -19,11 +19,11 @@
     border-left:1px solid #ddd;border-bottom:1px solid #ddd;padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
   #unlinked h4{margin:0 0 6px;}
   #unlinked.empty{display:none;}
-.node .self rect{fill:#eef4fb;stroke:#6b8fb5;stroke-width:1.4px;cursor:pointer;}
-.node.hl .self rect{stroke:#d35400;stroke-width:2px;fill:#fdf0e6;}
-.node.uncertain .self rect{stroke-dasharray:4 3;fill:#fbf6e6;}
-.spouse rect{fill:#fbeef4;stroke:#b56b8f;stroke-width:1.4px;cursor:pointer;}
-.spouse.placeholder rect{fill:#faf6f8;stroke-dasharray:4 3;cursor:default;}
-.spouse.placeholder text{fill:#999;font-style:italic;}
-.spouse text{font-size:11px;fill:#333;pointer-events:none;}
-.thumb{pointer-events:none;}
+  .node .self rect{fill:#eef4fb;stroke:#6b8fb5;stroke-width:1.4px;cursor:pointer;}
+  .node.hl .self rect{stroke:#d35400;stroke-width:2px;fill:#fdf0e6;}
+  .node.uncertain .self rect{stroke-dasharray:4 3;fill:#fbf6e6;}
+  .spouse rect{fill:#fbeef4;stroke:#b56b8f;stroke-width:1.4px;cursor:pointer;}
+  .spouse.placeholder rect{fill:#faf6f8;stroke-dasharray:4 3;cursor:default;}
+  .spouse.placeholder text{fill:#999;font-style:italic;}
+  .spouse text{font-size:11px;fill:#333;pointer-events:none;}
+  .thumb{pointer-events:none;}

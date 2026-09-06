@@ -78,8 +78,9 @@ var FT = { views: {} };
   }
 
   function drawBox(parent, p, x, y, w, role, owner) {
+    var unfilled = role === 'spouse' && !!p.placeholder;
     var cls = role + (p.status === 'uncertain' ? ' uncertain' : '') +
-      (p.placeholder ? ' placeholder' : '');
+      (unfilled ? ' placeholder' : '');
     var g = el('g', { 'class': cls, transform: 'translate(' + x + ',' + y + ')' }, parent);
     el('rect', { width: w, height: FT.NODE_H, rx: 6 }, g);
     var textX = w / 2, thumb = 0;
@@ -89,15 +90,20 @@ var FT = { views: {} };
         href: p.photo, x: 6, y: FT.NODE_H / 2 - thumb, width: thumb * 2, height: thumb * 2,
         preserveAspectRatio: 'xMidYMid slice', 'clip-path': 'inset(0 round 50%)', 'class': 'thumb'
       }, g);
-      img.addEventListener('error', function () { g.removeChild(img); });
+      img.addEventListener('error', function () {
+        g.removeChild(img);
+        [].forEach.call(g.querySelectorAll('text:not(.badge)'), function (t) {
+          t.setAttribute('x', w / 2);
+        });
+      });
       textX = (w + thumb * 2 + 6) / 2;
     }
-    textLines(g, p.placeholder ? ['Unknown'] : FT.label(p), textX, 18);
+    textLines(g, unfilled ? ['Unknown'] : FT.label(p), textX, 18);
     if (p.status === 'uncertain') {
       var b = el('text', { x: w - 12, y: 15, 'class': 'badge' }, g);
       b.textContent = '?';
     }
-    if (!p.placeholder) {
+    if (!unfilled) {
       g.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(p.id, owner); });
     }
     return g;
@@ -108,22 +114,7 @@ var FT = { views: {} };
       'class': 'node' + (n.status === 'uncertain' ? ' uncertain' : ''),
       'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
     }, parent);
-    var self = el('g', { 'class': 'self' }, g);
-    el('rect', { width: FT.SELF_W, height: FT.NODE_H, rx: 6 }, self);
-    var textX = FT.SELF_W / 2;
-    if (n.photo) {
-      var img = el('image', {
-        href: n.photo, x: 6, y: FT.NODE_H / 2 - 16, width: 32, height: 32,
-        preserveAspectRatio: 'xMidYMid slice', 'clip-path': 'inset(0 round 50%)', 'class': 'thumb'
-      }, self);
-      img.addEventListener('error', function () { self.removeChild(img); });
-      textX = (FT.SELF_W + 38) / 2;
-    }
-    textLines(self, FT.label(n), textX, 18);
-    if (n.status === 'uncertain') {
-      var b = el('text', { x: FT.SELF_W - 12, y: 15, 'class': 'badge' }, self);
-      b.textContent = '?';
-    }
+    drawBox(g, n, 0, 0, FT.SELF_W, 'self', n);
     FT.partners(n).forEach(function (p, i) {
       var y = i * (FT.NODE_H + 6);
       el('line', {

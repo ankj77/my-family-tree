@@ -25,14 +25,14 @@
     border-left:1px solid #ddd;border-bottom:1px solid #ddd;padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
   #unlinked h4{margin:0 0 6px;}
   #unlinked.empty{display:none;}
-.node .self rect{fill:#eef4fb;stroke:#6b8fb5;stroke-width:1.4px;cursor:pointer;}
-.node.hl .self rect{stroke:#d35400;stroke-width:2px;fill:#fdf0e6;}
-.node.uncertain .self rect{stroke-dasharray:4 3;fill:#fbf6e6;}
-.spouse rect{fill:#fbeef4;stroke:#b56b8f;stroke-width:1.4px;cursor:pointer;}
-.spouse.placeholder rect{fill:#faf6f8;stroke-dasharray:4 3;cursor:default;}
-.spouse.placeholder text{fill:#999;font-style:italic;}
-.spouse text{font-size:11px;fill:#333;pointer-events:none;}
-.thumb{pointer-events:none;}
+  .node .self rect{fill:#eef4fb;stroke:#6b8fb5;stroke-width:1.4px;cursor:pointer;}
+  .node.hl .self rect{stroke:#d35400;stroke-width:2px;fill:#fdf0e6;}
+  .node.uncertain .self rect{stroke-dasharray:4 3;fill:#fbf6e6;}
+  .spouse rect{fill:#fbeef4;stroke:#b56b8f;stroke-width:1.4px;cursor:pointer;}
+  .spouse.placeholder rect{fill:#faf6f8;stroke-dasharray:4 3;cursor:default;}
+  .spouse.placeholder text{fill:#999;font-style:italic;}
+  .spouse text{font-size:11px;fill:#333;pointer-events:none;}
+  .thumb{pointer-events:none;}
 </style>
 </head>
 <body>
@@ -129,8 +129,9 @@
   }
 
   function drawBox(parent, p, x, y, w, role, owner) {
+    var unfilled = role === 'spouse' && !!p.placeholder;
     var cls = role + (p.status === 'uncertain' ? ' uncertain' : '') +
-      (p.placeholder ? ' placeholder' : '');
+      (unfilled ? ' placeholder' : '');
     var g = el('g', { 'class': cls, transform: 'translate(' + x + ',' + y + ')' }, parent);
     el('rect', { width: w, height: FT.NODE_H, rx: 6 }, g);
     var textX = w / 2, thumb = 0;
@@ -140,15 +141,20 @@
         href: p.photo, x: 6, y: FT.NODE_H / 2 - thumb, width: thumb * 2, height: thumb * 2,
         preserveAspectRatio: 'xMidYMid slice', 'clip-path': 'inset(0 round 50%)', 'class': 'thumb'
       }, g);
-      img.addEventListener('error', function () { g.removeChild(img); });
+      img.addEventListener('error', function () {
+        g.removeChild(img);
+        [].forEach.call(g.querySelectorAll('text:not(.badge)'), function (t) {
+          t.setAttribute('x', w / 2);
+        });
+      });
       textX = (w + thumb * 2 + 6) / 2;
     }
-    textLines(g, p.placeholder ? ['Unknown'] : FT.label(p), textX, 18);
+    textLines(g, unfilled ? ['Unknown'] : FT.label(p), textX, 18);
     if (p.status === 'uncertain') {
       var b = el('text', { x: w - 12, y: 15, 'class': 'badge' }, g);
       b.textContent = '?';
     }
-    if (!p.placeholder) {
+    if (!unfilled) {
       g.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(p.id, owner); });
     }
     return g;
@@ -159,22 +165,7 @@
       'class': 'node' + (n.status === 'uncertain' ? ' uncertain' : ''),
       'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
     }, parent);
-    var self = el('g', { 'class': 'self' }, g);
-    el('rect', { width: FT.SELF_W, height: FT.NODE_H, rx: 6 }, self);
-    var textX = FT.SELF_W / 2;
-    if (n.photo) {
-      var img = el('image', {
-        href: n.photo, x: 6, y: FT.NODE_H / 2 - 16, width: 32, height: 32,
-        preserveAspectRatio: 'xMidYMid slice', 'clip-path': 'inset(0 round 50%)', 'class': 'thumb'
-      }, self);
-      img.addEventListener('error', function () { self.removeChild(img); });
-      textX = (FT.SELF_W + 38) / 2;
-    }
-    textLines(self, FT.label(n), textX, 18);
-    if (n.status === 'uncertain') {
-      var b = el('text', { x: FT.SELF_W - 12, y: 15, 'class': 'badge' }, self);
-      b.textContent = '?';
-    }
+    drawBox(g, n, 0, 0, FT.SELF_W, 'self', n);
     FT.partners(n).forEach(function (p, i) {
       var y = i * (FT.NODE_H + 6);
       el('line', {
@@ -312,10 +303,19 @@ FT.views.classic = {
   nodeShape: 'box',
   layout: function (root) {
     var slot = FT.SELF_W + FT.BAR + FT.SPOUSE_W + FT.H_GAP;
+    var rowHeight = [];
+    (function measure(n, depth) {
+      rowHeight[depth] = Math.max(rowHeight[depth] || 0, FT.nodeH(n));
+      FT.visibleChildren(n).forEach(function (c) { measure(c, depth + 1); });
+    })(root, 0);
+    var rowTop = [0];
+    for (var d = 0; d < rowHeight.length; d++) {
+      rowTop[d + 1] = rowTop[d] + rowHeight[d] + FT.V_GAP;
+    }
     var cursor = 0;
     (function place(n, depth) {
       n.depth = depth;
-      n.y = depth * (FT.NODE_H + FT.V_GAP);
+      n.y = rowTop[depth];
       var kids = FT.visibleChildren(n);
       if (!kids.length) {
         n.x = cursor + slot / 2 - FT.jointX(n);
@@ -324,8 +324,8 @@ FT.views.classic = {
       }
       kids.forEach(function (c) { place(c, depth + 1); });
       var first = kids[0], last = kids[kids.length - 1];
-      var span = (first.x + FT.jointX(first) + last.x + FT.jointX(last)) / 2;
-      n.x = span - FT.jointX(n);
+      var mid = (first.x + FT.jointX(first) + last.x + FT.jointX(last)) / 2;
+      n.x = mid - FT.jointX(n);
     })(root, 0);
   },
   drawEdges: function (g, root) {
