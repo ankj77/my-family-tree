@@ -90,7 +90,12 @@ var FT = { views: {} };
   function personRef(id) {
     var n = FT.byId[id];
     var label = n ? (FT.label(n)[0]) : id;
-    return '<a href="#" data-goto="' + id + '">' + esc(label) + '</a>';
+    return '<a href="#" data-goto="' + esc(id) + '">' + esc(label) + '</a>';
+  }
+
+  function spouseRef(s, owner) {
+    return '<a href="#" data-spouse="' + esc(s.id) + '" data-owner="' + esc(owner.id) + '">' +
+      esc(FT.label(s)[0]) + '</a>';
   }
 
   function sheetHtml(p, owner) {
@@ -112,7 +117,7 @@ var FT = { views: {} };
     if (parent) rel += '<div><span>Parent</span> ' + personRef(parent.id) + '</div>';
     if (owner.spouses && owner.spouses.length) {
       rel += '<div><span>Spouse</span> ' +
-        owner.spouses.map(function (s) { return esc(FT.label(s)[0]); }).join(', ') + '</div>';
+        owner.spouses.map(function (s) { return spouseRef(s, owner); }).join(', ') + '</div>';
     } else if (owner.placeholder) {
       rel += '<div><span>Spouse</span> <em>not recorded</em></div>';
     }
@@ -159,6 +164,13 @@ var FT = { views: {} };
 
   document.getElementById('sheet-close').addEventListener('click', FT.closeSheet);
   sheetBody.addEventListener('click', function (e) {
+    var sp = e.target.closest('[data-spouse]');
+    if (sp) {
+      e.preventDefault();
+      var owner = FT.byId[sp.getAttribute('data-owner')];
+      if (owner) FT.select(sp.getAttribute('data-spouse'), owner);
+      return;
+    }
     var a = e.target.closest('[data-goto]');
     if (!a) return;
     e.preventDefault();
