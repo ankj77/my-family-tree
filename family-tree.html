@@ -117,17 +117,26 @@
     if (n.placeholder) return [{ id: null, placeholder: true, gender: n.placeholder }];
     return [];
   };
+  FT.stacked = function (n) {
+    var view = FT.views[FT.state.viewId];
+    return !!(view && view.stack);
+  };
   FT.nodeW = function (n) {
+    if (FT.stacked(n)) return FT.SELF_W;
     return FT.hasPartner(n) ? FT.SELF_W + FT.BAR + FT.SPOUSE_W : FT.SELF_W;
   };
   FT.nodeH = function (n) {
     var rows = Math.max(1, FT.partners(n).length);
+    if (FT.stacked(n)) return FT.NODE_H * (1 + (FT.hasPartner(n) ? rows : 0)) + 4;
     return FT.NODE_H + (rows - 1) * (FT.NODE_H + 6);
   };
   FT.jointX = function (n) {
+    if (FT.stacked(n)) return FT.SELF_W;
     return FT.hasPartner(n) ? FT.SELF_W + FT.BAR / 2 : FT.SELF_W / 2;
   };
-  FT.jointY = function (n) { return FT.nodeH(n); };
+  FT.jointY = function (n) {
+    return FT.stacked(n) ? FT.nodeH(n) / 2 : FT.nodeH(n);
+  };
 
   FT.visibleChildren = function (n) {
     return FT.state.collapsed[n.id] ? [] : (n.children || []);
@@ -279,17 +288,28 @@
     }, parent);
     drawBox(g, n, 0, 0, FT.SELF_W, 'self', n);
     FT.partners(n).forEach(function (p, i) {
-      var y = i * (FT.NODE_H + 6);
-      el('line', {
-        'class': 'marriage', x1: FT.SELF_W, y1: FT.NODE_H / 2,
-        x2: FT.SELF_W + FT.BAR, y2: y + FT.NODE_H / 2
-      }, g);
-      var sg = drawBox(g, p, FT.SELF_W + FT.BAR, y, FT.SPOUSE_W, 'spouse', n);
+      var sg;
+      if (FT.stacked(n)) {
+        var y = FT.NODE_H * (i + 1) + 4;
+        el('line', {
+          'class': 'marriage', x1: FT.SELF_W / 2, y1: FT.NODE_H,
+          x2: FT.SELF_W / 2, y2: y
+        }, g);
+        sg = drawBox(g, p, 0, y, FT.SELF_W, 'spouse', n);
+      } else {
+        var yy = i * (FT.NODE_H + 6);
+        el('line', {
+          'class': 'marriage', x1: FT.SELF_W, y1: FT.NODE_H / 2,
+          x2: FT.SELF_W + FT.BAR, y2: yy + FT.NODE_H / 2
+        }, g);
+        sg = drawBox(g, p, FT.SELF_W + FT.BAR, yy, FT.SPOUSE_W, 'spouse', n);
+      }
       sg.setAttribute('data-spouse-of', n.id);
     });
     if ((n.children || []).length) {
       var t = el('circle', {
-        'class': 'toggle', cx: FT.jointX(n), cy: FT.jointY(n) + 10, r: 11
+        'class': 'toggle', cx: FT.jointX(n) + (FT.stacked(n) ? 14 : 0),
+        cy: FT.stacked(n) ? FT.jointY(n) : FT.jointY(n) + 10, r: 11
       }, g);
       t.addEventListener('click', function (ev) {
         ev.stopPropagation();
@@ -450,6 +470,57 @@ FT.views.classic = {
       kids.forEach(function (c) {
         FT.edge(g, 'M' + (c.x + FT.jointX(c)) + ',' + busY +
                    ' V' + c.y, c.id);
+        walk(c);
+      });
+    })(root);
+  }
+};
+
+FT.views.horizontal = {
+  id: 'horizontal',
+  label: 'Left to right',
+  nodeShape: 'box',
+  stack: true,
+  layout: function (root) {
+    var cursor = 0;
+    var COL = FT.SELF_W + 90;
+    function shiftDown(n, dy) {
+      n.y += dy;
+      FT.visibleChildren(n).forEach(function (c) { shiftDown(c, dy); });
+    }
+    (function place(n, depth) {
+      n.depth = depth;
+      n.x = depth * COL;
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) {
+        n.y = cursor;
+        cursor += FT.nodeH(n) + 18;
+        return;
+      }
+      var subtreeTop = cursor;
+      kids.forEach(function (c) { place(c, depth + 1); });
+      var first = kids[0], last = kids[kids.length - 1];
+      n.y = (first.y + FT.jointY(first) + last.y + FT.jointY(last)) / 2 - FT.jointY(n);
+      if (n.y < subtreeTop) {
+        var dy = subtreeTop - n.y;
+        kids.forEach(function (c) { shiftDown(c, dy); });
+        n.y = subtreeTop;
+      }
+      cursor = Math.max(cursor, n.y + FT.nodeH(n) + 18);
+    })(root, 0);
+  },
+  drawEdges: function (g, root) {
+    (function walk(n) {
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) return;
+      var jx = n.x + FT.nodeW(n), jy = n.y + FT.jointY(n);
+      var busX = jx + 45;
+      FT.edge(g, 'M' + jx + ',' + jy + ' H' + busX);
+      var ys = kids.map(function (c) { return c.y + FT.jointY(c); });
+      FT.edge(g, 'M' + busX + ',' + Math.min.apply(null, ys) +
+                 ' V' + Math.max.apply(null, ys));
+      kids.forEach(function (c) {
+        FT.edge(g, 'M' + busX + ',' + (c.y + FT.jointY(c)) + ' H' + c.x, c.id);
         walk(c);
       });
     })(root);

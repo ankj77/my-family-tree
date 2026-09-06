@@ -77,5 +77,10 @@ class TestDetailSheet(unittest.TestCase):
         self.assertIn("FT.closeSheet", html)
 
 
+class TestHorizontalView(unittest.TestCase):
+    def test_horizontal_view_is_registered(self):
+        self.assertIn("FT.views.horizontal", _payload_html())
+
+
 if __name__ == "__main__":
     unittest.main()

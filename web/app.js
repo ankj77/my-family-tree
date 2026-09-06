@@ -41,17 +41,26 @@ var FT = { views: {} };
     if (n.placeholder) return [{ id: null, placeholder: true, gender: n.placeholder }];
     return [];
   };
+  FT.stacked = function (n) {
+    var view = FT.views[FT.state.viewId];
+    return !!(view && view.stack);
+  };
   FT.nodeW = function (n) {
+    if (FT.stacked(n)) return FT.SELF_W;
     return FT.hasPartner(n) ? FT.SELF_W + FT.BAR + FT.SPOUSE_W : FT.SELF_W;
   };
   FT.nodeH = function (n) {
     var rows = Math.max(1, FT.partners(n).length);
+    if (FT.stacked(n)) return FT.NODE_H * (1 + (FT.hasPartner(n) ? rows : 0)) + 4;
     return FT.NODE_H + (rows - 1) * (FT.NODE_H + 6);
   };
   FT.jointX = function (n) {
+    if (FT.stacked(n)) return FT.SELF_W;
     return FT.hasPartner(n) ? FT.SELF_W + FT.BAR / 2 : FT.SELF_W / 2;
   };
-  FT.jointY = function (n) { return FT.nodeH(n); };
+  FT.jointY = function (n) {
+    return FT.stacked(n) ? FT.nodeH(n) / 2 : FT.nodeH(n);
+  };
 
   FT.visibleChildren = function (n) {
     return FT.state.collapsed[n.id] ? [] : (n.children || []);
@@ -203,17 +212,28 @@ var FT = { views: {} };
     }, parent);
     drawBox(g, n, 0, 0, FT.SELF_W, 'self', n);
     FT.partners(n).forEach(function (p, i) {
-      var y = i * (FT.NODE_H + 6);
-      el('line', {
-        'class': 'marriage', x1: FT.SELF_W, y1: FT.NODE_H / 2,
-        x2: FT.SELF_W + FT.BAR, y2: y + FT.NODE_H / 2
-      }, g);
-      var sg = drawBox(g, p, FT.SELF_W + FT.BAR, y, FT.SPOUSE_W, 'spouse', n);
+      var sg;
+      if (FT.stacked(n)) {
+        var y = FT.NODE_H * (i + 1) + 4;
+        el('line', {
+          'class': 'marriage', x1: FT.SELF_W / 2, y1: FT.NODE_H,
+          x2: FT.SELF_W / 2, y2: y
+        }, g);
+        sg = drawBox(g, p, 0, y, FT.SELF_W, 'spouse', n);
+      } else {
+        var yy = i * (FT.NODE_H + 6);
+        el('line', {
+          'class': 'marriage', x1: FT.SELF_W, y1: FT.NODE_H / 2,
+          x2: FT.SELF_W + FT.BAR, y2: yy + FT.NODE_H / 2
+        }, g);
+        sg = drawBox(g, p, FT.SELF_W + FT.BAR, yy, FT.SPOUSE_W, 'spouse', n);
+      }
       sg.setAttribute('data-spouse-of', n.id);
     });
     if ((n.children || []).length) {
       var t = el('circle', {
-        'class': 'toggle', cx: FT.jointX(n), cy: FT.jointY(n) + 10, r: 11
+        'class': 'toggle', cx: FT.jointX(n) + (FT.stacked(n) ? 14 : 0),
+        cy: FT.stacked(n) ? FT.jointY(n) : FT.jointY(n) + 10, r: 11
       }, g);
       t.addEventListener('click', function (ev) {
         ev.stopPropagation();
