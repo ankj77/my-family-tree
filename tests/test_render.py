@@ -111,6 +111,10 @@ class TestOrganicView(unittest.TestCase):
         self.assertIn("hide-labels", html)
         self.assertIn(".hide-labels .leaflabel", html)
 
+    def test_branch_width_is_set_via_style_not_attribute(self):
+        html = _payload_html()
+        self.assertIn("style.strokeWidth", html)
+
 
 if __name__ == "__main__":
     unittest.main()

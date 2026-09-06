@@ -77,7 +77,6 @@ var FT = { views: {} };
     return FT.hasPartner(n) ? FT.SELF_W + FT.BAR / 2 : FT.SELF_W / 2;
   };
   FT.jointY = function (n) {
-    if (FT.leafShaped()) return 0;
     return FT.stacked(n) ? FT.nodeH(n) / 2 : FT.nodeH(n);
   };
 
