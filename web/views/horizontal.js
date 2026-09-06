@@ -23,12 +23,13 @@ FT.views.horizontal = {
       kids.forEach(function (c) { place(c, depth + 1); });
       var first = kids[0], last = kids[kids.length - 1];
       n.y = (first.y + FT.jointY(first) + last.y + FT.jointY(last)) / 2 - FT.jointY(n);
+      var dy = 0;
       if (n.y < subtreeTop) {
-        var dy = subtreeTop - n.y;
+        dy = subtreeTop - n.y;
         kids.forEach(function (c) { shiftDown(c, dy); });
         n.y = subtreeTop;
       }
-      cursor = Math.max(cursor, n.y + FT.nodeH(n) + 18);
+      cursor = Math.max(cursor + dy, n.y + FT.nodeH(n) + 18);
     })(root, 0);
   },
   drawEdges: function (g, root) {
