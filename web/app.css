@@ -27,3 +27,24 @@
   .spouse.placeholder text{fill:#999;font-style:italic;}
   .spouse text{font-size:11px;fill:#333;pointer-events:none;}
   .thumb{pointer-events:none;}
+  #sheet{position:absolute;right:0;top:0;bottom:0;width:320px;background:#fff;
+    border-left:1px solid #ddd;box-shadow:-2px 0 12px rgba(0,0,0,.08);
+    padding:16px;overflow:auto;z-index:20;box-sizing:border-box;font-size:13px;}
+  #sheet.hidden{display:none;}
+  #sheet-close{position:absolute;right:8px;top:8px;width:44px;height:44px;
+    border:0;background:none;font-size:24px;line-height:1;cursor:pointer;color:#666;}
+  .sheet-photo{display:block;width:96px;height:96px;border-radius:50%;
+    object-fit:cover;margin:0 auto 10px;border:1px solid #ccc;}
+  #sheet h3{margin:0 0 2px;text-align:center;font-size:16px;}
+  .sheet-hi{margin:0 0 12px;text-align:center;color:#666;}
+  #sheet dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;}
+  #sheet dt{color:#888;}
+  #sheet dd{margin:0;}
+  .sheet-rel{margin-top:12px;padding-top:10px;border-top:1px solid #eee;line-height:1.9;}
+  .sheet-rel span{color:#888;margin-right:4px;}
+  .sheet-rel a{color:#3a6ea5;text-decoration:none;}
+  @media (max-width:768px){
+    #sheet{right:0;left:0;top:auto;bottom:0;width:auto;max-height:60%;
+      border-left:0;border-top:1px solid #ddd;border-radius:12px 12px 0 0;
+      box-shadow:0 -2px 12px rgba(0,0,0,.12);}
+  }

@@ -67,7 +67,94 @@ var FT = { views: {} };
     return out.length ? out : [p.id];
   };
 
-  FT.select = function (id) { highlight(id); };
+  var ADDRESS_ROWS = [
+    ['line', 'Address'], ['locality', 'Locality'], ['city', 'City'],
+    ['state', 'State'], ['country', 'Country']
+  ];
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  function personRef(id) {
+    var n = FT.byId[id];
+    var label = n ? (FT.label(n)[0]) : id;
+    return '<a href="#" data-goto="' + id + '">' + esc(label) + '</a>';
+  }
+
+  function sheetHtml(p, owner) {
+    var h = '';
+    if (p.photo) h += '<img class="sheet-photo" src="' + esc(p.photo) + '" alt="">';
+    if (p.name) h += '<h3>' + esc(p.name) + '</h3>';
+    if (p.name_hi) h += '<p class="sheet-hi">' + esc(p.name_hi) + '</p>';
+    var rows = '';
+    if (p.born) rows += '<dt>Born</dt><dd>' + esc(p.born) + '</dd>';
+    ADDRESS_ROWS.forEach(function (r) {
+      var v = (p.address || {})[r[0]];
+      if (v) rows += '<dt>' + r[1] + '</dt><dd>' + esc(v) + '</dd>';
+    });
+    if (p.note) rows += '<dt>Note</dt><dd>' + esc(p.note) + '</dd>';
+    if (rows) h += '<dl>' + rows + '</dl>';
+
+    var rel = '';
+    var parent = FT.parentOf[owner.id];
+    if (parent) rel += '<div><span>Parent</span> ' + personRef(parent.id) + '</div>';
+    if (owner.spouses && owner.spouses.length) {
+      rel += '<div><span>Spouse</span> ' +
+        owner.spouses.map(function (s) { return esc(FT.label(s)[0]); }).join(', ') + '</div>';
+    } else if (owner.placeholder) {
+      rel += '<div><span>Spouse</span> <em>not recorded</em></div>';
+    }
+    var kids = owner.children || [];
+    if (kids.length) {
+      rel += '<div><span>Children</span> ' +
+        kids.map(function (c) { return personRef(c.id); }).join(', ') + '</div>';
+    }
+    if (rel) h += '<div class="sheet-rel">' + rel + '</div>';
+    return h;
+  }
+
+  var sheet = document.getElementById('sheet');
+  var sheetBody = document.getElementById('sheet-body');
+
+  FT.closeSheet = function () {
+    sheet.classList.add('hidden');
+    FT.state.selected = null;
+  };
+
+  FT.select = function (id, owner) {
+    var node = owner || FT.byId[id];
+    if (!node) return;
+    var person = node.id === id ? node :
+      (node.spouses || []).filter(function (s) { return s.id === id; })[0] || node;
+    FT.state.selected = id;
+    highlight(node.id);
+    sheetBody.innerHTML = sheetHtml(person, node);
+    sheet.classList.remove('hidden');
+  };
+
+  FT.focus = function (id) {
+    var n = FT.byId[id];
+    if (!n) return;
+    var c = FT.parentOf[id];
+    while (c) { FT.state.collapsed[c.id] = false; c = FT.parentOf[c.id]; }
+    FT.render();
+    var r = stage.getBoundingClientRect();
+    tx = r.width / 2 - (n.x + FT.jointX(n)) * scale;
+    ty = r.height / 2 - n.y * scale;
+    apply();
+    FT.select(id, n);
+  };
+
+  document.getElementById('sheet-close').addEventListener('click', FT.closeSheet);
+  sheetBody.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-goto]');
+    if (!a) return;
+    e.preventDefault();
+    FT.focus(a.getAttribute('data-goto'));
+  });
 
   function textLines(g, lines, cx, y) {
     lines.forEach(function (t, i) {
@@ -215,11 +302,8 @@ var FT = { views: {} };
       if(((n.name||'')+(n.name_hi||'')).toLowerCase().indexOf(q)>=0){ hit=n; break; }
     }
     if(!hit) return;
-    var c=FT.parentOf[hit.id]; while(c){ FT.state.collapsed[c.id]=false; c=FT.parentOf[c.id]; }
-    FT.render();
-    var r=stage.getBoundingClientRect();
-    scale=1; tx=r.width/2-(hit.x+FT.jointX(hit)); ty=r.height/2-(hit.y+FT.nodeH(hit)/2); apply();
-    highlight(hit.id);
+    scale=1;
+    FT.focus(hit.id);
   });
 
   var langBtns=document.querySelectorAll('#toolbar [data-lang]');

@@ -70,5 +70,12 @@ class TestPayload(unittest.TestCase):
         self.assertIn("FT.views.classic", _payload_html())
 
 
+class TestDetailSheet(unittest.TestCase):
+    def test_sheet_markup_is_present(self):
+        html = _payload_html()
+        self.assertIn('id="sheet"', html)
+        self.assertIn("FT.closeSheet", html)
+
+
 if __name__ == "__main__":
     unittest.main()
