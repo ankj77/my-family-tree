@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -75,6 +76,7 @@ class Person:
     note: Optional[str] = None
     status: Optional[str] = None
     address: Address = field(default_factory=Address)
+    photo: Optional[str] = None
 
     def display_name(self) -> str:
         return self.name or self.name_hi or self.id
@@ -133,3 +135,37 @@ def load_people(path: str) -> List[Person]:
             )
         )
     return people
+
+
+PHOTO_EXTS = (".jpg", ".jpeg", ".png", ".webp")
+PHOTO_MAX_BYTES = 150 * 1024
+
+
+def resolve_photos(people: List[Person], photo_dir: str) -> List[str]:
+    warnings = []
+    if not os.path.isdir(photo_dir):
+        return warnings
+    by_id = {p.id: p for p in people}
+    folder = os.path.basename(os.path.normpath(photo_dir))
+    for fname in sorted(os.listdir(photo_dir)):
+        stem, ext = os.path.splitext(fname)
+        if ext.lower() not in PHOTO_EXTS:
+            continue
+        person = by_id.get(stem)
+        if person is None:
+            warnings.append("photo '%s' matches no person id" % fname)
+            continue
+        if person.photo is not None:
+            warnings.append(
+                "photo '%s' ignored; '%s' is already used for '%s'"
+                % (fname, person.photo, stem)
+            )
+            continue
+        person.photo = "%s/%s" % (folder, fname)
+        size = os.path.getsize(os.path.join(photo_dir, fname))
+        if size > PHOTO_MAX_BYTES:
+            warnings.append(
+                "photo '%s' is %dKB (over %dKB) — shrink it: sips -Z 400 %s"
+                % (fname, size // 1024, PHOTO_MAX_BYTES // 1024, os.path.join(photo_dir, fname))
+            )
+    return warnings

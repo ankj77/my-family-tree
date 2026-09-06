@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import sys
 
-from family_tree.model import load_people, LoadError
+from family_tree.model import load_people, resolve_photos, LoadError
 from family_tree.validate import validate, ValidationError
 from family_tree.tree import build_tree
 from family_tree.render import render_html
 
 DATA = "family-tree.yaml"
 OUT = "family-tree.html"
+PHOTOS = "photos"
 
 
 def main() -> int:
@@ -21,6 +22,7 @@ def main() -> int:
     except ValidationError as e:
         print("VALIDATION ERROR: %s" % e, file=sys.stderr)
         return 1
+    warnings = warnings + resolve_photos(people, PHOTOS)
 
     root, unlinked, summary = build_tree(people)
     with open(OUT, "w", encoding="utf-8") as f:

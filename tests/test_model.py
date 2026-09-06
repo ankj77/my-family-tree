@@ -1,8 +1,9 @@
 import os
+import shutil
 import tempfile
 import unittest
 
-from family_tree.model import Person, load_people, LoadError
+from family_tree.model import Person, load_people, resolve_photos, LoadError
 
 
 def _write(text):
@@ -142,6 +143,70 @@ class TestMotherId(unittest.TestCase):
     def test_non_scalar_mother_id_raises(self):
         with self.assertRaises(LoadError):
             load_people(_write("- id: x\n  name: X\n  mother_id: [a, b]\n"))
+
+
+class TestResolvePhotos(unittest.TestCase):
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        self.photos = os.path.join(self.dir, "photos")
+        os.mkdir(self.photos)
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def _touch(self, name, size=10):
+        with open(os.path.join(self.photos, name), "wb") as f:
+            f.write(b"x" * size)
+
+    def test_matches_photo_to_person_by_id(self):
+        self._touch("kannu.jpg")
+        people = [Person(id="kannu", name="Kannu")]
+        warnings = resolve_photos(people, self.photos)
+        self.assertEqual(people[0].photo, "photos/kannu.jpg")
+        self.assertEqual(warnings, [])
+
+    def test_person_without_photo_stays_none(self):
+        people = [Person(id="kannu", name="Kannu")]
+        resolve_photos(people, self.photos)
+        self.assertIsNone(people[0].photo)
+
+    def test_all_supported_extensions_match(self):
+        for ext in ("jpg", "jpeg", "png", "webp"):
+            self._touch("p_%s.%s" % (ext, ext))
+        people = [Person(id="p_%s" % e, name=e) for e in ("jpg", "jpeg", "png", "webp")]
+        resolve_photos(people, self.photos)
+        self.assertTrue(all(p.photo is not None for p in people))
+
+    def test_unrelated_extension_is_ignored(self):
+        self._touch("kannu.txt")
+        people = [Person(id="kannu", name="Kannu")]
+        warnings = resolve_photos(people, self.photos)
+        self.assertIsNone(people[0].photo)
+        self.assertEqual(warnings, [])
+
+    def test_photo_matching_no_person_warns(self):
+        self._touch("nobody.jpg")
+        warnings = resolve_photos([Person(id="kannu", name="Kannu")], self.photos)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("nobody.jpg", warnings[0])
+
+    def test_duplicate_extensions_pick_one_deterministically_and_warn(self):
+        self._touch("kannu.jpg")
+        self._touch("kannu.png")
+        people = [Person(id="kannu", name="Kannu")]
+        warnings = resolve_photos(people, self.photos)
+        self.assertEqual(people[0].photo, "photos/kannu.jpg")
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("kannu.png", warnings[0])
+
+    def test_oversized_photo_warns_with_sips_hint(self):
+        self._touch("kannu.jpg", size=200 * 1024)
+        warnings = resolve_photos([Person(id="kannu", name="Kannu")], self.photos)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("sips", warnings[0])
+
+    def test_missing_photo_dir_is_not_an_error(self):
+        self.assertEqual(resolve_photos([Person(id="k", name="K")], "/nonexistent/dir"), [])
 
 
 if __name__ == "__main__":
