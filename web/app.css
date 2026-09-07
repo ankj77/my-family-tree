@@ -39,8 +39,8 @@
   .branch{fill:none;stroke:var(--bark);stroke-linecap:round;}
   .branch.trunk{stroke-width:16px;stroke:var(--bark-trunk);}
   .branch.hl{stroke:var(--hl);}
-  .leaf{fill:var(--leaf-1);stroke:var(--leaf-2);stroke-width:1px;cursor:pointer;}
-  .leaf.spouseleaf{fill:var(--leaf-spouse);stroke:var(--rail-f);}
+  .leaf{stroke:var(--leaf-2);stroke-width:1px;cursor:pointer;}
+  .leaf.spouseleaf{stroke:var(--rail-f);}
   .leafnode.hl .leaf{stroke:var(--hl);stroke-width:2.5px;}
   .leafnode.deceased .leaf{opacity:.7;}
   .leafnode.deceased .leaflabel{fill:var(--ink-muted);}

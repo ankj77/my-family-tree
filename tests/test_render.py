@@ -184,7 +184,7 @@ class TestCoupleCard(unittest.TestCase):
 
     def test_a_died_value_wins_over_a_living_flag(self):
         html = _payload_html()
-        self.assertIn("p.died || p.life === 'deceased' ? ' deceased' : ''", html)
+        self.assertIn("FT.isDeceased(p) ? ' deceased' : ''", html)
         self.assertIn("dot: p.life === 'living' && !p.died", html)
         self.assertIn("if (p.born && p.died) return p.born + '\u2013' + p.died;", html)
 
@@ -233,6 +233,31 @@ class TestLifeInPayload(unittest.TestCase):
         html = self._html()
         self.assertIn("Died", html)
         self.assertIn("Status", html)
+        self.assertIn("FT.isDeceased(p) ? 'Deceased' : 'Living'", html)
+
+
+class TestIsDeceasedIsCentralized(unittest.TestCase):
+    def test_isDeceased_is_defined_once_and_used_by_card_sheet_and_leaf(self):
+        html = _payload_html()
+        self.assertIn(
+            "FT.isDeceased = function (p) {\n"
+            "    return !!(p.died || p.life === 'deceased');\n"
+            "  };",
+            html,
+        )
+        self.assertIn("FT.isDeceased(p) ? ' deceased' : ''", html)
+        self.assertIn("FT.isDeceased(p) ? 'Deceased' : 'Living'", html)
+        self.assertIn("var deceased = FT.isDeceased(n);", html)
+
+
+class TestOrganicLeafFillSurvivesTheCascade(unittest.TestCase):
+    def test_leaf_fill_is_set_via_style_not_a_presentation_attribute(self):
+        html = _payload_html()
+        self.assertIn(
+            "leaf.style.fill = LEAF_RAMP[(n.depth || 0) % LEAF_RAMP.length];", html
+        )
+        self.assertIn("spouse.style.fill = 'var(--leaf-spouse)';", html)
+        self.assertNotIn("'class': 'leaf', fill:", html)
 
 
 if __name__ == "__main__":

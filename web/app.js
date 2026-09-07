@@ -78,6 +78,10 @@ var FT = { views: {} };
     return { text: parts.join(' · '), dot: p.life === 'living' && !p.died };
   };
 
+  FT.isDeceased = function (p) {
+    return !!(p.died || p.life === 'deceased');
+  };
+
   FT.lifespan = function (p) {
     if (p.born && p.died) return p.born + '–' + p.died;
     if (p.born && p.life === 'deceased') return p.born + '–Deceased';
@@ -131,7 +135,7 @@ var FT = { views: {} };
     if (p.died) rows += '<dt>Died</dt><dd>' + esc(p.died) + '</dd>';
     if (p.life || p.died) {
       rows += '<dt>Status</dt><dd>' +
-        (p.died || p.life === 'deceased' ? 'Deceased' : 'Living') + '</dd>';
+        (FT.isDeceased(p) ? 'Deceased' : 'Living') + '</dd>';
     }
     ADDRESS_ROWS.forEach(function (r) {
       var v = (p.address || {})[r[0]];
@@ -225,7 +229,7 @@ var FT = { views: {} };
     var y = rowIndex * FT.ROW_H;
     var unfilled = !p.id;
     var cls = 'card-row' + (unfilled ? ' unfilled' : '') +
-      (p.died || p.life === 'deceased' ? ' deceased' : '') +
+      (FT.isDeceased(p) ? ' deceased' : '') +
       (p.status === 'uncertain' ? ' uncertain' : '');
     var g = el('g', { 'class': cls, transform: 'translate(0,' + y + ')' }, parent);
     el('rect', {
@@ -272,17 +276,18 @@ var FT = { views: {} };
   var LEAF_RAMP = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];
 
   FT.drawLeaf = function (parent, n) {
-    var deceased = n.died || n.life === 'deceased';
+    var deceased = FT.isDeceased(n);
     var g = el('g', {
       'class': 'leafnode' + (FT.hasPartner(n) ? ' paired' : '') +
         (deceased ? ' deceased' : ''),
       'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
     }, parent);
     var r = 7 + Math.min(6, Math.sqrt(FT.leafCount(n)));
-    var fill = LEAF_RAMP[(n.depth || 0) % LEAF_RAMP.length];
-    el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf', fill: fill }, g);
+    var leaf = el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf' }, g);
+    leaf.style.fill = LEAF_RAMP[(n.depth || 0) % LEAF_RAMP.length];
     if (FT.hasPartner(n)) {
-      el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
+      var spouse = el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
+      spouse.style.fill = 'var(--leaf-spouse)';
     }
     var t = el('text', { y: -r - 5, 'text-anchor': 'middle', 'class': 'leaflabel' }, g);
     t.textContent = FT.label(n)[0];
