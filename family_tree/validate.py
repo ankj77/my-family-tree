@@ -72,6 +72,13 @@ def validate(people: List[Person]) -> List[str]:
         if p.relation in SPOUSE_RELATIONS and p.relation_id is not None:
             spouses_of.setdefault(p.relation_id, set()).add(p.id)
 
+    for owner, spouse_ids in sorted(spouses_of.items()):
+        if len(spouse_ids) > 1:
+            raise ValidationError(
+                "Person '%s' has %d spouses (%s); one spouse per person is expected"
+                % (owner, len(spouse_ids), sorted(spouse_ids))
+            )
+
     warnings = []
     for p in people:
         if p.mother_id is None or p.relation_id is None:

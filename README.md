@@ -28,7 +28,6 @@ person — a `relation` type plus the `relation_id` it points to:
   died: "1961"             # optional, free text like born
   note: "free text"        # optional
   status: uncertain        # optional: uncertain | needs-parent
-  mother_id: wife_id       # optional: only when the father has 2+ recorded wives
   address:                 # optional, all keys optional
     line: House 214
     locality: Sector 14
@@ -67,21 +66,11 @@ recorded spouse renders a dashed **Unknown** box beside them — that placeholde
 drawn by the viewer and is never written to the YAML. A person with no children
 gets no placeholder.
 
-If a man has two or more recorded wives, add `mother_id` to each child so the
-viewer knows which marriage they belong to. Children left without `mother_id`
-hang from the man's own line.
-
-`mother_id` has two different failure modes, and only one of them stops the build:
-
-- If `mother_id` names a person who doesn't exist anywhere in the file, the build
-  **fails** with an error — you can't miss it.
-- If `mother_id` names a real person who is not actually a recorded wife of that
-  child's father (usually a typo that happens to match a different person's id),
-  the build **still succeeds**. It only prints a warning, and the child quietly
-  renders on the father's own line instead of under the wife you meant. Since a
-  successful build looks the same either way, **check the output of
-  `python3 build.py` after adding or changing a `mother_id`** to make sure no such
-  warning appeared.
+**One spouse per person.** Every child has exactly one father and one mother, and
+each person has at most one recorded spouse. If you accidentally give the same
+person two wives — usually a copy-paste with the wrong `relation_id` — the build
+**stops** with an error naming the person and both spouses, so the mistake cannot
+slip through quietly.
 
 ## Recording a death — or that someone is living
 
@@ -154,10 +143,6 @@ EN / हिं / EN+हिं buttons to switch languages. The toolbar wraps to 
 
 ## Limitations
 
-- Children of a man with two or more wives all hang from one shared joint below him,
-  even when each child's `mother_id` correctly records which wife is their mother.
-  The data is right; no view yet draws the children split out under the wife they
-  actually belong to.
 - The organic view is a picture first: names appear only as you zoom in past 1.2×.
   It also gets crowded as the family grows: today's tree has 47 people with no
   recorded children (its "leaves"), and the leaves and their labels stay clear of

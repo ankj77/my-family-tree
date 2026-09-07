@@ -75,6 +75,46 @@ class TestValidate(unittest.TestCase):
         self.assertTrue(any("uncertain" in w for w in warnings))
 
 
+class TestOneSpouseEach(unittest.TestCase):
+    def test_one_spouse_is_fine(self):
+        people = [
+            Person(id="dad", name="Dad", gender="male"),
+            Person(id="mom", name="Mom", gender="female", relation="wife", relation_id="dad"),
+        ]
+        self.assertEqual([w for w in validate(people) if "spouse" in w], [])
+
+    def test_two_spouses_on_one_person_raises(self):
+        people = [
+            Person(id="dad", name="Dad", gender="male"),
+            Person(id="w1", name="W1", gender="female", relation="wife", relation_id="dad"),
+            Person(id="w2", name="W2", gender="female", relation="wife", relation_id="dad"),
+        ]
+        with self.assertRaises(ValidationError):
+            validate(people)
+
+    def test_the_error_names_the_person_and_both_spouses(self):
+        people = [
+            Person(id="dad", name="Dad", gender="male"),
+            Person(id="w1", name="W1", gender="female", relation="wife", relation_id="dad"),
+            Person(id="w2", name="W2", gender="female", relation="wife", relation_id="dad"),
+        ]
+        with self.assertRaises(ValidationError) as ctx:
+            validate(people)
+        msg = str(ctx.exception)
+        self.assertIn("dad", msg)
+        self.assertIn("w1", msg)
+        self.assertIn("w2", msg)
+
+    def test_a_husband_relation_counts_too(self):
+        people = [
+            Person(id="her", name="Her", gender="female"),
+            Person(id="h1", name="H1", gender="male", relation="husband", relation_id="her"),
+            Person(id="h2", name="H2", gender="male", relation="husband", relation_id="her"),
+        ]
+        with self.assertRaises(ValidationError):
+            validate(people)
+
+
 class TestMotherIdValidation(unittest.TestCase):
     def _base(self):
         return [
