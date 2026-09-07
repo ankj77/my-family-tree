@@ -3,7 +3,7 @@ FT.views.organic = {
   label: 'Tree (organic)',
   nodeShape: 'leaf',
   layout: function (root) {
-    var SPREAD = 150 * Math.PI / 180;
+    var SPREAD = (window.innerWidth < 768 ? 84 : 150) * Math.PI / 180;
     var TRUNK = 120;
     var RING = 115;
     (function place(n, a0, a1, depth) {

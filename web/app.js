@@ -528,7 +528,7 @@ var FT = { views: {} };
     var r = stage.getBoundingClientRect();
     var stageW = r.width > 0 ? r.width : window.innerWidth;
     var stageH = r.height > 0 ? r.height : window.innerHeight;
-    var pad = 40;
+    var pad = window.innerWidth < 768 ? 14 : 40;
     scale = Math.min(
       (stageW - pad * 2) / Math.max(1, maxX - minX),
       (stageH - pad * 2) / Math.max(1, maxY - minY)
