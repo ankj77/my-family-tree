@@ -23,7 +23,7 @@ var FT = { views: {} };
   FT.SELF_W = 150; FT.SPOUSE_W = 120; FT.NODE_H = 46;
   FT.BAR = 22; FT.H_GAP = 40; FT.V_GAP = 100;
 
-  FT.state = { lang: 'both', viewId: 'classic', collapsed: {}, selected: null };
+  FT.state = { lang: 'both', viewId: 'classic', collapsed: {}, selected: null, highlighted: null };
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
 
   (function walk(n, parent) {
@@ -154,6 +154,7 @@ var FT = { views: {} };
   FT.closeSheet = function () {
     sheet.classList.add('hidden');
     FT.state.selected = null;
+    FT.state.highlighted = null;
   };
 
   FT.select = function (id, owner) {
@@ -162,6 +163,7 @@ var FT = { views: {} };
     var person = node.id === id ? node :
       (node.spouses || []).filter(function (s) { return s.id === id; })[0] || node;
     FT.state.selected = id;
+    FT.state.highlighted = node.id;
     highlight(node.id);
     sheetBody.innerHTML = sheetHtml(person, node);
     sheet.classList.remove('hidden');
@@ -303,6 +305,7 @@ var FT = { views: {} };
       FT.drawNode(nodes, n);
       FT.visibleChildren(n).forEach(walk);
     })(tree);
+    if (FT.state.highlighted) highlight(FT.state.highlighted);
     apply();
   };
 
@@ -314,9 +317,9 @@ var FT = { views: {} };
     clearHl();
     var cur=id;
     while(cur){
-      var node=vp.querySelector('[data-id="'+cur+'"]');
+      var node=vp.querySelector('[data-id="'+CSS.escape(cur)+'"]');
       if(node) node.classList.add('hl');
-      var edge=vp.querySelector('.edge[data-edge="'+cur+'"]');
+      var edge=vp.querySelector('.edge[data-edge="'+CSS.escape(cur)+'"]');
       if(edge) edge.classList.add('hl');
       cur=FT.parentOf[cur]?FT.parentOf[cur].id:null;
     }
@@ -394,7 +397,7 @@ var FT = { views: {} };
       (stageW - pad * 2) / Math.max(1, maxX - minX),
       (stageH - pad * 2) / Math.max(1, maxY - minY)
     );
-    scale = Math.max(0.05, Math.min(scale, 1.2));
+    scale = Math.min(scale, 1.2);
     tx = pad - minX * scale + (stageW - pad * 2 - (maxX - minX) * scale) / 2;
     ty = pad - minY * scale + (stageH - pad * 2 - (maxY - minY) * scale) / 2;
     apply();
@@ -443,7 +446,7 @@ var FT = { views: {} };
   if(unlinked.length){
     var html='<h4>Unlinked — to place</h4>';
     unlinked.forEach(function(p){
-      html+='<div>• '+(p.name||p.name_hi||p.id)+(p.note?' <em>('+p.note+')</em>':'')+'</div>';
+      html+='<div>• '+esc(p.name||p.name_hi||p.id)+(p.note?' <em>('+esc(p.note)+')</em>':'')+'</div>';
     });
     up.innerHTML=html;
   } else {

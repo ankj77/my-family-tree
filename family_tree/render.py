@@ -46,6 +46,7 @@ def _node_json(node: dict) -> dict:
     return d
 
 
+# ensure_ascii=False keeps Devanagari readable; escape </ so it can't close the script tag
 def _embed(obj) -> str:
     return json.dumps(obj, ensure_ascii=False).replace("</", "<\\/")
 

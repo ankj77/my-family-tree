@@ -190,7 +190,7 @@ class TestResolvePhotos(unittest.TestCase):
         self.assertEqual(len(warnings), 1)
         self.assertIn("nobody.jpg", warnings[0])
 
-    def test_duplicate_extensions_pick_one_deterministically_and_warn(self):
+    def test_duplicate_extensions_pick_alphabetically_first_and_warn(self):
         self._touch("kannu.jpg")
         self._touch("kannu.png")
         people = [Person(id="kannu", name="Kannu")]
@@ -198,6 +198,15 @@ class TestResolvePhotos(unittest.TestCase):
         self.assertEqual(people[0].photo, "photos/kannu.jpg")
         self.assertEqual(len(warnings), 1)
         self.assertIn("kannu.png", warnings[0])
+
+    def test_duplicate_extensions_are_alphabetical_not_priority_ordered(self):
+        self._touch("kannu.jpg")
+        self._touch("kannu.jpeg")
+        people = [Person(id="kannu", name="Kannu")]
+        warnings = resolve_photos(people, self.photos)
+        self.assertEqual(people[0].photo, "photos/kannu.jpeg")
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("kannu.jpg", warnings[0])
 
     def test_oversized_photo_warns_with_sips_hint(self):
         self._touch("kannu.jpg", size=200 * 1024)

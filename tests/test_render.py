@@ -116,5 +116,21 @@ class TestOrganicView(unittest.TestCase):
         self.assertIn("style.strokeWidth", html)
 
 
+class TestScriptConcatenationOrder(unittest.TestCase):
+    def test_app_js_precedes_views_which_precede_init(self):
+        html = _payload_html()
+        app_js_pos = html.index("var FT = { views: {} };")
+        classic_pos = html.index("FT.views.classic")
+        horizontal_pos = html.index("FT.views.horizontal")
+        organic_pos = html.index("FT.views.organic")
+        init_pos = html.index("FT.init();")
+        self.assertLess(app_js_pos, classic_pos)
+        self.assertLess(app_js_pos, horizontal_pos)
+        self.assertLess(app_js_pos, organic_pos)
+        self.assertLess(classic_pos, init_pos)
+        self.assertLess(horizontal_pos, init_pos)
+        self.assertLess(organic_pos, init_pos)
+
+
 if __name__ == "__main__":
     unittest.main()

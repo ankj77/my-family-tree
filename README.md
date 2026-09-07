@@ -69,6 +69,18 @@ If a man has two or more recorded wives, add `mother_id` to each child so the
 viewer knows which marriage they belong to. Children left without `mother_id`
 hang from the man's own line.
 
+`mother_id` has two different failure modes, and only one of them stops the build:
+
+- If `mother_id` names a person who doesn't exist anywhere in the file, the build
+  **fails** with an error — you can't miss it.
+- If `mother_id` names a real person who is not actually a recorded wife of that
+  child's father (usually a typo that happens to match a different person's id),
+  the build **still succeeds**. It only prints a warning, and the child quietly
+  renders on the father's own line instead of under the wife you meant. Since a
+  successful build looks the same either way, **check the output of
+  `python3 build.py` after adding or changing a `mother_id`** to make sure no such
+  warning appeared.
+
 ## Photos
 
 Drop a file into `photos/` named after the person's id — `photos/chandgiram.jpg`.
