@@ -6,7 +6,7 @@ from family_tree.model import Person
 from family_tree.tree import Summary
 
 WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "web")
-VIEW_FILES = ("classic.js", "horizontal.js", "organic.js", "poster.js")
+VIEW_FILES = ("classic.js", "horizontal.js", "poster.js")
 
 
 def _read(*parts) -> str:

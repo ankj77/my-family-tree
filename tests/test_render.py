@@ -148,7 +148,7 @@ class TestPosterView(unittest.TestCase):
     def test_poster_view_is_registered_and_listed(self):
         html = _payload_html()
         self.assertIn("FT.views.poster", html)
-        self.assertIn("Poster (illustrated)", html)
+        self.assertIn("Tree (organic)", html)
         self.assertIn("'poster'", html)
 
     def test_poster_caps_depth_and_the_core_honours_it(self):
@@ -200,66 +200,6 @@ class TestPlaceholderHindiIsConditional(unittest.TestCase):
     def test_both_mode_returns_one_line_when_there_is_no_devanagari_name(self):
         html = _payload_html()
         self.assertIn("return hi ? [en, hi] : [en];", html)
-
-
-class TestTreeNodeCards(unittest.TestCase):
-    def test_the_floating_chip_is_replaced_by_an_attached_card(self):
-        html = _payload_html()
-        self.assertIn("leaf-card", html)
-        self.assertNotIn("'class': 'leaf-chip'", html)
-
-    def test_the_card_carries_a_lifespan_line(self):
-        html = _payload_html()
-        self.assertIn("leaf-meta", html)
-
-    def test_the_card_is_flush_with_the_leaf_not_floating(self):
-        html = _payload_html()
-        self.assertIn("var cardBottom = -r * 0.72;", html)
-
-    def test_cards_still_hide_when_zoomed_out(self):
-        html = _payload_html()
-        self.assertIn("#stage.hide-labels .leaf-card", html)
-
-
-class TestOrganicView(unittest.TestCase):
-    def test_organic_view_is_registered(self):
-        self.assertIn("FT.views.organic", _payload_html())
-
-    def test_stable_hash_and_leaf_shape_live_in_the_shared_core(self):
-        html = _payload_html()
-        self.assertIn("FT.hash01", html)
-        self.assertIn("FT.leafCount", html)
-        self.assertIn("nodeShape === 'leaf'", html)
-
-    def test_branches_keep_the_edge_class_so_highlighting_still_finds_them(self):
-        html = _payload_html()
-        self.assertIn("'edge branch'", html)
-        self.assertNotIn("'branch'", html)
-
-    def test_labels_are_hidden_below_the_zoom_threshold(self):
-        html = _payload_html()
-        self.assertIn("hide-labels", html)
-        self.assertIn(".hide-labels .leaflabel", html)
-
-    def test_branch_width_is_set_via_style_not_attribute(self):
-        html = _payload_html()
-        self.assertIn("style.strokeWidth", html)
-
-
-class TestScriptConcatenationOrder(unittest.TestCase):
-    def test_app_js_precedes_views_which_precede_init(self):
-        html = _payload_html()
-        app_js_pos = html.index("var FT = { views: {} };")
-        classic_pos = html.index("FT.views.classic")
-        horizontal_pos = html.index("FT.views.horizontal")
-        organic_pos = html.index("FT.views.organic")
-        init_pos = html.index("FT.init();")
-        self.assertLess(app_js_pos, classic_pos)
-        self.assertLess(app_js_pos, horizontal_pos)
-        self.assertLess(app_js_pos, organic_pos)
-        self.assertLess(classic_pos, init_pos)
-        self.assertLess(horizontal_pos, init_pos)
-        self.assertLess(organic_pos, init_pos)
 
 
 class TestThemeTokens(unittest.TestCase):
@@ -361,7 +301,7 @@ class TestSheetRendersLifeStatus(unittest.TestCase):
 
 
 class TestIsDeceasedIsCentralized(unittest.TestCase):
-    def test_isDeceased_is_defined_once_and_used_by_card_sheet_and_leaf(self):
+    def test_isDeceased_is_defined_once_and_used_by_the_card_and_the_sheet(self):
         html = _payload_html()
         self.assertIn(
             "FT.isDeceased = function (p) {\n"
@@ -371,17 +311,7 @@ class TestIsDeceasedIsCentralized(unittest.TestCase):
         )
         self.assertIn("FT.isDeceased(p) ? ' deceased' : ''", html)
         self.assertIn("FT.isDeceased(p) ? 'Deceased' : 'Living'", html)
-        self.assertIn("var deceased = FT.isDeceased(n);", html)
-
-
-class TestOrganicLeafFillSurvivesTheCascade(unittest.TestCase):
-    def test_leaf_fill_is_set_via_style_not_a_presentation_attribute(self):
-        html = _payload_html()
-        self.assertIn(
-            "leaf.style.fill = LEAF_RAMP[(n.depth || 0) % LEAF_RAMP.length];", html
-        )
-        self.assertIn("spouse.style.fill = 'var(--leaf-spouse)';", html)
-        self.assertNotIn("'class': 'leaf', fill:", html)
+        self.assertNotIn("var deceased = FT.isDeceased(n);", html)
 
 
 if __name__ == "__main__":

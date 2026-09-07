@@ -45,17 +45,6 @@
   svg{width:100%;height:100%;display:block;}
   .edge{fill:none;stroke:var(--connector);stroke-width:1.25px;}
   .edge.hl{stroke:var(--hl);stroke-width:2.5px;}
-  .branch{fill:none;stroke:var(--bark);stroke-linecap:round;}
-  .branch.trunk{stroke-width:16px;stroke:var(--bark-trunk);}
-  .branch.hl{stroke:var(--hl);}
-  .leaf{stroke:var(--leaf-2);stroke-width:1px;cursor:pointer;}
-  .leaf.spouseleaf{stroke:var(--rail-f);}
-  .leafnode.hl .leaf{stroke:var(--hl);stroke-width:2.5px;}
-  .leafnode.deceased .leaf{opacity:.7;}
-  .leafnode.deceased .leaflabel{fill:var(--ink-muted);}
-  .leaflabel{font-size:11.5px;font-weight:600;font-family:var(--serif);
-    fill:var(--name-ink);pointer-events:none;}
-  #stage.hide-labels .leaflabel{display:none;}
   .toggle{fill:var(--rail-m);cursor:pointer;pointer-events:none;}
   .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
   #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:var(--card);
@@ -126,11 +115,6 @@
   .poster-leaf{stroke:none;}
   #stage[data-view="poster"] .toggle,
   #stage[data-view="poster"] .toggle-hit{display:none;}
-  .leaf-card{fill:var(--card);stroke:var(--edge);stroke-width:1.25px;pointer-events:none;}
-  #stage.hide-labels .leaf-card{display:none;}
-  .leaf-meta{font-size:9.5px;fill:var(--ink-muted);pointer-events:none;}
-  #stage.hide-labels .leaf-meta{display:none;}
-  .leafnode.deceased .leaf-meta{fill:var(--ink-muted);}
   .parent-card .pc-name{font-family:var(--serif);font-size:14.5px;font-weight:600;
     fill:var(--name-ink);pointer-events:none;}
   .pc-rule{stroke:var(--rule);stroke-width:1px;}
@@ -236,10 +220,7 @@
     if (view && view.cardStyle === 'parents') return FT.POSTER_CARD_H;
     return FT.rows(n) * FT.ROW_H;
   };
-  FT.jointX = function () {
-    var view = FT.views[FT.state.viewId];
-    return view && view.nodeShape === 'leaf' ? 0 : FT.CARD_W / 2;
-  };
+  FT.jointX = function () { return FT.CARD_W / 2; };
   FT.jointY = function (n) { return FT.nodeH(n); };
 
   FT.visibleChildren = function (n) {
@@ -452,47 +433,6 @@
     return g;
   }
 
-  var LEAF_RAMP = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];
-
-  FT.drawLeaf = function (parent, n) {
-    var deceased = FT.isDeceased(n);
-    var g = el('g', {
-      'class': 'leafnode' + (FT.hasPartner(n) ? ' paired' : '') +
-        (deceased ? ' deceased' : ''),
-      'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
-    }, parent);
-    var r = 7 + Math.min(6, Math.sqrt(FT.leafCount(n)));
-    var leaf = el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf' }, g);
-    leaf.style.fill = LEAF_RAMP[(n.depth || 0) % LEAF_RAMP.length];
-    if (FT.hasPartner(n)) {
-      var spouse = el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
-      spouse.style.fill = 'var(--leaf-spouse)';
-    }
-    var cardBottom = -r * 0.72;
-    var span = FT.lifespan(n);
-    var cardH = span ? 38 : 25;
-    var name = el('text', {
-      y: cardBottom - (span ? 24 : 9), 'text-anchor': 'middle', 'class': 'leaflabel'
-    }, g);
-    name.textContent = FT.label(n)[0];
-    var w = name.getComputedTextLength();
-    var meta = null;
-    if (span) {
-      meta = el('text', {
-        y: cardBottom - 9, 'text-anchor': 'middle', 'class': 'leaf-meta'
-      }, g);
-      meta.textContent = span;
-      w = Math.max(w, meta.getComputedTextLength());
-    }
-    w = Math.max(60, w + 18);
-    var card = el('rect', {
-      'class': 'leaf-card', x: -w / 2, y: cardBottom - cardH, width: w, height: cardH, rx: 8
-    });
-    g.insertBefore(card, name);
-    g.addEventListener('click', function () { FT.select(n.id, n); });
-    return g;
-  };
-
   FT.parentsOf = function (n) {
     var p = FT.parentOf[n.id];
     if (!p) return { father: null, mother: null };
@@ -545,7 +485,6 @@
 
   FT.drawNode = function (parent, n) {
     var view = FT.views[FT.state.viewId];
-    if (view && view.nodeShape === 'leaf') return FT.drawLeaf(parent, n);
     if (view && view.cardStyle === 'parents') return FT.drawParentCard(parent, n);
     var g = el('g', {
       'class': 'card', 'data-id': n.id,
@@ -615,7 +554,6 @@
   var tx=40, ty=20, scale=1, dragging=false, lx=0, ly=0;
   function apply(){
     vp.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')');
-    stage.classList.toggle('hide-labels', scale < 1.2);
   }
   stage.addEventListener('mousedown',function(e){ dragging=true; lx=e.clientX; ly=e.clientY; stage.classList.add('grabbing'); });
   window.addEventListener('mousemove',function(e){ if(!dragging) return; tx+=e.clientX-lx; ty+=e.clientY-ly; lx=e.clientX; ly=e.clientY; apply(); });
@@ -651,7 +589,7 @@
   }, {passive:false});
   stage.addEventListener('touchend',function(e){ if(e.touches.length===0) touch=null; });
 
-  var VIEW_ORDER = ['classic', 'horizontal', 'organic', 'poster'];
+  var VIEW_ORDER = ['classic', 'horizontal', 'poster'];
 
   FT.placeholderName = function (owner, gender) {
     var en = (owner.name || owner.name_hi || owner.id) +
@@ -692,17 +630,13 @@
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     var cap = FT.maxDepth();
     (function walk(n, depth) {
-      var w = view.nodeShape === 'leaf' ? 30 : FT.nodeW(n);
-      var h = view.nodeShape === 'leaf' ? 30 : FT.nodeH(n);
+      var w = FT.nodeW(n);
+      var h = FT.nodeH(n);
       minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
       minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
       if (depth >= cap) return;
       FT.visibleChildren(n).forEach(function (c) { walk(c, depth + 1); });
     })(tree, 0);
-    if (view.nodeShape === 'leaf') {
-      minX = Math.min(minX, -10); maxX = Math.max(maxX, 10);
-      minY = Math.min(minY, 30); maxY = Math.max(maxY, 50);
-    }
     if (view.extentPad) {
       minX = Math.min(minX, view.extentPad.minX); maxX = Math.max(maxX, view.extentPad.maxX);
       minY = Math.min(minY, view.extentPad.minY); maxY = Math.max(maxY, view.extentPad.maxY);
@@ -885,55 +819,9 @@ FT.views.horizontal = {
   }
 };
 
-FT.views.organic = {
-  id: 'organic',
-  label: 'Tree (organic)',
-  nodeShape: 'leaf',
-  layout: function (root) {
-    var SPREAD = (window.innerWidth < 768 ? 84 : 150) * Math.PI / 180;
-    var TRUNK = 120;
-    var RING = 115;
-    (function place(n, a0, a1, depth) {
-      n.depth = depth;
-      var mid = (a0 + a1) / 2;
-      var wobble = (FT.hash01(n.id) - 0.5) * (a1 - a0) * 0.25;
-      var ang = mid + wobble;
-      var r = TRUNK + depth * RING;
-      n.ang = ang;
-      n.x = r * Math.sin(ang);
-      n.y = -r * Math.cos(ang);
-      var kids = FT.visibleChildren(n);
-      if (!kids.length) return;
-      var total = kids.reduce(function (s, c) { return s + FT.leafCount(c); }, 0);
-      var cur = a0;
-      kids.forEach(function (c) {
-        var share = (a1 - a0) * (FT.leafCount(c) / total);
-        place(c, cur, cur + share, depth + 1);
-        cur += share;
-      });
-    })(root, -SPREAD / 2, SPREAD / 2, 0);
-  },
-  drawEdges: function (g, root) {
-    FT.edge(g, 'M0,40 L' + root.x + ',' + root.y).setAttribute(
-      'class', 'branch trunk'
-    );
-    (function walk(n) {
-      FT.visibleChildren(n).forEach(function (c) {
-        var cx = n.x + (c.x - n.x) * 0.35 + Math.sin(n.ang) * 20;
-        var cy = n.y + (c.y - n.y) * 0.35 - Math.cos(n.ang) * 20;
-        var p = FT.edge(g,
-          'M' + n.x + ',' + n.y + ' Q' + cx + ',' + cy + ' ' + c.x + ',' + c.y, c.id);
-        p.setAttribute('class', 'edge branch');
-        p.style.strokeWidth = Math.max(1.5, Math.sqrt(FT.leafCount(c)) * 1.8) + 'px';
-        walk(c);
-      });
-    })(root);
-  }
-};
-
 FT.views.poster = {
   id: 'poster',
-  label: 'Poster (illustrated)',
+  label: 'Tree (organic)',
   nodeShape: 'box',
   cardStyle: 'parents',
   maxDepth: 2,

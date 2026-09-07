@@ -68,10 +68,7 @@ var FT = { views: {} };
     if (view && view.cardStyle === 'parents') return FT.POSTER_CARD_H;
     return FT.rows(n) * FT.ROW_H;
   };
-  FT.jointX = function () {
-    var view = FT.views[FT.state.viewId];
-    return view && view.nodeShape === 'leaf' ? 0 : FT.CARD_W / 2;
-  };
+  FT.jointX = function () { return FT.CARD_W / 2; };
   FT.jointY = function (n) { return FT.nodeH(n); };
 
   FT.visibleChildren = function (n) {
@@ -284,47 +281,6 @@ var FT = { views: {} };
     return g;
   }
 
-  var LEAF_RAMP = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];
-
-  FT.drawLeaf = function (parent, n) {
-    var deceased = FT.isDeceased(n);
-    var g = el('g', {
-      'class': 'leafnode' + (FT.hasPartner(n) ? ' paired' : '') +
-        (deceased ? ' deceased' : ''),
-      'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
-    }, parent);
-    var r = 7 + Math.min(6, Math.sqrt(FT.leafCount(n)));
-    var leaf = el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf' }, g);
-    leaf.style.fill = LEAF_RAMP[(n.depth || 0) % LEAF_RAMP.length];
-    if (FT.hasPartner(n)) {
-      var spouse = el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
-      spouse.style.fill = 'var(--leaf-spouse)';
-    }
-    var cardBottom = -r * 0.72;
-    var span = FT.lifespan(n);
-    var cardH = span ? 38 : 25;
-    var name = el('text', {
-      y: cardBottom - (span ? 24 : 9), 'text-anchor': 'middle', 'class': 'leaflabel'
-    }, g);
-    name.textContent = FT.label(n)[0];
-    var w = name.getComputedTextLength();
-    var meta = null;
-    if (span) {
-      meta = el('text', {
-        y: cardBottom - 9, 'text-anchor': 'middle', 'class': 'leaf-meta'
-      }, g);
-      meta.textContent = span;
-      w = Math.max(w, meta.getComputedTextLength());
-    }
-    w = Math.max(60, w + 18);
-    var card = el('rect', {
-      'class': 'leaf-card', x: -w / 2, y: cardBottom - cardH, width: w, height: cardH, rx: 8
-    });
-    g.insertBefore(card, name);
-    g.addEventListener('click', function () { FT.select(n.id, n); });
-    return g;
-  };
-
   FT.parentsOf = function (n) {
     var p = FT.parentOf[n.id];
     if (!p) return { father: null, mother: null };
@@ -377,7 +333,6 @@ var FT = { views: {} };
 
   FT.drawNode = function (parent, n) {
     var view = FT.views[FT.state.viewId];
-    if (view && view.nodeShape === 'leaf') return FT.drawLeaf(parent, n);
     if (view && view.cardStyle === 'parents') return FT.drawParentCard(parent, n);
     var g = el('g', {
       'class': 'card', 'data-id': n.id,
@@ -447,7 +402,6 @@ var FT = { views: {} };
   var tx=40, ty=20, scale=1, dragging=false, lx=0, ly=0;
   function apply(){
     vp.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')');
-    stage.classList.toggle('hide-labels', scale < 1.2);
   }
   stage.addEventListener('mousedown',function(e){ dragging=true; lx=e.clientX; ly=e.clientY; stage.classList.add('grabbing'); });
   window.addEventListener('mousemove',function(e){ if(!dragging) return; tx+=e.clientX-lx; ty+=e.clientY-ly; lx=e.clientX; ly=e.clientY; apply(); });
@@ -483,7 +437,7 @@ var FT = { views: {} };
   }, {passive:false});
   stage.addEventListener('touchend',function(e){ if(e.touches.length===0) touch=null; });
 
-  var VIEW_ORDER = ['classic', 'horizontal', 'organic', 'poster'];
+  var VIEW_ORDER = ['classic', 'horizontal', 'poster'];
 
   FT.placeholderName = function (owner, gender) {
     var en = (owner.name || owner.name_hi || owner.id) +
@@ -524,17 +478,13 @@ var FT = { views: {} };
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     var cap = FT.maxDepth();
     (function walk(n, depth) {
-      var w = view.nodeShape === 'leaf' ? 30 : FT.nodeW(n);
-      var h = view.nodeShape === 'leaf' ? 30 : FT.nodeH(n);
+      var w = FT.nodeW(n);
+      var h = FT.nodeH(n);
       minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
       minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
       if (depth >= cap) return;
       FT.visibleChildren(n).forEach(function (c) { walk(c, depth + 1); });
     })(tree, 0);
-    if (view.nodeShape === 'leaf') {
-      minX = Math.min(minX, -10); maxX = Math.max(maxX, 10);
-      minY = Math.min(minY, 30); maxY = Math.max(maxY, 50);
-    }
     if (view.extentPad) {
       minX = Math.min(minX, view.extentPad.minX); maxX = Math.max(maxX, view.extentPad.maxX);
       minY = Math.min(minY, view.extentPad.minY); maxY = Math.max(maxY, view.extentPad.maxY);

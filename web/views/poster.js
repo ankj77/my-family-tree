@@ -1,6 +1,6 @@
 FT.views.poster = {
   id: 'poster',
-  label: 'Poster (illustrated)',
+  label: 'Tree (organic)',
   nodeShape: 'box',
   cardStyle: 'parents',
   maxDepth: 2,
