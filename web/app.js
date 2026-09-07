@@ -62,7 +62,12 @@ var FT = { views: {} };
     return 1 + partners;
   };
   FT.nodeW = function () { return FT.CARD_W; };
-  FT.nodeH = function (n) { return FT.rows(n) * FT.ROW_H; };
+  FT.POSTER_CARD_H = 104;
+  FT.nodeH = function (n) {
+    var view = FT.views[FT.state.viewId];
+    if (view && view.cardStyle === 'parents') return FT.POSTER_CARD_H;
+    return FT.rows(n) * FT.ROW_H;
+  };
   FT.jointX = function () {
     var view = FT.views[FT.state.viewId];
     return view && view.nodeShape === 'leaf' ? 0 : FT.CARD_W / 2;
@@ -295,8 +300,63 @@ var FT = { views: {} };
       var spouse = el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
       spouse.style.fill = 'var(--leaf-spouse)';
     }
-    var t = el('text', { y: -r - 5, 'text-anchor': 'middle', 'class': 'leaflabel' }, g);
+    var t = el('text', { y: -r - 9, 'text-anchor': 'middle', 'class': 'leaflabel' }, g);
     t.textContent = FT.label(n)[0];
+    var w = t.getComputedTextLength() + 16;
+    var chip = el('rect', {
+      'class': 'leaf-chip', x: -w / 2, y: -r - 22, width: w, height: 18, rx: 9
+    });
+    g.insertBefore(chip, t);
+    g.addEventListener('click', function () { FT.select(n.id, n); });
+    return g;
+  };
+
+  FT.parentsOf = function (n) {
+    var p = FT.parentOf[n.id];
+    if (!p) return { father: null, mother: null };
+    var spouse = (p.spouses && p.spouses.length) ? p.spouses[0] : null;
+    if (p.gender === 'female') return { mother: p, father: spouse };
+    return { father: p, mother: spouse };
+  };
+
+  function personIcon(g, cx, cy, gender) {
+    var tint = gender === 'female' ? 'var(--rail-f)' : 'var(--rail-m)';
+    var bg = el('circle', { 'class': 'pc-icon-bg', cx: cx, cy: cy, r: 9 }, g);
+    bg.style.fill = tint;
+    var head = el('circle', { 'class': 'pc-icon-fg', cx: cx, cy: cy - 2.4, r: 2.9 }, g);
+    head.style.fill = tint;
+    var body = el('path', {
+      'class': 'pc-icon-fg',
+      d: 'M' + (cx - 4.8) + ',' + (cy + 6.4) + ' a4.8,4.4 0 0 1 9.6,0 Z'
+    }, g);
+    body.style.fill = tint;
+  }
+
+  FT.drawParentCard = function (parent, n) {
+    var H = FT.POSTER_CARD_H;
+    var g = el('g', {
+      'class': 'card parent-card', 'data-id': n.id,
+      transform: 'translate(' + n.x + ',' + n.y + ')'
+    }, parent);
+    el('rect', { 'class': 'card-shadow', x: 0, y: 3, width: FT.CARD_W, height: H, rx: 10 }, g);
+    el('rect', { 'class': 'card-bg', width: FT.CARD_W, height: H, rx: 10 }, g);
+    el('rect', { 'class': 'card-hit', width: FT.CARD_W, height: H }, g);
+    var title = el('text', {
+      'class': 'pc-name', x: FT.CARD_W / 2, y: 26, 'text-anchor': 'middle'
+    }, g);
+    title.textContent = FT.label(n)[0];
+    fitText(title, FT.CARD_W - 24);
+    el('line', { 'class': 'pc-rule', x1: 18, y1: 38, x2: FT.CARD_W - 18, y2: 38 }, g);
+    var pr = FT.parentsOf(n);
+    [['Father', pr.father, 'male'], ['Mother', pr.mother, 'female']].forEach(function (row, i) {
+      var y = 58 + i * 30;
+      personIcon(g, 32, y, row[2]);
+      var lab = el('text', { 'class': 'pc-label', x: 52, y: y - 3 }, g);
+      lab.textContent = row[0];
+      var val = el('text', { 'class': 'pc-value', x: 52, y: y + 11 }, g);
+      val.textContent = row[1] ? FT.label(row[1])[0] : '(Unknown)';
+      fitText(val, FT.CARD_W - 52 - 14);
+    });
     g.addEventListener('click', function () { FT.select(n.id, n); });
     return g;
   };
@@ -304,6 +364,7 @@ var FT = { views: {} };
   FT.drawNode = function (parent, n) {
     var view = FT.views[FT.state.viewId];
     if (view && view.nodeShape === 'leaf') return FT.drawLeaf(parent, n);
+    if (view && view.cardStyle === 'parents') return FT.drawParentCard(parent, n);
     var g = el('g', {
       'class': 'card', 'data-id': n.id,
       transform: 'translate(' + n.x + ',' + n.y + ')'

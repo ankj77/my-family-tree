@@ -2,6 +2,7 @@ FT.views.poster = {
   id: 'poster',
   label: 'Poster (illustrated)',
   nodeShape: 'box',
+  cardStyle: 'parents',
   maxDepth: 2,
   hideToggles: true,
   extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },

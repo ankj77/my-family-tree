@@ -171,6 +171,27 @@ class TestPosterView(unittest.TestCase):
         self.assertIn('#stage[data-view="poster"] .toggle', html)
 
 
+class TestPosterParentCards(unittest.TestCase):
+    def test_poster_declares_the_parents_card_style(self):
+        html = _payload_html()
+        self.assertIn("cardStyle: 'parents'", html)
+        self.assertIn("FT.drawParentCard", html)
+
+    def test_parent_resolution_helper_exists(self):
+        html = _payload_html()
+        self.assertIn("FT.parentsOf", html)
+
+    def test_card_shows_father_and_mother_with_unknown_fallback(self):
+        html = _payload_html()
+        self.assertIn("'Father'", html)
+        self.assertIn("'Mother'", html)
+        self.assertIn("(Unknown)", html)
+
+    def test_parent_card_height_is_its_own_constant(self):
+        html = _payload_html()
+        self.assertIn("FT.POSTER_CARD_H", html)
+
+
 class TestOrganicView(unittest.TestCase):
     def test_organic_view_is_registered(self):
         self.assertIn("FT.views.organic", _payload_html())
