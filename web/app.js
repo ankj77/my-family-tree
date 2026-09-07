@@ -561,17 +561,124 @@ var FT = { views: {} };
     document.getElementById('toolbar').classList.toggle('show-extras');
   });
 
-  document.getElementById('search').addEventListener('keydown',function(e){
-    if(e.key!=='Enter') return;
-    var q=e.target.value.trim().toLowerCase(); if(!q) return;
-    var hit=null;
-    for(var i=0;i<FT.nodes.length;i++){
-      var n=FT.nodes[i];
-      if(((n.name||'')+(n.name_hi||'')).toLowerCase().indexOf(q)>=0){ hit=n; break; }
+  var RANK_PREFIX = 0, RANK_SUBSTRING = 1, RANK_SUBSEQUENCE = 2;
+
+  function subsequence(hay, needle) {
+    var i = 0;
+    for (var j = 0; j < hay.length && i < needle.length; j++) {
+      if (hay[j] === needle[i]) i++;
     }
-    if(!hit) return;
-    scale=1;
-    FT.focus(hit.id);
+    return i === needle.length;
+  }
+
+  FT.searchMatches = function (q, limit) {
+    var needle = q.trim().toLowerCase();
+    if (!needle) return { list: [], total: 0 };
+    var hits = [];
+    FT.nodes.forEach(function (n) {
+      var fields = [n.name || '', n.name_hi || ''];
+      var best = null;
+      fields.forEach(function (f) {
+        var hay = f.toLowerCase();
+        if (!hay) return;
+        var rank = null;
+        if (hay.indexOf(needle) === 0) rank = RANK_PREFIX;
+        else if (hay.indexOf(needle) > 0) rank = RANK_SUBSTRING;
+        else if (subsequence(hay, needle)) rank = RANK_SUBSEQUENCE;
+        if (rank !== null && (best === null || rank < best)) best = rank;
+      });
+      if (best !== null) hits.push({ node: n, rank: best });
+    });
+    hits.sort(function (a, b) {
+      if (a.rank !== b.rank) return a.rank - b.rank;
+      return FT.label(a.node)[0].localeCompare(FT.label(b.node)[0]);
+    });
+    return { list: hits.slice(0, limit || 12), total: hits.length };
+  };
+
+  var searchBox = document.getElementById('search');
+  var suggest = document.getElementById('suggest');
+  var picked = -1;
+
+  function hideSuggest() {
+    suggest.classList.add('hidden');
+    suggest.innerHTML = '';
+    picked = -1;
+  }
+
+  function placeSuggest() {
+    var r = searchBox.getBoundingClientRect();
+    suggest.style.left = r.left + 'px';
+    suggest.style.top = (r.bottom + 4) + 'px';
+    suggest.style.width = Math.max(220, r.width) + 'px';
+  }
+
+  function renderSuggest() {
+    var res = FT.searchMatches(searchBox.value);
+    if (!res.list.length) { hideSuggest(); return; }
+    var html = res.list.map(function (m, i) {
+      var parent = FT.parentOf[m.node.id];
+      var hint = parent ? 'child of ' + esc(FT.label(parent)[0]) : 'root ancestor';
+      return '<button class="sg-row" data-goto="' + esc(m.node.id) + '" data-i="' + i + '">' +
+        '<span class="sg-name">' + esc(FT.label(m.node)[0]) + '</span>' +
+        '<span class="sg-hint">' + hint + '</span></button>';
+    }).join('');
+    if (res.total > res.list.length) {
+      html += '<p class="sg-more">' + (res.total - res.list.length) + ' more…</p>';
+    }
+    suggest.innerHTML = html;
+    placeSuggest();
+    suggest.classList.remove('hidden');
+    picked = -1;
+  }
+
+  function mark() {
+    var rows = suggest.querySelectorAll('.sg-row');
+    for (var i = 0; i < rows.length; i++) {
+      rows[i].classList.toggle('on', i === picked);
+    }
+    if (picked >= 0 && rows[picked]) rows[picked].scrollIntoView({ block: 'nearest' });
+  }
+
+  function go(id) {
+    hideSuggest();
+    searchBox.blur();
+    FT.focus(id);
+  }
+
+  searchBox.addEventListener('input', renderSuggest);
+  searchBox.addEventListener('focus', function () {
+    if (searchBox.value.trim()) renderSuggest();
+  });
+
+  searchBox.addEventListener('keydown', function (e) {
+    var rows = suggest.querySelectorAll('.sg-row');
+    if (e.key === 'ArrowDown' && rows.length) {
+      e.preventDefault(); picked = (picked + 1) % rows.length; mark(); return;
+    }
+    if (e.key === 'ArrowUp' && rows.length) {
+      e.preventDefault(); picked = (picked <= 0 ? rows.length : picked) - 1; mark(); return;
+    }
+    if (e.key === 'Escape') { hideSuggest(); return; }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (picked >= 0 && rows[picked]) { go(rows[picked].getAttribute('data-goto')); return; }
+      var res = FT.searchMatches(searchBox.value, 1);
+      if (res.list.length) go(res.list[0].node.id);
+    }
+  });
+
+  suggest.addEventListener('click', function (e) {
+    var row = e.target.closest('.sg-row');
+    if (row) go(row.getAttribute('data-goto'));
+  });
+
+  document.addEventListener('click', function (e) {
+    if (e.target !== searchBox && !suggest.contains(e.target)) hideSuggest();
+  });
+
+  window.addEventListener('resize', function () {
+    if (!suggest.classList.contains('hidden')) placeSuggest();
   });
 
   var langBtns=document.querySelectorAll('#toolbar [data-lang]');

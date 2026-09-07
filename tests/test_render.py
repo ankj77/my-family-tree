@@ -227,6 +227,33 @@ class TestProgressiveGenerations(unittest.TestCase):
         self.assertIn("FT.treeDepth", html)
 
 
+class TestSearchSuggestions(unittest.TestCase):
+    def test_suggestion_panel_and_matcher_exist(self):
+        html = _payload_html()
+        self.assertIn('id="suggest"', html)
+        self.assertIn("FT.searchMatches", html)
+
+    def test_matcher_ranks_prefix_then_substring_then_subsequence(self):
+        html = _payload_html()
+        self.assertIn("RANK_PREFIX", html)
+        self.assertIn("RANK_SUBSTRING", html)
+        self.assertIn("RANK_SUBSEQUENCE", html)
+
+    def test_it_searches_devanagari_as_well_as_latin(self):
+        html = _payload_html()
+        self.assertIn("n.name_hi", html)
+
+    def test_suggestion_rows_escape_every_interpolated_value(self):
+        html = _payload_html()
+        self.assertIn("esc(FT.label(m.node)[0])", html)
+
+    def test_keyboard_navigation_is_wired(self):
+        html = _payload_html()
+        self.assertIn("ArrowDown", html)
+        self.assertIn("ArrowUp", html)
+        self.assertIn("Escape", html)
+
+
 class TestThemeTokens(unittest.TestCase):
     def test_token_block_is_present(self):
         html = _payload_html()

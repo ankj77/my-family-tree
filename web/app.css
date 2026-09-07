@@ -118,3 +118,15 @@
   .pc-icon-fg{opacity:.95;pointer-events:none;}
   #deeper,#shallower{display:none;}
   #toolbar.capped #deeper,#toolbar.capped #shallower{display:inline-block;}
+  #suggest{position:fixed;z-index:30;max-height:52vh;overflow-y:auto;
+    background:var(--card);border:1px solid var(--edge);border-radius:10px;
+    box-shadow:var(--shadow-card);padding:4px;box-sizing:border-box;}
+  #suggest.hidden{display:none;}
+  .sg-row{display:block;width:100%;min-height:44px;text-align:left;cursor:pointer;
+    background:none;border:0;border-radius:7px;padding:6px 10px;font-family:var(--font);}
+  .sg-row:hover,.sg-row.on{background:var(--canvas);}
+  .sg-row:focus-visible{outline:2px solid var(--hl);}
+  .sg-name{display:block;font-family:var(--serif);font-size:14px;font-weight:600;
+    color:var(--name-ink);}
+  .sg-hint{display:block;font-size:11px;color:var(--ink-muted);}
+  .sg-more{margin:4px 10px 6px;font-size:11px;color:var(--ink-muted);}
