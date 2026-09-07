@@ -197,9 +197,9 @@ class TestPlaceholderHindiIsConditional(unittest.TestCase):
         html = _payload_html()
         self.assertIn("var hi = owner.name_hi ?", html)
 
-    def test_both_mode_returns_one_line_when_there_is_no_devanagari_name(self):
+    def test_hindi_falls_back_to_english_when_there_is_no_devanagari_name(self):
         html = _payload_html()
-        self.assertIn("return hi ? [en, hi] : [en];", html)
+        self.assertIn("return FT.state.lang === 'hi' ? [hi || en] : [en];", html)
 
 
 class TestProgressiveGenerations(unittest.TestCase):
@@ -255,25 +255,22 @@ class TestSearchSuggestions(unittest.TestCase):
 
 
 class TestLanguageToggle(unittest.TestCase):
-    def test_devanagari_is_only_repeated_in_the_both_mode(self):
+    def test_it_is_a_two_state_toggle_with_no_both_mode(self):
         html = _payload_html()
-        self.assertIn("if (FT.state.lang === 'both' && p.name_hi) parts.push(p.name_hi);", html)
-        self.assertNotIn("if (FT.state.lang !== 'en' && p.name_hi)", html)
+        self.assertIn("LANG_OTHER = { en: 'hi', hi: 'en' }", html)
+        self.assertNotIn("'both'", html)
 
-    def test_one_button_replaces_the_three(self):
+    def test_the_button_names_the_language_you_would_switch_to(self):
         html = _payload_html()
-        self.assertIn('id="lang"', html)
-        self.assertIn("FT.cycleLang", html)
-        self.assertNotIn('data-lang="both"', html)
-        self.assertNotIn('data-lang="en"', html)
+        self.assertIn("langBtn.textContent = LANG_LABEL[next];", html)
 
-    def test_the_button_cycles_en_then_hindi_then_both(self):
+    def test_english_is_the_starting_language(self):
         html = _payload_html()
-        self.assertIn("LANG_CYCLE = ['en', 'hi', 'both']", html)
+        self.assertIn("lang: 'en'", html)
 
-    def test_the_button_label_names_the_current_mode(self):
+    def test_the_meta_line_no_longer_repeats_a_name(self):
         html = _payload_html()
-        self.assertIn("LANG_LABEL", html)
+        self.assertNotIn("parts.push(p.name_hi)", html)
 
 
 class TestThemeTokens(unittest.TestCase):

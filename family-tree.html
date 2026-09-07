@@ -192,7 +192,7 @@
   FT.CARD_W = 250; FT.ROW_H = 52; FT.RAIL_W = 5; FT.AVATAR = 32;
   FT.H_GAP = 40; FT.V_GAP = 100;
 
-  FT.state = { lang: 'both', viewId: 'classic', collapsed: {}, selected: null, highlighted: null };
+  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, selected: null, highlighted: null };
   FT.OPEN_DEPTH = 2;
   FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
@@ -281,7 +281,6 @@
 
   FT.metaLine = function (p) {
     var parts = [];
-    if (FT.state.lang === 'both' && p.name_hi) parts.push(p.name_hi);
     var span = FT.lifespan(p);
     if (span) parts.push(span);
     return { text: parts.join(' · '), dot: !FT.isDeceased(p) && p.life === 'living' };
@@ -303,13 +302,9 @@
   };
 
   FT.label = function (p) {
-    var lang = FT.state.lang;
-    if (lang === 'en') return [p.name || p.name_hi || p.id];
-    if (lang === 'hi') return [p.name_hi || p.name || p.id];
-    var out = [];
-    if (p.name) out.push(p.name);
-    if (p.name_hi) out.push(p.name_hi);
-    return out.length ? out : [p.id];
+    return FT.state.lang === 'hi'
+      ? [p.name_hi || p.name || p.id]
+      : [p.name || p.name_hi || p.id];
   };
 
   var ADDRESS_ROWS = [
@@ -649,9 +644,7 @@
       (gender === 'male' ? "'s husband" : "'s wife");
     var hi = owner.name_hi ?
       owner.name_hi + (gender === 'male' ? ' के पति' : ' की पत्नी') : '';
-    if (FT.state.lang === 'hi') return [hi || en];
-    if (FT.state.lang === 'en') return [en];
-    return hi ? [en, hi] : [en];
+    return FT.state.lang === 'hi' ? [hi || en] : [en];
   };
 
   FT.collapseBelowOpenDepth = function () {
@@ -848,17 +841,18 @@
     if (!suggest.classList.contains('hidden')) placeSuggest();
   });
 
-  var LANG_CYCLE = ['en', 'hi', 'both'];
-  var LANG_LABEL = { en: 'EN', hi: 'हिं', both: 'EN+हिं' };
+  var LANG_OTHER = { en: 'hi', hi: 'en' };
+  var LANG_LABEL = { en: 'EN', hi: 'हिं' };
   var langBtn = document.getElementById('lang');
 
   function markLang() {
-    langBtn.textContent = LANG_LABEL[FT.state.lang];
+    var next = LANG_OTHER[FT.state.lang];
+    langBtn.textContent = LANG_LABEL[next];
+    langBtn.title = 'Show names in ' + (next === 'hi' ? 'Hindi' : 'English');
   }
 
   FT.cycleLang = function () {
-    var i = LANG_CYCLE.indexOf(FT.state.lang);
-    FT.state.lang = LANG_CYCLE[(i + 1) % LANG_CYCLE.length];
+    FT.state.lang = LANG_OTHER[FT.state.lang];
     markLang();
     FT.render();
   };
