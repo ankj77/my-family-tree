@@ -202,6 +202,31 @@ class TestPlaceholderHindiIsConditional(unittest.TestCase):
         self.assertIn("return hi ? [en, hi] : [en];", html)
 
 
+class TestProgressiveGenerations(unittest.TestCase):
+    def test_depth_cap_lives_in_state_not_only_on_the_view(self):
+        html = _payload_html()
+        self.assertIn("FT.state.depthCap", html)
+
+    def test_deeper_and_shallower_controls_exist(self):
+        html = _payload_html()
+        self.assertIn('id="deeper"', html)
+        self.assertIn('id="shallower"', html)
+        self.assertIn("FT.deepen", html)
+
+    def test_expand_all_lifts_the_cap(self):
+        html = _payload_html()
+        self.assertIn("FT.state.depthCap = Infinity", html)
+
+    def test_focus_reveals_a_person_deeper_than_the_cap(self):
+        html = _payload_html()
+        self.assertIn("FT.depthOf", html)
+        self.assertIn("FT.revealDepth", html)
+
+    def test_the_view_reports_the_trees_full_depth(self):
+        html = _payload_html()
+        self.assertIn("FT.treeDepth", html)
+
+
 class TestThemeTokens(unittest.TestCase):
     def test_token_block_is_present(self):
         html = _payload_html()

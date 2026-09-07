@@ -6,13 +6,17 @@ FT.views.poster = {
   maxDepth: 2,
   hideToggles: true,
   extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },
+  rowTop: function (depth) {
+    return depth === 0 ? 210 : -470 - (depth - 1) * 360;
+  },
   layout: function (root) {
     var SLOT = FT.CARD_W + FT.H_GAP;
-    var TOP = [210, -470, -830];
+    var cap = FT.maxDepth();
+    var view = this;
     var cursor = 0;
     (function place(n, depth) {
       n.depth = depth;
-      var kids = depth >= 2 ? [] : FT.visibleChildren(n);
+      var kids = depth >= cap ? [] : FT.visibleChildren(n);
       if (!kids.length) {
         n.x = cursor;
         cursor += SLOT;
@@ -20,7 +24,7 @@ FT.views.poster = {
         kids.forEach(function (c) { place(c, depth + 1); });
         n.x = (kids[0].x + kids[kids.length - 1].x) / 2;
       }
-      n.y = TOP[depth];
+      n.y = view.rowTop(depth);
     })(root, 0);
     this.cx = root.x + FT.CARD_W / 2;
     var span = cursor > 0 ? cursor - SLOT + FT.CARD_W : FT.CARD_W;
@@ -80,14 +84,18 @@ FT.views.poster = {
       view.leaves(g, x1, y1, mx, my, x2, y2, id);
     }
 
-    FT.visibleChildren(root).forEach(function (c) {
-      branch(cx, TRUNK_TOP + 10, c.x + FT.CARD_W / 2, c.y + FT.nodeH(c),
-        Math.max(6, Math.sqrt(FT.leafCount(c)) * 2.4), c.id);
-      FT.visibleChildren(c).forEach(function (gc) {
-        branch(c.x + FT.CARD_W / 2, c.y, gc.x + FT.CARD_W / 2, gc.y + FT.nodeH(gc),
-          Math.max(3.5, Math.sqrt(FT.leafCount(gc)) * 1.7), gc.id);
+    var cap = FT.maxDepth();
+    (function walk(n, depth) {
+      if (depth >= cap) return;
+      FT.visibleChildren(n).forEach(function (c) {
+        var x1 = depth === 0 ? cx : n.x + FT.CARD_W / 2;
+        var y1 = depth === 0 ? TRUNK_TOP + 10 : n.y;
+        var thickness = depth === 0 ? 2.4 : 1.7;
+        branch(x1, y1, c.x + FT.CARD_W / 2, c.y + FT.nodeH(c),
+          Math.max(depth === 0 ? 6 : 3.5, Math.sqrt(FT.leafCount(c)) * thickness), c.id);
+        walk(c, depth + 1);
       });
-    });
+    })(root, 0);
   },
   leaves: function (g, x1, y1, mx, my, x2, y2, id) {
     var ramp = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];

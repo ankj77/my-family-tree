@@ -122,6 +122,8 @@
   .pc-value{font-size:12.5px;fill:var(--ink);pointer-events:none;}
   .pc-icon-bg{opacity:.28;pointer-events:none;}
   .pc-icon-fg{opacity:.95;pointer-events:none;}
+  #deeper,#shallower{display:none;}
+  #toolbar.capped #deeper,#toolbar.capped #shallower{display:inline-block;}
 </style>
 </head>
 <body>
@@ -133,6 +135,8 @@
     <button data-lang="both">EN+हिं</button>
     <button data-lang="en">EN</button>
     <button data-lang="hi">हिं</button>
+    <button id="shallower" title="Show one generation less">− Generation</button>
+    <button id="deeper" title="Show one more generation">+ Generation</button>
     <button id="expand-all">Expand all</button>
     <button id="reset">Fit to screen</button>
   </span>
@@ -179,6 +183,7 @@
 
   FT.state = { lang: 'both', viewId: 'classic', collapsed: {}, selected: null, highlighted: null };
   FT.OPEN_DEPTH = 2;
+  FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
 
   (function walk(n, parent) {
@@ -187,6 +192,42 @@
     if (parent) FT.parentOf[n.id] = parent;
     (n.children || []).forEach(function (c) { walk(c, n); });
   })(tree, null);
+
+  FT.depthOf = function (id) {
+    var d = 0, c = FT.parentOf[id];
+    while (c) { d++; c = FT.parentOf[c.id]; }
+    return d;
+  };
+
+  FT.treeDepth = function () {
+    var deepest = 0;
+    FT.nodes.forEach(function (n) {
+      var d = FT.depthOf(n.id);
+      if (d > deepest) deepest = d;
+    });
+    return deepest;
+  };
+
+  FT.viewCap = function () {
+    var view = FT.views[FT.state.viewId];
+    return view && view.maxDepth !== undefined ? view.maxDepth : Infinity;
+  };
+
+  FT.revealDepth = function (d) {
+    if (FT.maxDepth() < d) FT.state.depthCap = d;
+  };
+
+  FT.deepen = function (step) {
+    var cap = FT.maxDepth();
+    if (cap === Infinity) return;
+    var next = Math.min(FT.treeDepth(), Math.max(1, cap + step));
+    FT.state.depthCap = next;
+    FT.nodes.forEach(function (n) {
+      if (FT.depthOf(n.id) < next) delete FT.state.collapsed[n.id];
+    });
+    FT.render();
+    FT.fit();
+  };
 
   FT.hasPartner = function (n) {
     return (n.spouses && n.spouses.length > 0) || !!n.placeholder;
@@ -347,6 +388,7 @@
     if (!n) return;
     var c = FT.parentOf[id];
     while (c) { FT.state.collapsed[c.id] = false; c = FT.parentOf[c.id]; }
+    FT.revealDepth(FT.depthOf(id));
     FT.render();
     var r = stage.getBoundingClientRect();
     tx = r.width / 2 - (n.x + FT.jointX(n)) * scale;
@@ -513,8 +555,8 @@
   };
 
   FT.maxDepth = function () {
-    var view = FT.views[FT.state.viewId];
-    return view && view.maxDepth !== undefined ? view.maxDepth : Infinity;
+    if (FT.state.depthCap !== null) return FT.state.depthCap;
+    return FT.viewCap();
   };
 
   FT.render = function () {
@@ -612,6 +654,7 @@
 
   FT.expandAll = function () {
     FT.state.collapsed = {};
+    FT.state.depthCap = Infinity;
     FT.render();
     FT.fit();
   };
@@ -619,6 +662,9 @@
   FT.setView = function (id) {
     if (!FT.views[id]) return;
     FT.state.viewId = id;
+    FT.state.depthCap = null;
+    document.getElementById('toolbar')
+      .classList.toggle('capped', FT.viewCap() !== Infinity);
     try { localStorage.setItem('ft-view', id); } catch (e) {}
     document.getElementById('view-picker').value = id;
     FT.render();
@@ -690,6 +736,8 @@
   }
   document.getElementById('reset').addEventListener('click', FT.fit);
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
+  document.getElementById('deeper').addEventListener('click', function () { FT.deepen(1); });
+  document.getElementById('shallower').addEventListener('click', function () { FT.deepen(-1); });
 
   document.getElementById('summary').textContent=
     'People '+summary.total+' · Generations '+summary.generations+
@@ -827,13 +875,17 @@ FT.views.poster = {
   maxDepth: 2,
   hideToggles: true,
   extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },
+  rowTop: function (depth) {
+    return depth === 0 ? 210 : -470 - (depth - 1) * 360;
+  },
   layout: function (root) {
     var SLOT = FT.CARD_W + FT.H_GAP;
-    var TOP = [210, -470, -830];
+    var cap = FT.maxDepth();
+    var view = this;
     var cursor = 0;
     (function place(n, depth) {
       n.depth = depth;
-      var kids = depth >= 2 ? [] : FT.visibleChildren(n);
+      var kids = depth >= cap ? [] : FT.visibleChildren(n);
       if (!kids.length) {
         n.x = cursor;
         cursor += SLOT;
@@ -841,7 +893,7 @@ FT.views.poster = {
         kids.forEach(function (c) { place(c, depth + 1); });
         n.x = (kids[0].x + kids[kids.length - 1].x) / 2;
       }
-      n.y = TOP[depth];
+      n.y = view.rowTop(depth);
     })(root, 0);
     this.cx = root.x + FT.CARD_W / 2;
     var span = cursor > 0 ? cursor - SLOT + FT.CARD_W : FT.CARD_W;
@@ -901,14 +953,18 @@ FT.views.poster = {
       view.leaves(g, x1, y1, mx, my, x2, y2, id);
     }
 
-    FT.visibleChildren(root).forEach(function (c) {
-      branch(cx, TRUNK_TOP + 10, c.x + FT.CARD_W / 2, c.y + FT.nodeH(c),
-        Math.max(6, Math.sqrt(FT.leafCount(c)) * 2.4), c.id);
-      FT.visibleChildren(c).forEach(function (gc) {
-        branch(c.x + FT.CARD_W / 2, c.y, gc.x + FT.CARD_W / 2, gc.y + FT.nodeH(gc),
-          Math.max(3.5, Math.sqrt(FT.leafCount(gc)) * 1.7), gc.id);
+    var cap = FT.maxDepth();
+    (function walk(n, depth) {
+      if (depth >= cap) return;
+      FT.visibleChildren(n).forEach(function (c) {
+        var x1 = depth === 0 ? cx : n.x + FT.CARD_W / 2;
+        var y1 = depth === 0 ? TRUNK_TOP + 10 : n.y;
+        var thickness = depth === 0 ? 2.4 : 1.7;
+        branch(x1, y1, c.x + FT.CARD_W / 2, c.y + FT.nodeH(c),
+          Math.max(depth === 0 ? 6 : 3.5, Math.sqrt(FT.leafCount(c)) * thickness), c.id);
+        walk(c, depth + 1);
       });
-    });
+    })(root, 0);
   },
   leaves: function (g, x1, y1, mx, my, x2, y2, id) {
     var ramp = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];

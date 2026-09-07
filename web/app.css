@@ -116,3 +116,5 @@
   .pc-value{font-size:12.5px;fill:var(--ink);pointer-events:none;}
   .pc-icon-bg{opacity:.28;pointer-events:none;}
   .pc-icon-fg{opacity:.95;pointer-events:none;}
+  #deeper,#shallower{display:none;}
+  #toolbar.capped #deeper,#toolbar.capped #shallower{display:inline-block;}

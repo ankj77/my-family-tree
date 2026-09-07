@@ -27,6 +27,7 @@ var FT = { views: {} };
 
   FT.state = { lang: 'both', viewId: 'classic', collapsed: {}, selected: null, highlighted: null };
   FT.OPEN_DEPTH = 2;
+  FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
 
   (function walk(n, parent) {
@@ -35,6 +36,42 @@ var FT = { views: {} };
     if (parent) FT.parentOf[n.id] = parent;
     (n.children || []).forEach(function (c) { walk(c, n); });
   })(tree, null);
+
+  FT.depthOf = function (id) {
+    var d = 0, c = FT.parentOf[id];
+    while (c) { d++; c = FT.parentOf[c.id]; }
+    return d;
+  };
+
+  FT.treeDepth = function () {
+    var deepest = 0;
+    FT.nodes.forEach(function (n) {
+      var d = FT.depthOf(n.id);
+      if (d > deepest) deepest = d;
+    });
+    return deepest;
+  };
+
+  FT.viewCap = function () {
+    var view = FT.views[FT.state.viewId];
+    return view && view.maxDepth !== undefined ? view.maxDepth : Infinity;
+  };
+
+  FT.revealDepth = function (d) {
+    if (FT.maxDepth() < d) FT.state.depthCap = d;
+  };
+
+  FT.deepen = function (step) {
+    var cap = FT.maxDepth();
+    if (cap === Infinity) return;
+    var next = Math.min(FT.treeDepth(), Math.max(1, cap + step));
+    FT.state.depthCap = next;
+    FT.nodes.forEach(function (n) {
+      if (FT.depthOf(n.id) < next) delete FT.state.collapsed[n.id];
+    });
+    FT.render();
+    FT.fit();
+  };
 
   FT.hasPartner = function (n) {
     return (n.spouses && n.spouses.length > 0) || !!n.placeholder;
@@ -195,6 +232,7 @@ var FT = { views: {} };
     if (!n) return;
     var c = FT.parentOf[id];
     while (c) { FT.state.collapsed[c.id] = false; c = FT.parentOf[c.id]; }
+    FT.revealDepth(FT.depthOf(id));
     FT.render();
     var r = stage.getBoundingClientRect();
     tx = r.width / 2 - (n.x + FT.jointX(n)) * scale;
@@ -361,8 +399,8 @@ var FT = { views: {} };
   };
 
   FT.maxDepth = function () {
-    var view = FT.views[FT.state.viewId];
-    return view && view.maxDepth !== undefined ? view.maxDepth : Infinity;
+    if (FT.state.depthCap !== null) return FT.state.depthCap;
+    return FT.viewCap();
   };
 
   FT.render = function () {
@@ -460,6 +498,7 @@ var FT = { views: {} };
 
   FT.expandAll = function () {
     FT.state.collapsed = {};
+    FT.state.depthCap = Infinity;
     FT.render();
     FT.fit();
   };
@@ -467,6 +506,9 @@ var FT = { views: {} };
   FT.setView = function (id) {
     if (!FT.views[id]) return;
     FT.state.viewId = id;
+    FT.state.depthCap = null;
+    document.getElementById('toolbar')
+      .classList.toggle('capped', FT.viewCap() !== Infinity);
     try { localStorage.setItem('ft-view', id); } catch (e) {}
     document.getElementById('view-picker').value = id;
     FT.render();
@@ -538,6 +580,8 @@ var FT = { views: {} };
   }
   document.getElementById('reset').addEventListener('click', FT.fit);
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
+  document.getElementById('deeper').addEventListener('click', function () { FT.deepen(1); });
+  document.getElementById('shallower').addEventListener('click', function () { FT.deepen(-1); });
 
   document.getElementById('summary').textContent=
     'People '+summary.total+' · Generations '+summary.generations+
