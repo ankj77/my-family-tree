@@ -25,7 +25,7 @@ var FT = { views: {} };
   FT.CARD_W = 250; FT.ROW_H = 52; FT.RAIL_W = 5; FT.AVATAR = 32;
   FT.H_GAP = 40; FT.V_GAP = 100;
 
-  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, selected: null, highlighted: null };
+  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, only: null, picks: [], selected: null, highlighted: null };
   FT.OPEN_DEPTH = 2;
   FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
@@ -62,6 +62,7 @@ var FT = { views: {} };
   };
 
   FT.deepen = function (step) {
+    FT.clearPicks();
     var cap = FT.maxDepth();
     if (cap === Infinity) return;
     var next = Math.min(FT.treeDepth(), Math.max(1, cap + step));
@@ -109,7 +110,11 @@ var FT = { views: {} };
   FT.jointY = function (n) { return FT.nodeH(n); };
 
   FT.visibleChildren = function (n) {
-    return FT.state.collapsed[n.id] ? [] : (n.children || []);
+    if (FT.state.collapsed[n.id]) return [];
+    var kids = n.children || [];
+    var only = FT.state.only;
+    if (!only) return kids;
+    return kids.filter(function (c) { return only[c.id]; });
   };
 
   FT.metaLine = function (p) {
@@ -222,18 +227,62 @@ var FT = { views: {} };
     sheet.classList.remove('hidden');
   };
 
-  FT.focus = function (id) {
+  FT.lineage = function (id) {
+    var keep = {};
     var n = FT.byId[id];
-    if (!n) return;
-    var c = FT.parentOf[id];
-    while (c) { FT.state.collapsed[c.id] = false; c = FT.parentOf[c.id]; }
-    FT.revealDepth(FT.depthOf(id));
+    while (n) { keep[n.id] = true; n = FT.parentOf[n.id]; }
+    return keep;
+  };
+
+  FT.MAX_PICKS = 3;
+
+  FT.commonAncestor = function (ids) {
+    if (!ids.length) return null;
+    var common = FT.lineage(ids[0]);
+    ids.slice(1).forEach(function (id) {
+      var line = FT.lineage(id);
+      Object.keys(common).forEach(function (k) { if (!line[k]) delete common[k]; });
+    });
+    var best = null;
+    Object.keys(common).forEach(function (k) {
+      if (best === null || FT.depthOf(k) > FT.depthOf(best)) best = k;
+    });
+    return best;
+  };
+
+  FT.focus = function (id) {
+    if (FT.state.picks.indexOf(id) < 0) FT.state.picks = [id];
+    FT.showPicks();
+  };
+
+  FT.clearPicks = function () {
+    FT.state.picks = [];
+    FT.state.only = null;
+    if (FT.renderPicks) FT.renderPicks();
+  };
+
+  FT.showPicks = function () {
+    var ids = FT.state.picks.filter(function (id) { return FT.byId[id]; });
+    FT.state.picks = ids;
+    FT.renderPicks();
+    if (!ids.length) { FT.state.only = null; FT.render(); FT.fit(); return; }
+    var keep = {}, deepest = 0;
+    ids.forEach(function (id) {
+      var line = FT.lineage(id);
+      Object.keys(line).forEach(function (k) { keep[k] = true; });
+      deepest = Math.max(deepest, FT.depthOf(id));
+    });
+    FT.state.only = keep;
+    FT.state.collapsed = {};
+    FT.revealDepth(deepest + 1);
     FT.render();
+    if (ids.length > 1) { FT.fit(); FT.closeSheet(); return; }
+    var n = FT.byId[ids[0]];
     var r = stage.getBoundingClientRect();
     tx = r.width / 2 - (n.x + FT.jointX(n)) * scale;
     ty = r.height / 2 - n.y * scale;
     apply();
-    FT.select(id, n);
+    FT.select(ids[0], n);
   };
 
   document.getElementById('sheet-close').addEventListener('click', FT.closeSheet);
@@ -385,6 +434,7 @@ var FT = { views: {} };
       el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 11 }, g);
       hit.addEventListener('click', function (ev) {
         ev.stopPropagation();
+        FT.clearPicks();
         FT.state.collapsed[n.id] = !FT.state.collapsed[n.id];
         FT.render();
       });
@@ -412,7 +462,10 @@ var FT = { views: {} };
       if (depth >= cap) return;
       FT.visibleChildren(n).forEach(function (c) { walk(c, depth + 1); });
     })(tree, 0);
-    if (FT.state.highlighted) highlight(FT.state.highlighted);
+    if (FT.state.picks.length) {
+      clearHl();
+      FT.state.picks.forEach(hlPath);
+    } else if (FT.state.highlighted) highlight(FT.state.highlighted);
     apply();
   };
 
@@ -422,6 +475,9 @@ var FT = { views: {} };
   }
   function highlight(id){
     clearHl();
+    hlPath(id);
+  }
+  function hlPath(id){
     var cur=id;
     while(cur){
       var node=vp.querySelector('[data-id="'+CSS.escape(cur)+'"]');
@@ -490,6 +546,7 @@ var FT = { views: {} };
   };
 
   FT.expandAll = function () {
+    FT.clearPicks();
     FT.state.collapsed = {};
     FT.state.depthCap = Infinity;
     FT.render();
@@ -499,6 +556,7 @@ var FT = { views: {} };
   FT.setView = function (id) {
     if (!FT.views[id]) return;
     FT.state.viewId = id;
+    FT.clearPicks();
     FT.state.depthCap = null;
     document.getElementById('toolbar')
       .classList.toggle('capped', FT.viewCap() !== Infinity);
@@ -633,10 +691,55 @@ var FT = { views: {} };
     if (picked >= 0 && rows[picked]) rows[picked].scrollIntoView({ block: 'nearest' });
   }
 
+  var picksBar = document.getElementById('picks');
+  var pickNote = '';
+
+  FT.renderPicks = function () {
+    var ids = FT.state.picks;
+    var html = ids.map(function (id) {
+      return '<span class="pick">' + esc(FT.label(FT.byId[id])[0]) +
+        '<button data-drop="' + esc(id) + '" aria-label="Remove">×</button></span>';
+    }).join('');
+    if (ids.length > 1) {
+      var a = FT.commonAncestor(ids);
+      html += '<span class="pick-note">Common father: <b>' +
+        (a ? esc(FT.label(FT.byId[a])[0]) : '—') + '</b></span>';
+    }
+    if (pickNote) html += '<span class="pick-note">' + esc(pickNote) + '</span>';
+    if (ids.length) html += '<button class="pick-clear">Clear</button>';
+    picksBar.innerHTML = html;
+  };
+
+  picksBar.addEventListener('click', function (e) {
+    var drop = e.target.closest('[data-drop]');
+    if (drop) {
+      var id = drop.getAttribute('data-drop');
+      FT.state.picks = FT.state.picks.filter(function (p) { return p !== id; });
+      pickNote = '';
+      FT.showPicks();
+      return;
+    }
+    if (e.target.closest('.pick-clear')) {
+      pickNote = '';
+      FT.state.picks = [];
+      FT.showPicks();
+    }
+  });
+
   function go(id) {
     hideSuggest();
+    searchBox.value = '';
     searchBox.blur();
-    FT.focus(id);
+    if (FT.state.picks.indexOf(id) < 0) {
+      if (FT.state.picks.length >= FT.MAX_PICKS) {
+        pickNote = 'Up to ' + FT.MAX_PICKS + ' people — remove one first.';
+        FT.renderPicks();
+        return;
+      }
+      FT.state.picks = FT.state.picks.concat([id]);
+    }
+    pickNote = '';
+    FT.showPicks();
   }
 
   searchBox.addEventListener('input', renderSuggest);

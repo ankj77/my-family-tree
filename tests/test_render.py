@@ -282,6 +282,36 @@ class TestLanguageToggle(unittest.TestCase):
         self.assertNotIn("parts.push(p.name_hi)", html)
 
 
+class TestFocusIsolatesTheLine(unittest.TestCase):
+    def test_lineage_helper_exists(self):
+        html = _payload_html()
+        self.assertIn("FT.lineage", html)
+
+    def test_focus_keeps_only_the_lines_of_the_picked_people(self):
+        html = _payload_html()
+        self.assertIn("FT.state.only = keep;", html)
+        self.assertIn("return kids.filter(function (c) { return only[c.id]; });", html)
+
+    def test_focus_reveals_one_level_past_the_deepest_pick(self):
+        html = _payload_html()
+        self.assertIn("FT.revealDepth(deepest + 1);", html)
+
+
+class TestCommonFather(unittest.TestCase):
+    def test_common_ancestor_helper_exists(self):
+        self.assertIn("FT.commonAncestor = function (ids)", _payload_html())
+
+    def test_at_most_three_people(self):
+        html = _payload_html()
+        self.assertIn("FT.MAX_PICKS = 3;", html)
+        self.assertIn("FT.state.picks.length >= FT.MAX_PICKS", html)
+
+    def test_the_bar_names_the_common_father(self):
+        html = _payload_html()
+        self.assertIn("Common father:", html)
+        self.assertIn('<div id="picks"></div>', html)
+
+
 class TestThemeTokens(unittest.TestCase):
     def test_token_block_is_present(self):
         html = _payload_html()
