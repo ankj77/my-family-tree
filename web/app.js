@@ -24,6 +24,7 @@ var FT = { views: {} };
   FT.H_GAP = 40; FT.V_GAP = 100;
 
   FT.state = { lang: 'both', viewId: 'classic', collapsed: {}, selected: null, highlighted: null };
+  FT.OPEN_DEPTH = 2;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
 
   (function walk(n, parent) {
@@ -251,10 +252,13 @@ var FT = { views: {} };
       img.addEventListener('error', function () { g.removeChild(img); });
       textX += FT.AVATAR + 10;
     }
+    var placeholder = unfilled ? FT.placeholderName(owner, p.gender) : null;
     var name = el('text', { 'class': 'card-name', x: textX, y: 21 }, g);
-    name.textContent = unfilled ? 'Unknown' : FT.label(p)[0];
+    name.textContent = placeholder ? placeholder[0] : FT.label(p)[0];
     fitText(name, FT.CARD_W - textX - 10);
-    var meta = FT.metaLine(p);
+    var meta = placeholder
+      ? { text: placeholder[1] || '', dot: false }
+      : FT.metaLine(p);
     if (meta.dot) {
       el('circle', { 'class': 'living-dot', cx: textX + 3, cy: 34, r: 3 }, g);
     }
@@ -396,6 +400,31 @@ var FT = { views: {} };
 
   var VIEW_ORDER = ['classic', 'horizontal', 'organic'];
 
+  FT.placeholderName = function (owner, gender) {
+    var en = (owner.name || owner.name_hi || owner.id) +
+      (gender === 'male' ? "'s husband" : "'s wife");
+    var hi = (owner.name_hi || owner.name || owner.id) +
+      (gender === 'male' ? ' के पति' : ' की पत्नी');
+    if (FT.state.lang === 'hi') return [hi];
+    if (FT.state.lang === 'en') return [en];
+    return [en, hi];
+  };
+
+  FT.collapseBelowOpenDepth = function () {
+    (function walk(n, depth) {
+      if (depth >= FT.OPEN_DEPTH && (n.children || []).length) {
+        FT.state.collapsed[n.id] = true;
+      }
+      (n.children || []).forEach(function (c) { walk(c, depth + 1); });
+    })(tree, 0);
+  };
+
+  FT.expandAll = function () {
+    FT.state.collapsed = {};
+    FT.render();
+    FT.fit();
+  };
+
   FT.setView = function (id) {
     if (!FT.views[id]) return;
     FT.state.viewId = id;
@@ -467,6 +496,7 @@ var FT = { views: {} };
     langBtns[i].addEventListener('click', (function(b){ return function(){ FT.state.lang=b.getAttribute('data-lang'); FT.render(); }; })(langBtns[i]));
   }
   document.getElementById('reset').addEventListener('click', FT.fit);
+  document.getElementById('expand-all').addEventListener('click', FT.expandAll);
 
   document.getElementById('summary').textContent=
     'People '+summary.total+' · Generations '+summary.generations+
@@ -485,6 +515,7 @@ var FT = { views: {} };
 
   FT.init = function () {
     populateViewPicker();
+    FT.collapseBelowOpenDepth();
     var saved = null;
     try { saved = localStorage.getItem('ft-view'); } catch (e) {}
     var preferred = saved && FT.views[saved]

@@ -91,6 +91,36 @@ class TestViewPicker(unittest.TestCase):
         self.assertIn("Tree (organic)", html)
 
 
+class TestReadableDefaultDepth(unittest.TestCase):
+    def test_init_collapses_below_the_third_generation(self):
+        html = _payload_html()
+        self.assertIn("FT.OPEN_DEPTH = 2", html)
+        self.assertIn("FT.collapseBelowOpenDepth", html)
+
+    def test_expand_all_control_and_handler_exist(self):
+        html = _payload_html()
+        self.assertIn('id="expand-all"', html)
+        self.assertIn("FT.expandAll", html)
+
+    def test_expand_all_clears_every_collapsed_entry(self):
+        html = _payload_html()
+        self.assertIn("FT.state.collapsed = {}", html)
+
+
+class TestPlaceholderSpouseIsNamedAfterItsPartner(unittest.TestCase):
+    def test_helper_exists_and_the_bare_unknown_label_is_gone(self):
+        html = _payload_html()
+        self.assertIn("FT.placeholderName", html)
+        self.assertNotIn("unfilled ? 'Unknown'", html)
+
+    def test_both_relations_and_both_scripts_are_covered(self):
+        html = _payload_html()
+        self.assertIn("wife", html)
+        self.assertIn("husband", html)
+        self.assertIn("की पत्नी", html)
+        self.assertIn("के पति", html)
+
+
 class TestOrganicView(unittest.TestCase):
     def test_organic_view_is_registered(self):
         self.assertIn("FT.views.organic", _payload_html())
