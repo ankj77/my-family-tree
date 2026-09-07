@@ -4,12 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Family Tree</title>
-<style>
-  html,body{margin:0;height:100%;font-family:system-ui,Arial,"Noto Sans Devanagari",sans-serif;}
+<style>  html,body{margin:0;height:100%;font-family:system-ui,Arial,"Noto Sans Devanagari",sans-serif;}
   body{display:flex;flex-direction:column;}
   #toolbar{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
     padding:6px 12px;background:#f4f4f4;border-bottom:1px solid #ccc;z-index:10;box-sizing:border-box;}
-  #toolbar input{padding:6px 8px;flex:1 1 140px;min-width:0;max-width:260px;font-size:16px;}
+  #toolbar input{padding:6px 8px;flex:1 1 140px;min-width:0;max-width:260px;font-size:16px;min-height:44px;}
   #toolbar button{padding:6px 10px;cursor:pointer;font-size:14px;}
   #toolbar .summary{width:100%;font-size:12px;color:#555;}
   #stage{flex:1 1 auto;position:relative;overflow:hidden;background:#fff;cursor:grab;touch-action:none;}
@@ -17,68 +16,92 @@
   svg{width:100%;height:100%;display:block;}
   .edge{fill:none;stroke:#bbb;stroke-width:1.5px;}
   .edge.hl{stroke:#d35400;stroke-width:2.5px;}
-  .node rect{fill:#eef4fb;stroke:#6b8fb5;rx:6;cursor:pointer;}
-  .node.hl rect{stroke:#d35400;stroke-width:2px;fill:#fdf0e6;}
-  .node.uncertain rect{stroke-dasharray:4 3;fill:#fbf6e6;}
   .node text{font-size:12px;fill:#222;pointer-events:none;}
   .node text.hi{font-size:11px;fill:#555;}
-  .wife rect{fill:#fbeef4;stroke:#b56b8f;rx:6;}
-  .wife text{font-size:11px;fill:#333;pointer-events:none;}
+  .branch{fill:none;stroke:#8b6b4a;stroke-linecap:round;}
+  .branch.trunk{stroke-width:16px;}
+  .branch.hl{stroke:#d35400;}
+  .leaf{fill:#cfe3c9;stroke:#8aa87f;stroke-width:1px;cursor:pointer;}
+  .leaf.spouseleaf{fill:#f0dbe6;stroke:#b56b8f;}
+  .leafnode.hl .leaf{stroke:#d35400;stroke-width:2.5px;}
+  .leaflabel{font-size:11px;fill:#2c4a2c;pointer-events:none;}
+  #stage.hide-labels .leaflabel{display:none;}
   .marriage{stroke:#b56b8f;stroke-width:1.5px;}
-  .toggle{fill:#6b8fb5;cursor:pointer;}
+  .toggle{fill:#6b8fb5;cursor:pointer;pointer-events:none;}
+  .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
   .badge{font-size:12px;fill:#c0392b;font-weight:bold;pointer-events:none;}
   #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:#fffaf0;
     border-left:1px solid #ddd;border-bottom:1px solid #ddd;padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
   #unlinked h4{margin:0 0 6px;}
   #unlinked.empty{display:none;}
+  .node .self rect{fill:#eef4fb;stroke:#6b8fb5;stroke-width:1.4px;cursor:pointer;}
+  .node.hl .self rect{stroke:#d35400;stroke-width:2px;fill:#fdf0e6;}
+  .node.uncertain .self rect{stroke-dasharray:4 3;fill:#fbf6e6;}
+  .spouse rect{fill:#fbeef4;stroke:#b56b8f;stroke-width:1.4px;cursor:pointer;}
+  .spouse.placeholder rect{fill:#faf6f8;stroke-dasharray:4 3;cursor:default;}
+  .spouse.placeholder text{fill:#999;font-style:italic;}
+  .spouse text{font-size:11px;fill:#333;pointer-events:none;}
+  .thumb{pointer-events:none;}
+  #sheet{position:absolute;right:0;top:0;bottom:0;width:320px;background:#fff;
+    border-left:1px solid #ddd;box-shadow:-2px 0 12px rgba(0,0,0,.08);
+    padding:16px;overflow:auto;z-index:20;box-sizing:border-box;font-size:13px;}
+  #sheet.hidden{display:none;}
+  #sheet-close{position:absolute;right:8px;top:8px;width:44px;height:44px;
+    border:0;background:none;font-size:24px;line-height:1;cursor:pointer;color:#666;}
+  .sheet-photo{display:block;width:96px;height:96px;border-radius:50%;
+    object-fit:cover;margin:0 auto 10px;border:1px solid #ccc;}
+  #sheet h3{margin:0 0 2px;text-align:center;font-size:16px;}
+  .sheet-hi{margin:0 0 12px;text-align:center;color:#666;}
+  #sheet dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;}
+  #sheet dt{color:#888;}
+  #sheet dd{margin:0;}
+  .sheet-rel{margin-top:12px;padding-top:10px;border-top:1px solid #eee;line-height:1.9;}
+  .sheet-rel span{color:#888;margin-right:4px;}
+  .sheet-rel a{color:#3a6ea5;text-decoration:none;}
+  #view-picker{padding:8px;font-size:16px;min-height:44px;max-width:180px;}
+  #toolbar button{min-height:44px;min-width:44px;}
+  #more{display:none;}
+  @media (max-width:768px){
+    #sheet{right:0;left:0;top:auto;bottom:0;width:auto;max-height:60%;
+      border-left:0;border-top:1px solid #ddd;border-radius:12px 12px 0 0;
+      box-shadow:0 -2px 12px rgba(0,0,0,.12);}
+    #more{display:inline-block;}
+    #extras{display:none;width:100%;}
+    #toolbar.show-extras #extras{display:flex;gap:8px;flex-wrap:wrap;}
+    #toolbar .summary{font-size:11px;}
+  }
 </style>
 </head>
 <body>
 <div id="toolbar">
+  <select id="view-picker" aria-label="Tree view"></select>
   <input id="search" placeholder="Search name, press Enter" autocomplete="off">
-  <button data-lang="both">EN+हिं</button>
-  <button data-lang="en">EN</button>
-  <button data-lang="hi">हिं</button>
-  <button id="reset">Reset view</button>
+  <button id="more" aria-label="More options">⋯</button>
+  <span id="extras">
+    <button data-lang="both">EN+हिं</button>
+    <button data-lang="en">EN</button>
+    <button data-lang="hi">हिं</button>
+    <button id="reset">Fit to screen</button>
+  </span>
   <span class="summary" id="summary"></span>
 </div>
 <div id="stage"><svg><g id="viewport"></g></svg></div>
 <div id="unlinked"></div>
-<script id="tree-data" type="application/json">{"id": "sevakram", "name": "Sevak Ram", "name_hi": "सेवकराम", "born": "1884 (Samvat 1941)", "note": "root ancestor — all descend from him", "status": null, "wives": [], "children": [{"id": "lakshman", "name": "Dada Lakshman", "name_hi": "दादा लक्ष्मण", "born": null, "note": "son of Sevak Ram", "status": null, "wives": [], "children": [{"id": "bhagmal", "name": "Dada Bhagmal", "name_hi": "दादा भागमल", "born": null, "note": "'Till 1925'; handwritten word nearby (नवरात्नी?) may be a wife — verify", "status": null, "wives": [], "children": [{"id": "netram", "name": "Netram", "name_hi": null, "born": null, "note": "son of Dada Bhagmal ('Till 1945')", "status": null, "wives": [], "children": [{"id": "chandgiram", "name": "Chandgiram", "name_hi": null, "born": null, "note": "son of Netram; 4 sons (Kanwarsen, Jugmandar das, Surajbhan, Ramratan)", "status": null, "wives": [], "children": [{"id": "kanwarsen", "name": "Kanwarsen", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "rajendra", "name": "Rajendra", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "sachin", "name": "Sachin", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "aaditya", "name": "Aaditya", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "nishant_r", "name": "Nishant", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "kannav", "name": "Kannav", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "anil", "name": "Anil", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "sunny", "name": "Sunny", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "aarav", "name": "Aarav", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "rahul", "name": "Rahul", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "vijay", "name": "Vijay", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "ankur", "name": "Ankur", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "avyukt", "name": "Avyukt", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "pawan", "name": "Pawan", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "abhinav", "name": "Abhinav", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "deepak", "name": "Deepak", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "jinendra", "name": "Jinendra", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "jugmandardas", "name": "Jugmandar das", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "naresh", "name": "Naresh", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "arun", "name": "Arun", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "prashan", "name": "Prashan", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "varun", "name": "Varun", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "arham", "name": "Arham", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "parveen", "name": "Praveen", "name_hi": null, "born": null, "note": "son of Jugmandar das", "status": null, "wives": [], "children": [{"id": "pushkar", "name": "Pushkar", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "surajbhan", "name": "Surajbhan", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "rajesh", "name": "Rajesh", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "vipul", "name": "Vipul", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "ramratan", "name": "Ramratan", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "dinesh", "name": "Dinesh", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "abhishek", "name": "Abhishek", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "mukesh_l", "name": "Mukesh", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}, {"id": "vinay", "name": "Vinay", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "pooranchand", "name": "Pooranchand", "name_hi": null, "born": null, "note": "son of Netram", "status": null, "wives": [], "children": [{"id": "subhashchand", "name": "Subhash Chand", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "anshul", "name": "Anshul", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "narendra", "name": "Narendra", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "hardik", "name": "Hardik", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "jaibhagvan", "name": "Jai Bhagwan", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "abhinandan", "name": "Abhinandan", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "harsh", "name": "Harsh", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}, {"id": "anand", "name": "Anand", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "surender", "name": "Surender", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}, {"id": "pankaj", "name": "Pankaj", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "jawaharlal", "name": "Jawahar Lal", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "nishant_j", "name": "Nishant", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "aadit", "name": "Aadit", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}, {"id": "agrim", "name": "Agrim", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "gulabchand", "name": "Gulab Chand", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "sreyans", "name": "Sreyans", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "shaurya", "name": "Shaurya", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "mahavirprasad", "name": "Mahavir Prasad", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "rishabh", "name": "Rishabh", "name_hi": null, "born": null, "note": "son of Mahavir Prasad", "status": null, "wives": [], "children": []}]}, {"id": "ramnivas", "name": "Ram Nivas", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "vikas", "name": "Vikas", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "sanyam", "name": "Sanyam", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}]}, {"id": "mayachand", "name": "Mayachand", "name_hi": null, "born": null, "note": "biological son of Netram; adopted by Khushiram", "status": null, "wives": [], "children": [{"id": "ramesh", "name": "Ramesh", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "manish", "name": "Manish", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "aayush", "name": "Aayush", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "mukesh_m", "name": "Mukesh", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "akshay", "name": "Akshay", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "kapoorchand", "name": "Kapoorchand", "name_hi": null, "born": null, "note": "brother of Chandgiram (son of Netram); no son", "status": null, "wives": [], "children": []}]}, {"id": "moladhrnal", "name": "Moladhrnal", "name_hi": null, "born": null, "note": "son of Dada Bhagmal", "status": null, "wives": [], "children": [{"id": "ramnarayan", "name": "Ram Narayan", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "jagdishchand", "name": "Jagdish Chand", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "ravi", "name": "Ravi", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "naveen", "name": "Naveen", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "ramlal", "name": "Ram Lal", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "sanjay", "name": "Sanjay", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "guddu", "name": "Guddu", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "sandeep", "name": "Sandeep", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "jainarayan", "name": "Jai Narayan", "name_hi": null, "born": null, "note": "son of Moladhrnal", "status": null, "wives": [], "children": [{"id": "bhanuprakash", "name": "Bhanu Prakash", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "kamal", "name": "Kamal", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "satyam", "name": "Satyam", "name_hi": null, "born": null, "note": "GUESS: verify parent", "status": null, "wives": [], "children": []}]}, {"id": "ankit", "name": "Ankit", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "tejas", "name": "Tejas", "name_hi": null, "born": null, "note": "GUESS: verify parent", "status": null, "wives": [], "children": []}]}]}, {"id": "satyaprakash", "name": "Satya Prakash", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "ashish", "name": "Ashish", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}, {"id": "saurabh", "name": "Saurabh", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "jaiprakash", "name": "Jai Prakash", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "rajiv", "name": "Rajiv", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "kartik", "name": "Kartik", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}, {"id": "vinayak", "name": "Vinayak", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "sanjiv", "name": "Sanjiv", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "kanishka", "name": "Kanishka", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}, {"id": "shribhagwan", "name": "Shri Bhagwan", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "girish", "name": "Girish", "name_hi": null, "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}]}, {"id": "khushiram", "name": "Khushiram", "name_hi": null, "born": null, "note": "son of Dada Bhagmal; no biological son — adopted Mayachand (Netram's son)", "status": null, "wives": [], "children": []}]}, {"id": "gaurishankar", "name": "Dada Gaurishankar", "name_hi": "दादा गौरीशंकर", "born": null, "note": "no children", "status": null, "wives": [], "children": []}]}, {"id": "udmi", "name": "Udmi", "name_hi": "उदमी", "born": null, "note": "daughter of Sevak Ram (Till annotation on chart)", "status": null, "wives": [], "children": [{"id": "ramjilal", "name": "Ramjilal", "name_hi": "रामजीलाल", "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "mamchand", "name": "Mamchand", "name_hi": "मामचन्द", "born": null, "note": null, "status": null, "wives": [], "children": []}]}, {"id": "richa", "name": "Richa", "name_hi": null, "born": null, "note": "daughter of Udmi (was read as 'Siddho' — reinterpreted per correction)", "status": null, "wives": [], "children": [{"id": "niyadar", "name": "Niyadar", "name_hi": null, "born": null, "note": "child of Richa (was read as 'Nisar')", "status": null, "wives": [], "children": []}, {"id": "lekhram", "name": "Lekhram", "name_hi": null, "born": null, "note": "child of Richa (was read as 'Lorvaram')", "status": null, "wives": [], "children": []}]}]}, {"id": "kannu", "name": "Kannu", "name_hi": "कन्नू", "born": null, "note": null, "status": null, "wives": [], "children": [{"id": "rajaram", "name": "Rajaram", "name_hi": "राजाराम", "born": null, "note": null, "status": null, "wives": [], "children": []}, {"id": "panmeshwar", "name": "Panmeshwar", "name_hi": "पनमेश्वर", "born": null, "note": null, "status": null, "wives": [], "children": []}]}]}</script>
+<div id="sheet" class="hidden">
+  <button id="sheet-close" aria-label="Close">×</button>
+  <div id="sheet-body"></div>
+</div>
+<script id="tree-data" type="application/json">{"id": "sevakram", "name": "Sevak Ram", "name_hi": "सेवकराम", "gender": "male", "born": "1884 (Samvat 1941)", "note": "root ancestor — all descend from him", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["lakshman", "udmi", "kannu"]}], "children": [{"id": "lakshman", "name": "Dada Lakshman", "name_hi": "दादा लक्ष्मण", "gender": "male", "born": null, "note": "son of Sevak Ram", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["bhagmal", "gaurishankar"]}], "children": [{"id": "bhagmal", "name": "Dada Bhagmal", "name_hi": "दादा भागमल", "gender": "male", "born": null, "note": "'Till 1925'; handwritten word nearby (नवरात्नी?) may be a wife — verify", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["netram", "moladhrnal", "khushiram"]}], "children": [{"id": "netram", "name": "Netram", "name_hi": null, "gender": "male", "born": null, "note": "son of Dada Bhagmal ('Till 1945')", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["chandgiram", "pooranchand", "mayachand", "kapoorchand"]}], "children": [{"id": "chandgiram", "name": "Chandgiram", "name_hi": null, "gender": "male", "born": null, "note": "son of Netram; 4 sons (Kanwarsen, Jugmandar das, Surajbhan, Ramratan)", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kanwarsen", "jugmandardas", "surajbhan", "ramratan"]}], "children": [{"id": "kanwarsen", "name": "Kanwarsen", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rajendra", "anil", "vijay", "pawan", "deepak"]}], "children": [{"id": "rajendra", "name": "Rajendra", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sachin", "nishant_r"]}], "children": [{"id": "sachin", "name": "Sachin", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aaditya"]}], "children": [{"id": "aaditya", "name": "Aaditya", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "nishant_r", "name": "Nishant", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kannav"]}], "children": [{"id": "kannav", "name": "Kannav", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "anil", "name": "Anil", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sunny", "rahul"]}], "children": [{"id": "sunny", "name": "Sunny", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aarav"]}], "children": [{"id": "aarav", "name": "Aarav", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "rahul", "name": "Rahul", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "vijay", "name": "Vijay", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ankur"]}], "children": [{"id": "ankur", "name": "Ankur", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["avyukt"]}], "children": [{"id": "avyukt", "name": "Avyukt", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "pawan", "name": "Pawan", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["abhinav"]}], "children": [{"id": "abhinav", "name": "Abhinav", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "deepak", "name": "Deepak", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["jinendra"]}], "children": [{"id": "jinendra", "name": "Jinendra", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "jugmandardas", "name": "Jugmandar das", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["naresh", "parveen"]}], "children": [{"id": "naresh", "name": "Naresh", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["arun", "varun"]}], "children": [{"id": "arun", "name": "Arun", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["prashan"]}], "children": [{"id": "prashan", "name": "Prashan", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "varun", "name": "Varun", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["arham"]}], "children": [{"id": "arham", "name": "Arham", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "parveen", "name": "Praveen", "name_hi": null, "gender": "male", "born": null, "note": "son of Jugmandar das", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["pushkar"]}], "children": [{"id": "pushkar", "name": "Pushkar", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "surajbhan", "name": "Surajbhan", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rajesh"]}], "children": [{"id": "rajesh", "name": "Rajesh", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["vipul"]}], "children": [{"id": "vipul", "name": "Vipul", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "ramratan", "name": "Ramratan", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["dinesh", "mukesh_l", "vinay"]}], "children": [{"id": "dinesh", "name": "Dinesh", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["abhishek"]}], "children": [{"id": "abhishek", "name": "Abhishek", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "mukesh_l", "name": "Mukesh", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "vinay", "name": "Vinay", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "pooranchand", "name": "Pooranchand", "name_hi": null, "gender": "male", "born": null, "note": "son of Netram", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["subhashchand", "narendra", "jaibhagvan", "jawaharlal", "gulabchand", "mahavirprasad", "ramnivas"]}], "children": [{"id": "subhashchand", "name": "Subhash Chand", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["anshul"]}], "children": [{"id": "anshul", "name": "Anshul", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "narendra", "name": "Narendra", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["hardik"]}], "children": [{"id": "hardik", "name": "Hardik", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jaibhagvan", "name": "Jai Bhagwan", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["abhinandan", "surender", "pankaj"]}], "children": [{"id": "abhinandan", "name": "Abhinandan", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["harsh", "anand"]}], "children": [{"id": "harsh", "name": "Harsh", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "anand", "name": "Anand", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "surender", "name": "Surender", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "pankaj", "name": "Pankaj", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jawaharlal", "name": "Jawahar Lal", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["nishant_j"]}], "children": [{"id": "nishant_j", "name": "Nishant", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aadit", "agrim"]}], "children": [{"id": "aadit", "name": "Aadit", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "agrim", "name": "Agrim", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "gulabchand", "name": "Gulab Chand", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sreyans"]}], "children": [{"id": "sreyans", "name": "Sreyans", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["shaurya"]}], "children": [{"id": "shaurya", "name": "Shaurya", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "mahavirprasad", "name": "Mahavir Prasad", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rishabh"]}], "children": [{"id": "rishabh", "name": "Rishabh", "name_hi": null, "gender": "male", "born": null, "note": "son of Mahavir Prasad", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "ramnivas", "name": "Ram Nivas", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["vikas"]}], "children": [{"id": "vikas", "name": "Vikas", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sanyam"]}], "children": [{"id": "sanyam", "name": "Sanyam", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}]}, {"id": "mayachand", "name": "Mayachand", "name_hi": null, "gender": "male", "born": null, "note": "biological son of Netram; adopted by Khushiram", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ramesh", "mukesh_m"]}], "children": [{"id": "ramesh", "name": "Ramesh", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["manish"]}], "children": [{"id": "manish", "name": "Manish", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aayush"]}], "children": [{"id": "aayush", "name": "Aayush", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "mukesh_m", "name": "Mukesh", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["akshay"]}], "children": [{"id": "akshay", "name": "Akshay", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "kapoorchand", "name": "Kapoorchand", "name_hi": null, "gender": "male", "born": null, "note": "brother of Chandgiram (son of Netram); no son", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "moladhrnal", "name": "Moladhrnal", "name_hi": null, "gender": "male", "born": null, "note": "son of Dada Bhagmal", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ramnarayan", "ramlal", "jainarayan"]}], "children": [{"id": "ramnarayan", "name": "Ram Narayan", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["jagdishchand", "naveen"]}], "children": [{"id": "jagdishchand", "name": "Jagdish Chand", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ravi"]}], "children": [{"id": "ravi", "name": "Ravi", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "naveen", "name": "Naveen", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "ramlal", "name": "Ram Lal", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sanjay", "sandeep"]}], "children": [{"id": "sanjay", "name": "Sanjay", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["guddu"]}], "children": [{"id": "guddu", "name": "Guddu", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "sandeep", "name": "Sandeep", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jainarayan", "name": "Jai Narayan", "name_hi": null, "gender": "male", "born": null, "note": "son of Moladhrnal", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["bhanuprakash", "satyaprakash", "jaiprakash", "shribhagwan"]}], "children": [{"id": "bhanuprakash", "name": "Bhanu Prakash", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kamal", "ankit"]}], "children": [{"id": "kamal", "name": "Kamal", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["satyam"]}], "children": [{"id": "satyam", "name": "Satyam", "name_hi": null, "gender": "male", "born": null, "note": "GUESS: verify parent", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "ankit", "name": "Ankit", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["tejas"]}], "children": [{"id": "tejas", "name": "Tejas", "name_hi": null, "gender": "male", "born": null, "note": "GUESS: verify parent", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "satyaprakash", "name": "Satya Prakash", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ashish", "saurabh"]}], "children": [{"id": "ashish", "name": "Ashish", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "saurabh", "name": "Saurabh", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jaiprakash", "name": "Jai Prakash", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rajiv", "sanjiv"]}], "children": [{"id": "rajiv", "name": "Rajiv", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kartik", "vinayak"]}], "children": [{"id": "kartik", "name": "Kartik", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "vinayak", "name": "Vinayak", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "sanjiv", "name": "Sanjiv", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kanishka"]}], "children": [{"id": "kanishka", "name": "Kanishka", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "shribhagwan", "name": "Shri Bhagwan", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["girish"]}], "children": [{"id": "girish", "name": "Girish", "name_hi": null, "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}]}, {"id": "khushiram", "name": "Khushiram", "name_hi": null, "gender": "male", "born": null, "note": "son of Dada Bhagmal; no biological son — adopted Mayachand (Netram's son)", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "gaurishankar", "name": "Dada Gaurishankar", "name_hi": "दादा गौरीशंकर", "gender": "male", "born": null, "note": "no children", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "udmi", "name": "Udmi", "name_hi": "उदमी", "gender": "female", "born": null, "note": "daughter of Sevak Ram (Till annotation on chart)", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "male", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ramjilal", "richa"]}], "children": [{"id": "ramjilal", "name": "Ramjilal", "name_hi": "रामजीलाल", "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["mamchand"]}], "children": [{"id": "mamchand", "name": "Mamchand", "name_hi": "मामचन्द", "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "richa", "name": "Richa", "name_hi": null, "gender": "female", "born": null, "note": "daughter of Udmi (was read as 'Siddho' — reinterpreted per correction)", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "male", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["niyadar", "lekhram"]}], "children": [{"id": "niyadar", "name": "Niyadar", "name_hi": null, "gender": "male", "born": null, "note": "child of Richa (was read as 'Nisar')", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "lekhram", "name": "Lekhram", "name_hi": null, "gender": "male", "born": null, "note": "child of Richa (was read as 'Lorvaram')", "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "kannu", "name": "Kannu", "name_hi": "कन्नू", "gender": "female", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": "male", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rajaram", "panmeshwar"]}], "children": [{"id": "rajaram", "name": "Rajaram", "name_hi": "राजाराम", "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "panmeshwar", "name": "Panmeshwar", "name_hi": "पनमेश्वर", "gender": "male", "born": null, "note": null, "status": null, "photo": null, "address": {}, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}</script>
 <script id="unlinked-data" type="application/json">[]</script>
 <script id="summary-data" type="application/json">{"total": 105, "generations": 9, "uncertain": 0, "needs_parent": 0}</script>
-<script>
-(function(){
+<script>var FT = { views: {} };
+(function () {
   var NS="http://www.w3.org/2000/svg";
-  var NODE_W=170, NODE_H=46, H_GAP=170, V_GAP=100, WIFE_W=110, WIFE_H=38;
   var tree=JSON.parse(document.getElementById('tree-data').textContent);
   var unlinked=JSON.parse(document.getElementById('unlinked-data').textContent);
   var summary=JSON.parse(document.getElementById('summary-data').textContent);
   var vp=document.getElementById('viewport');
   var stage=document.getElementById('stage');
-  var lang='both';
-
-  var parentOf={};
-  (function walk(n){ (n.children||[]).forEach(function(c){ parentOf[c.id]=n; walk(c); }); })(tree);
-  var all=[]; (function walk(n){ all.push(n); (n.children||[]).forEach(walk); })(tree);
-
-  function label(p){
-    if(lang==='en') return [p.name||p.name_hi||p.id];
-    if(lang==='hi') return [p.name_hi||p.name||p.id];
-    var out=[]; if(p.name) out.push(p.name); if(p.name_hi) out.push(p.name_hi);
-    return out.length?out:[p.id];
-  }
-
-  var leaf=0;
-  function layout(n, depth){
-    n.depth=depth; n.y=depth*V_GAP;
-    var kids=n._collapsed?[]:(n.children||[]);
-    if(!kids.length){ n.x=leaf*(NODE_W+H_GAP); leaf++; }
-    else {
-      kids.forEach(function(c){ layout(c, depth+1); });
-      n.x=(kids[0].x + kids[kids.length-1].x)/2;
-    }
-  }
 
   function el(tag, attrs, parent){
     var e=document.createElementNS(NS, tag);
@@ -87,68 +110,322 @@
     return e;
   }
 
-  function textLines(g, lines, cx, y){
-    lines.forEach(function(t,i){
-      var te=el('text', {x:cx, y:y+i*14, 'text-anchor':'middle'}, g);
-      if(i>0) te.setAttribute('class','hi');
-      te.textContent=t;
+  FT.edge = function (g, d, childId) {
+    var attrs = { 'class': 'edge', d: d };
+    if (childId) attrs['data-edge'] = childId;
+    return el('path', attrs, g);
+  };
+
+  FT.SELF_W = 150; FT.SPOUSE_W = 120; FT.NODE_H = 46;
+  FT.BAR = 22; FT.H_GAP = 40; FT.V_GAP = 100;
+
+  FT.state = { lang: 'both', viewId: 'classic', collapsed: {}, selected: null, highlighted: null };
+  FT.nodes = []; FT.byId = {}; FT.parentOf = {};
+
+  (function walk(n, parent) {
+    FT.nodes.push(n);
+    FT.byId[n.id] = n;
+    if (parent) FT.parentOf[n.id] = parent;
+    (n.children || []).forEach(function (c) { walk(c, n); });
+  })(tree, null);
+
+  FT.hasPartner = function (n) {
+    return (n.spouses && n.spouses.length > 0) || !!n.placeholder;
+  };
+  FT.partners = function (n) {
+    if (n.spouses && n.spouses.length) return n.spouses;
+    if (n.placeholder) return [{ id: null, placeholder: true, gender: n.placeholder }];
+    return [];
+  };
+  FT.stacked = function (n) {
+    var view = FT.views[FT.state.viewId];
+    return !!(view && view.stack);
+  };
+  FT.leafShaped = function () {
+    var view = FT.views[FT.state.viewId];
+    return !!(view && view.nodeShape === 'leaf');
+  };
+  FT.hash01 = function (s) {
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return ((h >>> 0) % 10000) / 10000;
+  };
+  FT.leafCount = function (n) {
+    var kids = FT.visibleChildren(n);
+    if (!kids.length) return 1;
+    return kids.reduce(function (sum, c) { return sum + FT.leafCount(c); }, 0);
+  };
+  FT.nodeW = function (n) {
+    if (FT.stacked(n)) return FT.SELF_W;
+    return FT.hasPartner(n) ? FT.SELF_W + FT.BAR + FT.SPOUSE_W : FT.SELF_W;
+  };
+  FT.nodeH = function (n) {
+    var rows = Math.max(1, FT.partners(n).length);
+    if (FT.stacked(n)) return FT.NODE_H * (1 + (FT.hasPartner(n) ? rows : 0)) + 4;
+    return FT.NODE_H + (rows - 1) * (FT.NODE_H + 6);
+  };
+  FT.jointX = function (n) {
+    if (FT.leafShaped()) return 0;
+    if (FT.stacked(n)) return FT.SELF_W;
+    return FT.hasPartner(n) ? FT.SELF_W + FT.BAR / 2 : FT.SELF_W / 2;
+  };
+  FT.jointY = function (n) {
+    return FT.stacked(n) ? FT.nodeH(n) / 2 : FT.nodeH(n);
+  };
+
+  FT.visibleChildren = function (n) {
+    return FT.state.collapsed[n.id] ? [] : (n.children || []);
+  };
+
+  FT.label = function (p) {
+    var lang = FT.state.lang;
+    if (lang === 'en') return [p.name || p.name_hi || p.id];
+    if (lang === 'hi') return [p.name_hi || p.name || p.id];
+    var out = [];
+    if (p.name) out.push(p.name);
+    if (p.name_hi) out.push(p.name_hi);
+    return out.length ? out : [p.id];
+  };
+
+  var ADDRESS_ROWS = [
+    ['line', 'Address'], ['locality', 'Locality'], ['city', 'City'],
+    ['state', 'State'], ['country', 'Country']
+  ];
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
   }
 
-  function render(){
-    while(vp.firstChild) vp.removeChild(vp.firstChild);
-    leaf=0; layout(tree,0);
-    var edges=el('g', {}, vp);
-    var nodes=el('g', {}, vp);
-    (function draw(n){
-      var kids=n._collapsed?[]:(n.children||[]);
-      kids.forEach(function(c){
-        var midY=(n.y+NODE_H+c.y)/2;
-        el('path', {'class':'edge','data-edge':c.id,
-          d:'M'+(n.x+NODE_W/2)+','+(n.y+NODE_H)+' C'+(n.x+NODE_W/2)+','+midY+' '+(c.x+NODE_W/2)+','+midY+' '+(c.x+NODE_W/2)+','+c.y
-        }, edges);
-        draw(c);
-      });
-      var cls='node'+(n.status==='uncertain'?' uncertain':'');
-      var g=el('g', {'class':cls, 'data-id':n.id, transform:'translate('+n.x+','+n.y+')'}, nodes);
-      el('rect', {width:NODE_W, height:NODE_H}, g);
-      textLines(g, label(n), NODE_W/2, 18);
-      if(n.status==='uncertain'){ var b=el('text',{x:NODE_W-12,y:15,'class':'badge'},g); b.textContent='?'; }
-      (n.wives||[]).forEach(function(w,i){
-        var wx=NODE_W+30, wy=i*(WIFE_H+6);
-        el('line',{'class':'marriage',x1:NODE_W,y1:NODE_H/2,x2:NODE_W+30,y2:wy+WIFE_H/2},g);
-        var wcls='wife'+(w.status==='uncertain'?' uncertain':'');
-        var wg=el('g',{'class':wcls, transform:'translate('+wx+','+wy+')'},g);
-        el('rect',{width:WIFE_W,height:WIFE_H},wg);
-        textLines(wg, label(w), WIFE_W/2, 16);
-      });
-      if((n.children||[]).length){
-        var tg=el('circle',{'class':'toggle',cx:NODE_W/2,cy:NODE_H+2,r:6},g);
-        tg.addEventListener('click',function(ev){ ev.stopPropagation(); n._collapsed=!n._collapsed; render(); });
-      }
-      g.addEventListener('click',function(){ highlight(n.id); });
-    })(tree);
-    apply();
+  function personRef(id) {
+    var n = FT.byId[id];
+    var label = n ? (FT.label(n)[0]) : id;
+    return '<a href="#" data-goto="' + esc(id) + '">' + esc(label) + '</a>';
   }
 
+  function spouseRef(s, owner) {
+    return '<a href="#" data-spouse="' + esc(s.id) + '" data-owner="' + esc(owner.id) + '">' +
+      esc(FT.label(s)[0]) + '</a>';
+  }
+
+  function sheetHtml(p, owner) {
+    var h = '';
+    if (p.photo) h += '<img class="sheet-photo" src="' + esc(p.photo) + '" alt="">';
+    if (p.name) h += '<h3>' + esc(p.name) + '</h3>';
+    if (p.name_hi) h += '<p class="sheet-hi">' + esc(p.name_hi) + '</p>';
+    var rows = '';
+    if (p.born) rows += '<dt>Born</dt><dd>' + esc(p.born) + '</dd>';
+    ADDRESS_ROWS.forEach(function (r) {
+      var v = (p.address || {})[r[0]];
+      if (v) rows += '<dt>' + r[1] + '</dt><dd>' + esc(v) + '</dd>';
+    });
+    if (p.note) rows += '<dt>Note</dt><dd>' + esc(p.note) + '</dd>';
+    if (rows) h += '<dl>' + rows + '</dl>';
+
+    var rel = '';
+    var parent = FT.parentOf[owner.id];
+    if (parent) rel += '<div><span>Parent</span> ' + personRef(parent.id) + '</div>';
+    if (owner.spouses && owner.spouses.length) {
+      rel += '<div><span>Spouse</span> ' +
+        owner.spouses.map(function (s) { return spouseRef(s, owner); }).join(', ') + '</div>';
+    } else if (owner.placeholder) {
+      rel += '<div><span>Spouse</span> <em>not recorded</em></div>';
+    }
+    var kids = owner.children || [];
+    if (kids.length) {
+      rel += '<div><span>Children</span> ' +
+        kids.map(function (c) { return personRef(c.id); }).join(', ') + '</div>';
+    }
+    if (rel) h += '<div class="sheet-rel">' + rel + '</div>';
+    return h;
+  }
+
+  var sheet = document.getElementById('sheet');
+  var sheetBody = document.getElementById('sheet-body');
+
+  FT.closeSheet = function () {
+    sheet.classList.add('hidden');
+    FT.state.selected = null;
+    FT.state.highlighted = null;
+  };
+
+  FT.select = function (id, owner) {
+    var node = owner || FT.byId[id];
+    if (!node) return;
+    var person = node.id === id ? node :
+      (node.spouses || []).filter(function (s) { return s.id === id; })[0] || node;
+    FT.state.selected = id;
+    FT.state.highlighted = node.id;
+    highlight(node.id);
+    sheetBody.innerHTML = sheetHtml(person, node);
+    sheet.classList.remove('hidden');
+  };
+
+  FT.focus = function (id) {
+    var n = FT.byId[id];
+    if (!n) return;
+    var c = FT.parentOf[id];
+    while (c) { FT.state.collapsed[c.id] = false; c = FT.parentOf[c.id]; }
+    FT.render();
+    var r = stage.getBoundingClientRect();
+    tx = r.width / 2 - (n.x + FT.jointX(n)) * scale;
+    ty = r.height / 2 - n.y * scale;
+    apply();
+    FT.select(id, n);
+  };
+
+  document.getElementById('sheet-close').addEventListener('click', FT.closeSheet);
+  sheetBody.addEventListener('click', function (e) {
+    var sp = e.target.closest('[data-spouse]');
+    if (sp) {
+      e.preventDefault();
+      var owner = FT.byId[sp.getAttribute('data-owner')];
+      if (owner) FT.select(sp.getAttribute('data-spouse'), owner);
+      return;
+    }
+    var a = e.target.closest('[data-goto]');
+    if (!a) return;
+    e.preventDefault();
+    FT.focus(a.getAttribute('data-goto'));
+  });
+
+  function textLines(g, lines, cx, y) {
+    lines.forEach(function (t, i) {
+      var te = el('text', { x: cx, y: y + i * 14, 'text-anchor': 'middle' }, g);
+      if (i > 0) te.setAttribute('class', 'hi');
+      te.textContent = t;
+    });
+  }
+
+  function drawBox(parent, p, x, y, w, role, owner) {
+    var unfilled = role === 'spouse' && !!p.placeholder;
+    var cls = role + (p.status === 'uncertain' ? ' uncertain' : '') +
+      (unfilled ? ' placeholder' : '');
+    var g = el('g', { 'class': cls, transform: 'translate(' + x + ',' + y + ')' }, parent);
+    el('rect', { width: w, height: FT.NODE_H, rx: 6 }, g);
+    var textX = w / 2, thumb = 0;
+    if (p.photo) {
+      thumb = 16;
+      var img = el('image', {
+        href: p.photo, x: 6, y: FT.NODE_H / 2 - thumb, width: thumb * 2, height: thumb * 2,
+        preserveAspectRatio: 'xMidYMid slice', 'clip-path': 'inset(0 round 50%)', 'class': 'thumb'
+      }, g);
+      img.addEventListener('error', function () {
+        g.removeChild(img);
+        [].forEach.call(g.querySelectorAll('text:not(.badge)'), function (t) {
+          t.setAttribute('x', w / 2);
+        });
+      });
+      textX = (w + thumb * 2 + 6) / 2;
+    }
+    textLines(g, unfilled ? ['Unknown'] : FT.label(p), textX, 18);
+    if (p.status === 'uncertain') {
+      var b = el('text', { x: w - 12, y: 15, 'class': 'badge' }, g);
+      b.textContent = '?';
+    }
+    if (!unfilled) {
+      g.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(p.id, owner); });
+    }
+    return g;
+  }
+
+  FT.drawLeaf = function (parent, n) {
+    var g = el('g', {
+      'class': 'leafnode' + (FT.hasPartner(n) ? ' paired' : ''),
+      'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
+    }, parent);
+    var r = 7 + Math.min(6, Math.sqrt(FT.leafCount(n)));
+    el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf' }, g);
+    if (FT.hasPartner(n)) {
+      el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
+    }
+    var t = el('text', { y: -r - 5, 'text-anchor': 'middle', 'class': 'leaflabel' }, g);
+    t.textContent = FT.label(n)[0];
+    g.addEventListener('click', function () { FT.select(n.id, n); });
+    return g;
+  };
+
+  FT.drawNode = function (parent, n) {
+    if (FT.leafShaped()) return FT.drawLeaf(parent, n);
+    var g = el('g', {
+      'class': 'node' + (n.status === 'uncertain' ? ' uncertain' : ''),
+      'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
+    }, parent);
+    drawBox(g, n, 0, 0, FT.SELF_W, 'self', n);
+    FT.partners(n).forEach(function (p, i) {
+      var sg;
+      if (FT.stacked(n)) {
+        var y = FT.NODE_H * (i + 1) + 4;
+        el('line', {
+          'class': 'marriage', x1: FT.SELF_W / 2, y1: FT.NODE_H,
+          x2: FT.SELF_W / 2, y2: y
+        }, g);
+        sg = drawBox(g, p, 0, y, FT.SELF_W, 'spouse', n);
+      } else {
+        var yy = i * (FT.NODE_H + 6);
+        el('line', {
+          'class': 'marriage', x1: FT.SELF_W, y1: FT.NODE_H / 2,
+          x2: FT.SELF_W + FT.BAR, y2: yy + FT.NODE_H / 2
+        }, g);
+        sg = drawBox(g, p, FT.SELF_W + FT.BAR, yy, FT.SPOUSE_W, 'spouse', n);
+      }
+      sg.setAttribute('data-spouse-of', n.id);
+    });
+    if ((n.children || []).length) {
+      var toggleCx = FT.jointX(n) + (FT.stacked(n) ? 14 : 0);
+      var toggleCy = FT.stacked(n) ? FT.jointY(n) : FT.jointY(n) + 10;
+      var hit = el('circle', { 'class': 'toggle-hit', cx: toggleCx, cy: toggleCy, r: 22 }, g);
+      el('circle', { 'class': 'toggle', cx: toggleCx, cy: toggleCy, r: 11 }, g);
+      hit.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        FT.state.collapsed[n.id] = !FT.state.collapsed[n.id];
+        FT.render();
+      });
+    }
+    g.addEventListener('click', function () { FT.select(n.id, n); });
+    return g;
+  };
+
+  FT.render = function () {
+    while (vp.firstChild) vp.removeChild(vp.firstChild);
+    var view = FT.views[FT.state.viewId] || FT.views.classic;
+    view.layout(tree);
+    var edges = el('g', {}, vp);
+    var nodes = el('g', {}, vp);
+    view.drawEdges(edges, tree);
+    (function walk(n) {
+      FT.drawNode(nodes, n);
+      FT.visibleChildren(n).forEach(walk);
+    })(tree);
+    if (FT.state.highlighted) highlight(FT.state.highlighted);
+    apply();
+  };
+
   function clearHl(){
-    var hl=document.querySelectorAll('.node.hl,.edge.hl');
+    var hl=vp.querySelectorAll('.hl');
     for(var i=0;i<hl.length;i++) hl[i].classList.remove('hl');
   }
   function highlight(id){
     clearHl();
     var cur=id;
     while(cur){
-      var node=document.querySelector('.node[data-id="'+cur+'"]');
+      var node=vp.querySelector('[data-id="'+CSS.escape(cur)+'"]');
       if(node) node.classList.add('hl');
-      var edge=document.querySelector('.edge[data-edge="'+cur+'"]');
+      var edge=vp.querySelector('.edge[data-edge="'+CSS.escape(cur)+'"]');
       if(edge) edge.classList.add('hl');
-      cur=parentOf[cur]?parentOf[cur].id:null;
+      cur=FT.parentOf[cur]?FT.parentOf[cur].id:null;
     }
   }
 
   var tx=40, ty=20, scale=1, dragging=false, lx=0, ly=0;
-  function apply(){ vp.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')'); }
+  function apply(){
+    vp.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')');
+    stage.classList.toggle('hide-labels', scale < 1.2);
+  }
   stage.addEventListener('mousedown',function(e){ dragging=true; lx=e.clientX; ly=e.clientY; stage.classList.add('grabbing'); });
   window.addEventListener('mousemove',function(e){ if(!dragging) return; tx+=e.clientX-lx; ty+=e.clientY-ly; lx=e.clientX; ly=e.clientY; apply(); });
   window.addEventListener('mouseup',function(){ dragging=false; stage.classList.remove('grabbing'); });
@@ -183,29 +460,79 @@
   }, {passive:false});
   stage.addEventListener('touchend',function(e){ if(e.touches.length===0) touch=null; });
 
-  function resetView(){ tx=40; ty=20; scale=1; apply(); }
+  var VIEW_ORDER = ['classic', 'horizontal', 'organic'];
+
+  FT.setView = function (id) {
+    if (!FT.views[id]) return;
+    FT.state.viewId = id;
+    try { localStorage.setItem('ft-view', id); } catch (e) {}
+    document.getElementById('view-picker').value = id;
+    FT.render();
+    FT.fit();
+  };
+
+  FT.fit = function () {
+    var view = FT.views[FT.state.viewId];
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    (function walk(n) {
+      var w = view.nodeShape === 'leaf' ? 30 : FT.nodeW(n);
+      var h = view.nodeShape === 'leaf' ? 30 : FT.nodeH(n);
+      minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
+      minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
+      FT.visibleChildren(n).forEach(walk);
+    })(tree);
+    if (view.nodeShape === 'leaf') {
+      minX = Math.min(minX, -10); maxX = Math.max(maxX, 10);
+      minY = Math.min(minY, 30); maxY = Math.max(maxY, 50);
+    }
+    var r = stage.getBoundingClientRect();
+    var stageW = r.width > 0 ? r.width : window.innerWidth;
+    var stageH = r.height > 0 ? r.height : window.innerHeight;
+    var pad = 40;
+    scale = Math.min(
+      (stageW - pad * 2) / Math.max(1, maxX - minX),
+      (stageH - pad * 2) / Math.max(1, maxY - minY)
+    );
+    scale = Math.min(scale, 1.2);
+    tx = pad - minX * scale + (stageW - pad * 2 - (maxX - minX) * scale) / 2;
+    ty = pad - minY * scale + (stageH - pad * 2 - (maxY - minY) * scale) / 2;
+    apply();
+  };
+
+  function populateViewPicker() {
+    var sel = document.getElementById('view-picker');
+    VIEW_ORDER.forEach(function (id) {
+      if (!FT.views[id]) return;
+      var o = document.createElement('option');
+      o.value = id;
+      o.textContent = FT.views[id].label;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', function () { FT.setView(sel.value); });
+  }
+
+  document.getElementById('more').addEventListener('click', function () {
+    document.getElementById('toolbar').classList.toggle('show-extras');
+  });
 
   document.getElementById('search').addEventListener('keydown',function(e){
     if(e.key!=='Enter') return;
     var q=e.target.value.trim().toLowerCase(); if(!q) return;
     var hit=null;
-    for(var i=0;i<all.length;i++){
-      var n=all[i];
+    for(var i=0;i<FT.nodes.length;i++){
+      var n=FT.nodes[i];
       if(((n.name||'')+(n.name_hi||'')).toLowerCase().indexOf(q)>=0){ hit=n; break; }
     }
     if(!hit) return;
-    var c=parentOf[hit.id]; while(c){ c._collapsed=false; c=parentOf[c.id]; }
-    render();
-    var r=stage.getBoundingClientRect();
-    scale=1; tx=r.width/2-(hit.x+NODE_W/2); ty=r.height/2-(hit.y+NODE_H/2); apply();
-    highlight(hit.id);
+    scale=1;
+    FT.focus(hit.id);
   });
 
   var langBtns=document.querySelectorAll('#toolbar [data-lang]');
   for(var i=0;i<langBtns.length;i++){
-    langBtns[i].addEventListener('click', (function(b){ return function(){ lang=b.getAttribute('data-lang'); render(); }; })(langBtns[i]));
+    langBtns[i].addEventListener('click', (function(b){ return function(){ FT.state.lang=b.getAttribute('data-lang'); FT.render(); }; })(langBtns[i]));
   }
-  document.getElementById('reset').addEventListener('click', resetView);
+  document.getElementById('reset').addEventListener('click', FT.fit);
 
   document.getElementById('summary').textContent=
     'People '+summary.total+' · Generations '+summary.generations+
@@ -215,15 +542,172 @@
   if(unlinked.length){
     var html='<h4>Unlinked — to place</h4>';
     unlinked.forEach(function(p){
-      html+='<div>• '+(p.name||p.name_hi||p.id)+(p.note?' <em>('+p.note+')</em>':'')+'</div>';
+      html+='<div>• '+esc(p.name||p.name_hi||p.id)+(p.note?' <em>('+esc(p.note)+')</em>':'')+'</div>';
     });
     up.innerHTML=html;
   } else {
     up.className='empty';
   }
 
-  render(); resetView();
+  FT.init = function () {
+    populateViewPicker();
+    var saved = null;
+    try { saved = localStorage.getItem('ft-view'); } catch (e) {}
+    var preferred = saved && FT.views[saved]
+      ? saved
+      : (window.innerWidth < 768 ? 'horizontal' : 'classic');
+    FT.setView(preferred);
+  };
 })();
-</script>
+
+FT.views.classic = {
+  id: 'classic',
+  label: 'Classic (top-down)',
+  nodeShape: 'box',
+  layout: function (root) {
+    var slot = FT.SELF_W + FT.BAR + FT.SPOUSE_W + FT.H_GAP;
+    var rowHeight = [];
+    (function measure(n, depth) {
+      rowHeight[depth] = Math.max(rowHeight[depth] || 0, FT.nodeH(n));
+      FT.visibleChildren(n).forEach(function (c) { measure(c, depth + 1); });
+    })(root, 0);
+    var rowTop = [0];
+    for (var d = 0; d < rowHeight.length; d++) {
+      rowTop[d + 1] = rowTop[d] + rowHeight[d] + FT.V_GAP;
+    }
+    var cursor = 0;
+    (function place(n, depth) {
+      n.depth = depth;
+      n.y = rowTop[depth];
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) {
+        n.x = cursor + slot / 2 - FT.jointX(n);
+        cursor += slot;
+        return;
+      }
+      kids.forEach(function (c) { place(c, depth + 1); });
+      var first = kids[0], last = kids[kids.length - 1];
+      var mid = (first.x + FT.jointX(first) + last.x + FT.jointX(last)) / 2;
+      n.x = mid - FT.jointX(n);
+    })(root, 0);
+  },
+  drawEdges: function (g, root) {
+    (function walk(n) {
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) return;
+      var jx = n.x + FT.jointX(n), jy = n.y + FT.jointY(n);
+      var busY = jy + FT.V_GAP / 2;
+      FT.edge(g, 'M' + jx + ',' + jy + ' V' + busY);
+      var xs = kids.map(function (c) { return c.x + FT.jointX(c); });
+      FT.edge(g, 'M' + Math.min.apply(null, xs) + ',' + busY +
+                 ' H' + Math.max.apply(null, xs));
+      kids.forEach(function (c) {
+        FT.edge(g, 'M' + (c.x + FT.jointX(c)) + ',' + busY +
+                   ' V' + c.y, c.id);
+        walk(c);
+      });
+    })(root);
+  }
+};
+
+FT.views.horizontal = {
+  id: 'horizontal',
+  label: 'Left to right',
+  nodeShape: 'box',
+  stack: true,
+  layout: function (root) {
+    var cursor = 0;
+    var COL = FT.SELF_W + 90;
+    function shiftDown(n, dy) {
+      n.y += dy;
+      FT.visibleChildren(n).forEach(function (c) { shiftDown(c, dy); });
+    }
+    (function place(n, depth) {
+      n.depth = depth;
+      n.x = depth * COL;
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) {
+        n.y = cursor;
+        cursor += FT.nodeH(n) + 18;
+        return;
+      }
+      var subtreeTop = cursor;
+      kids.forEach(function (c) { place(c, depth + 1); });
+      var first = kids[0], last = kids[kids.length - 1];
+      n.y = (first.y + FT.jointY(first) + last.y + FT.jointY(last)) / 2 - FT.jointY(n);
+      var dy = 0;
+      if (n.y < subtreeTop) {
+        dy = subtreeTop - n.y;
+        kids.forEach(function (c) { shiftDown(c, dy); });
+        n.y = subtreeTop;
+      }
+      cursor = Math.max(cursor + dy, n.y + FT.nodeH(n) + 18);
+    })(root, 0);
+  },
+  drawEdges: function (g, root) {
+    (function walk(n) {
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) return;
+      var jx = n.x + FT.nodeW(n), jy = n.y + FT.jointY(n);
+      var busX = jx + 45;
+      FT.edge(g, 'M' + jx + ',' + jy + ' H' + busX);
+      var ys = kids.map(function (c) { return c.y + FT.jointY(c); });
+      FT.edge(g, 'M' + busX + ',' + Math.min.apply(null, ys) +
+                 ' V' + Math.max.apply(null, ys));
+      kids.forEach(function (c) {
+        FT.edge(g, 'M' + busX + ',' + (c.y + FT.jointY(c)) + ' H' + c.x, c.id);
+        walk(c);
+      });
+    })(root);
+  }
+};
+
+FT.views.organic = {
+  id: 'organic',
+  label: 'Tree (organic)',
+  nodeShape: 'leaf',
+  layout: function (root) {
+    var SPREAD = 150 * Math.PI / 180;
+    var TRUNK = 120;
+    var RING = 115;
+    (function place(n, a0, a1, depth) {
+      n.depth = depth;
+      var mid = (a0 + a1) / 2;
+      var wobble = (FT.hash01(n.id) - 0.5) * (a1 - a0) * 0.25;
+      var ang = mid + wobble;
+      var r = TRUNK + depth * RING;
+      n.ang = ang;
+      n.x = r * Math.sin(ang);
+      n.y = -r * Math.cos(ang);
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) return;
+      var total = kids.reduce(function (s, c) { return s + FT.leafCount(c); }, 0);
+      var cur = a0;
+      kids.forEach(function (c) {
+        var share = (a1 - a0) * (FT.leafCount(c) / total);
+        place(c, cur, cur + share, depth + 1);
+        cur += share;
+      });
+    })(root, -SPREAD / 2, SPREAD / 2, 0);
+  },
+  drawEdges: function (g, root) {
+    FT.edge(g, 'M0,40 L' + root.x + ',' + root.y).setAttribute(
+      'class', 'branch trunk'
+    );
+    (function walk(n) {
+      FT.visibleChildren(n).forEach(function (c) {
+        var cx = n.x + (c.x - n.x) * 0.35 + Math.sin(n.ang) * 20;
+        var cy = n.y + (c.y - n.y) * 0.35 - Math.cos(n.ang) * 20;
+        var p = FT.edge(g,
+          'M' + n.x + ',' + n.y + ' Q' + cx + ',' + cy + ' ' + c.x + ',' + c.y, c.id);
+        p.setAttribute('class', 'edge branch');
+        p.style.strokeWidth = Math.max(1.5, Math.sqrt(FT.leafCount(c)) * 1.8) + 'px';
+        walk(c);
+      });
+    })(root);
+  }
+};
+
+FT.init();</script>
 </body>
 </html>

@@ -12,16 +12,52 @@ class Summary:
     needs_parent: int
 
 
+OPPOSITE_GENDER = {"male": "female", "female": "male"}
+
+
+def _child_groups(children, spouses):
+    child_ids = [c["person"].id for c in children]
+    if not child_ids:
+        return []
+    if len(spouses) <= 1:
+        return [{
+            "spouse_id": spouses[0].id if spouses else None,
+            "unattributed": False,
+            "child_ids": child_ids,
+        }]
+    groups = [
+        {"spouse_id": s.id, "unattributed": False, "child_ids": []}
+        for s in spouses
+    ]
+    by_spouse = {g["spouse_id"]: g for g in groups}
+    loose = []
+    for c in children:
+        group = by_spouse.get(c["person"].mother_id)
+        if group is None:
+            loose.append(c["person"].id)
+        else:
+            group["child_ids"].append(c["person"].id)
+    if loose:
+        groups.append({"spouse_id": None, "unattributed": True, "child_ids": loose})
+    return groups
+
+
 def _node(person, children_by_parent, spouses_by_person):
-    node = {
+    spouses = spouses_by_person.get(person.id, [])
+    children = [
+        _node(child, children_by_parent, spouses_by_person)
+        for child in children_by_parent.get(person.id, [])
+    ]
+    placeholder = None
+    if children and not spouses:
+        placeholder = OPPOSITE_GENDER.get(person.gender)
+    return {
         "person": person,
-        # kept as "wives" for the viewer; holds whoever married in (husband/wife)
-        "wives": spouses_by_person.get(person.id, []),
-        "children": [],
+        "spouses": spouses,
+        "placeholder": placeholder,
+        "child_groups": _child_groups(children, spouses),
+        "children": children,
     }
-    for child in children_by_parent.get(person.id, []):
-        node["children"].append(_node(child, children_by_parent, spouses_by_person))
-    return node
 
 
 def _depth(node) -> int:

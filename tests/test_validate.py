@@ -75,5 +75,38 @@ class TestValidate(unittest.TestCase):
         self.assertTrue(any("uncertain" in w for w in warnings))
 
 
+class TestMotherIdValidation(unittest.TestCase):
+    def _base(self):
+        return [
+            Person(id="dad", name="Dad", gender="male"),
+            Person(id="mom", name="Mom", gender="female", relation="wife", relation_id="dad"),
+            Person(id="kid", name="Kid", relation="father", relation_id="dad", mother_id="mom"),
+        ]
+
+    def test_valid_mother_id_produces_no_warning(self):
+        warnings = validate(self._base())
+        self.assertEqual([w for w in warnings if w.startswith("mother_id")], [])
+
+    def test_unknown_mother_id_raises(self):
+        people = self._base()
+        people[2].mother_id = "ghost"
+        with self.assertRaises(ValidationError):
+            validate(people)
+
+    def test_self_referential_mother_id_raises(self):
+        people = self._base()
+        people[2].mother_id = "kid"
+        with self.assertRaises(ValidationError):
+            validate(people)
+
+    def test_mother_id_pointing_at_a_non_spouse_warns(self):
+        people = self._base()
+        people.append(Person(id="stranger", name="Stranger", gender="female",
+                             relation="father", relation_id="dad"))
+        people[2].mother_id = "stranger"
+        warnings = validate(people)
+        self.assertTrue(any(w.startswith("mother_id") for w in warnings))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,11 +1,12 @@
-from dataclasses import dataclass
+import os
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 import yaml
 
 ALLOWED_KEYS = {
     "id", "name", "name_hi", "gender", "relation", "relation_id",
-    "order", "born", "note", "status",
+    "order", "born", "note", "status", "address", "mother_id",
 }
 ALLOWED_STATUS = {"uncertain", "needs-parent"}
 ALLOWED_RELATION = {"father", "mother", "husband", "wife"}
@@ -22,6 +23,45 @@ class LoadError(Exception):
     pass
 
 
+ADDRESS_KEYS = {"line", "locality", "city", "state", "country"}
+
+
+@dataclass
+class Address:
+    line: Optional[str] = None
+    locality: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+
+    def is_empty(self) -> bool:
+        return not any([self.line, self.locality, self.city, self.state, self.country])
+
+    def as_dict(self) -> dict:
+        return {
+            k: v
+            for k, v in (
+                ("line", self.line),
+                ("locality", self.locality),
+                ("city", self.city),
+                ("state", self.state),
+                ("country", self.country),
+            )
+            if v
+        }
+
+
+def _parse_address(pid: str, raw) -> Address:
+    if raw is None:
+        return Address()
+    if not isinstance(raw, dict):
+        raise LoadError("Person '%s' has a non-mapping 'address'" % pid)
+    unknown = set(raw) - ADDRESS_KEYS
+    if unknown:
+        raise LoadError("Person '%s' has unknown address keys: %s" % (pid, sorted(unknown)))
+    return Address(**{k: (None if v is None else str(v)) for k, v in raw.items()})
+
+
 @dataclass
 class Person:
     id: str
@@ -30,10 +70,13 @@ class Person:
     gender: Optional[str] = None
     relation: Optional[str] = None
     relation_id: Optional[str] = None
+    mother_id: Optional[str] = None
     order: Optional[int] = None
     born: Optional[str] = None
     note: Optional[str] = None
     status: Optional[str] = None
+    address: Address = field(default_factory=Address)
+    photo: Optional[str] = None
 
     def display_name(self) -> str:
         return self.name or self.name_hi or self.id
@@ -71,6 +114,10 @@ def load_people(path: str) -> List[Person]:
         order = entry.get("order")
         if order is not None and not isinstance(order, int):
             raise LoadError("Person '%s' has non-integer order '%r'" % (pid, order))
+        address = _parse_address(str(pid), entry.get("address"))
+        mother_id = entry.get("mother_id")
+        if mother_id is not None and not isinstance(mother_id, (str, int)):
+            raise LoadError("Person '%s' has a non-scalar mother_id" % pid)
         people.append(
             Person(
                 id=str(pid),
@@ -79,10 +126,46 @@ def load_people(path: str) -> List[Person]:
                 gender=gender,
                 relation=relation,
                 relation_id=entry.get("relation_id"),
+                mother_id=None if mother_id is None else str(mother_id),
                 order=order,
                 born=entry.get("born"),
                 note=entry.get("note"),
                 status=status,
+                address=address,
             )
         )
     return people
+
+
+PHOTO_EXTS = (".jpg", ".jpeg", ".png", ".webp")
+PHOTO_MAX_BYTES = 150 * 1024
+
+
+def resolve_photos(people: List[Person], photo_dir: str) -> List[str]:
+    warnings = []
+    if not os.path.isdir(photo_dir):
+        return warnings
+    by_id = {p.id: p for p in people}
+    folder = os.path.basename(os.path.normpath(photo_dir))
+    for fname in sorted(os.listdir(photo_dir)):
+        stem, ext = os.path.splitext(fname)
+        if ext.lower() not in PHOTO_EXTS:
+            continue
+        person = by_id.get(stem)
+        if person is None:
+            warnings.append("photo '%s' matches no person id" % fname)
+            continue
+        if person.photo is not None:
+            warnings.append(
+                "photo '%s' ignored; '%s' is already used for '%s'"
+                % (fname, person.photo, stem)
+            )
+            continue
+        person.photo = "%s/%s" % (folder, fname)
+        size = os.path.getsize(os.path.join(photo_dir, fname))
+        if size > PHOTO_MAX_BYTES:
+            warnings.append(
+                "photo '%s' is %dKB (over %dKB) — shrink it: sips -Z 400 %s"
+                % (fname, size // 1024, PHOTO_MAX_BYTES // 1024, os.path.join(photo_dir, fname))
+            )
+    return warnings
