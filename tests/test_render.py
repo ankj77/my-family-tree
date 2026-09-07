@@ -156,20 +156,37 @@ class TestCoupleCard(unittest.TestCase):
         self.assertNotIn("FT.BAR", html)
 
     def test_marriage_bar_is_gone(self):
-        self.assertNotIn("class=\"marriage\"", _payload_html())
+        html = _payload_html()
+        self.assertNotIn("'marriage'", html)
+        self.assertNotIn("FT.NODE_H", html)
 
     def test_rail_is_drawn(self):
         self.assertIn("card-rail", _payload_html())
+
+    def test_every_row_gets_full_width_hit_geometry(self):
+        html = _payload_html()
+        self.assertIn("'class': 'card-hit', x: 0, y: 0, width: FT.CARD_W, height: FT.ROW_H", html)
+        self.assertIn(".card-hit{fill:transparent;pointer-events:all;}", html)
+
+    def test_long_text_is_truncated_to_the_card_width(self):
+        html = _payload_html()
+        self.assertIn("fitText(name, FT.CARD_W - textX - 10)", html)
+        self.assertIn("fitText(m, FT.CARD_W - metaX - 10)", html)
+        self.assertIn("getComputedTextLength", html)
+
+    def test_collapse_dot_clears_the_card_border(self):
+        self.assertIn("FT.jointY(n) + 8", _payload_html())
 
     def test_stack_flag_and_reader_are_gone(self):
         html = _payload_html()
         self.assertNotIn("FT.stacked", html)
         self.assertNotIn("stack: true", html)
 
-    def test_lifespan_helper_is_present(self):
+    def test_a_died_value_wins_over_a_living_flag(self):
         html = _payload_html()
-        self.assertIn("FT.lifespan", html)
-        self.assertIn("FT.metaLine", html)
+        self.assertIn("p.died || p.life === 'deceased' ? ' deceased' : ''", html)
+        self.assertIn("dot: p.life === 'living' && !p.died", html)
+        self.assertIn("if (p.born && p.died) return p.born + '\u2013' + p.died;", html)
 
 
 class TestLifePayload(unittest.TestCase):
@@ -184,6 +201,15 @@ class TestLifePayload(unittest.TestCase):
         self.assertIn('"life": "deceased"', html)
         self.assertIn('"died": "1962"', html)
         self.assertIn('"life": "living"', html)
+
+    def test_a_living_flag_and_a_died_value_both_reach_the_payload(self):
+        people = [
+            Person(id="root", name="Root", gender="male", life="living", died="1962"),
+        ]
+        root, unlinked, summary = build_tree(people)
+        html = render_html(root, unlinked, summary)
+        self.assertIn('"life": "living"', html)
+        self.assertIn('"died": "1962"', html)
 
 
 if __name__ == "__main__":

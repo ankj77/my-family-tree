@@ -75,7 +75,7 @@ var FT = { views: {} };
     if (FT.state.lang !== 'en' && p.name_hi) parts.push(p.name_hi);
     var span = FT.lifespan(p);
     if (span) parts.push(span);
-    return { text: parts.join(' · '), dot: p.life === 'living' };
+    return { text: parts.join(' · '), dot: p.life === 'living' && !p.died };
   };
 
   FT.lifespan = function (p) {
@@ -202,13 +202,28 @@ var FT = { views: {} };
     FT.focus(a.getAttribute('data-goto'));
   });
 
+  function fitText(t, avail) {
+    var full = t.getComputedTextLength();
+    if (full <= avail) return;
+    var s = t.textContent;
+    var keep = Math.max(1, Math.floor(s.length * avail / full) - 1);
+    t.textContent = s.slice(0, keep) + '…';
+    while (keep > 1 && t.getComputedTextLength() > avail) {
+      keep -= 1;
+      t.textContent = s.slice(0, keep) + '…';
+    }
+  }
+
   function drawRow(parent, p, rowIndex, owner) {
     var y = rowIndex * FT.ROW_H;
     var unfilled = !p.id;
     var cls = 'card-row' + (unfilled ? ' unfilled' : '') +
-      (p.life === 'deceased' || (p.died && p.life !== 'living') ? ' deceased' : '') +
+      (p.died || p.life === 'deceased' ? ' deceased' : '') +
       (p.status === 'uncertain' ? ' uncertain' : '');
     var g = el('g', { 'class': cls, transform: 'translate(0,' + y + ')' }, parent);
+    el('rect', {
+      'class': 'card-hit', x: 0, y: 0, width: FT.CARD_W, height: FT.ROW_H
+    }, g);
     el('rect', {
       'class': 'card-rail', x: 0, y: 0, width: FT.RAIL_W, height: FT.ROW_H,
       fill: unfilled ? 'var(--rail-unknown)'
@@ -227,15 +242,16 @@ var FT = { views: {} };
     }
     var name = el('text', { 'class': 'card-name', x: textX, y: 21 }, g);
     name.textContent = unfilled ? 'Unknown' : FT.label(p)[0];
+    fitText(name, FT.CARD_W - textX - 10);
     var meta = FT.metaLine(p);
     if (meta.dot) {
       el('circle', { 'class': 'living-dot', cx: textX + 3, cy: 34, r: 3 }, g);
     }
     if (meta.text) {
-      var m = el('text', {
-        'class': 'card-meta', x: textX + (meta.dot ? 12 : 0), y: 38
-      }, g);
+      var metaX = textX + (meta.dot ? 12 : 0);
+      var m = el('text', { 'class': 'card-meta', x: metaX, y: 38 }, g);
       m.textContent = meta.text;
+      fitText(m, FT.CARD_W - metaX - 10);
     }
     if (!unfilled) {
       g.addEventListener('click', function (ev) {
@@ -278,7 +294,7 @@ var FT = { views: {} };
     drawRow(g, n, 0, n);
     FT.partners(n).forEach(function (p, i) { drawRow(g, p, i + 1, n); });
     if ((n.children || []).length) {
-      var cx = FT.jointX(n), cy = FT.jointY(n);
+      var cx = FT.jointX(n), cy = FT.jointY(n) + 8;
       var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
       el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 11 }, g);
       hit.addEventListener('click', function (ev) {
