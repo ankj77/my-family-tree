@@ -114,7 +114,7 @@ var FT = { views: {} };
 
   FT.metaLine = function (p) {
     var parts = [];
-    if (FT.state.lang !== 'en' && p.name_hi) parts.push(p.name_hi);
+    if (FT.state.lang === 'both' && p.name_hi) parts.push(p.name_hi);
     var span = FT.lifespan(p);
     if (span) parts.push(span);
     return { text: parts.join(' · '), dot: !FT.isDeceased(p) && p.life === 'living' };
@@ -683,8 +683,21 @@ var FT = { views: {} };
 
   var langBtns=document.querySelectorAll('#toolbar [data-lang]');
   for(var i=0;i<langBtns.length;i++){
-    langBtns[i].addEventListener('click', (function(b){ return function(){ FT.state.lang=b.getAttribute('data-lang'); FT.render(); }; })(langBtns[i]));
+    langBtns[i].addEventListener('click', (function(b){ return function(){
+      FT.state.lang = b.getAttribute('data-lang');
+      markLang();
+      FT.render();
+    }; })(langBtns[i]));
   }
+
+  function markLang() {
+    for (var i = 0; i < langBtns.length; i++) {
+      var on = langBtns[i].getAttribute('data-lang') === FT.state.lang;
+      langBtns[i].classList.toggle('on', on);
+      langBtns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+  markLang();
   document.getElementById('reset').addEventListener('click', FT.fit);
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
   document.getElementById('deeper').addEventListener('click', function () { FT.deepen(1); });

@@ -254,6 +254,19 @@ class TestSearchSuggestions(unittest.TestCase):
         self.assertIn("Escape", html)
 
 
+class TestLanguageToggle(unittest.TestCase):
+    def test_devanagari_is_only_repeated_in_the_both_mode(self):
+        html = _payload_html()
+        self.assertIn("if (FT.state.lang === 'both' && p.name_hi) parts.push(p.name_hi);", html)
+        self.assertNotIn("if (FT.state.lang !== 'en' && p.name_hi)", html)
+
+    def test_the_active_language_is_marked(self):
+        html = _payload_html()
+        self.assertIn("function markLang", html)
+        self.assertIn("aria-pressed", html)
+        self.assertIn("[data-lang].on", html)
+
+
 class TestThemeTokens(unittest.TestCase):
     def test_token_block_is_present(self):
         html = _payload_html()

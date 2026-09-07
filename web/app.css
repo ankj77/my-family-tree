@@ -130,3 +130,4 @@
     color:var(--name-ink);}
   .sg-hint{display:block;font-size:11px;color:var(--ink-muted);}
   .sg-more{margin:4px 10px 6px;font-size:11px;color:var(--ink-muted);}
+  #toolbar [data-lang].on{background:var(--name-ink);color:var(--card);border-color:var(--name-ink);}
