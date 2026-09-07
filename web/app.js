@@ -474,11 +474,11 @@ var FT = { views: {} };
   FT.placeholderName = function (owner, gender) {
     var en = (owner.name || owner.name_hi || owner.id) +
       (gender === 'male' ? "'s husband" : "'s wife");
-    var hi = (owner.name_hi || owner.name || owner.id) +
-      (gender === 'male' ? ' के पति' : ' की पत्नी');
-    if (FT.state.lang === 'hi') return [hi];
+    var hi = owner.name_hi ?
+      owner.name_hi + (gender === 'male' ? ' के पति' : ' की पत्नी') : '';
+    if (FT.state.lang === 'hi') return [hi || en];
     if (FT.state.lang === 'en') return [en];
-    return [en, hi];
+    return hi ? [en, hi] : [en];
   };
 
   FT.collapseBelowOpenDepth = function () {

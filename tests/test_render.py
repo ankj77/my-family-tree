@@ -192,6 +192,16 @@ class TestPosterParentCards(unittest.TestCase):
         self.assertIn("FT.POSTER_CARD_H", html)
 
 
+class TestPlaceholderHindiIsConditional(unittest.TestCase):
+    def test_hindi_form_is_guarded_on_a_devanagari_name(self):
+        html = _payload_html()
+        self.assertIn("var hi = owner.name_hi ?", html)
+
+    def test_both_mode_returns_one_line_when_there_is_no_devanagari_name(self):
+        html = _payload_html()
+        self.assertIn("return hi ? [en, hi] : [en];", html)
+
+
 class TestOrganicView(unittest.TestCase):
     def test_organic_view_is_registered(self):
         self.assertIn("FT.views.organic", _payload_html())
