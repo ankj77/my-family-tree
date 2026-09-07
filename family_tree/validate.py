@@ -88,4 +88,10 @@ def validate(people: List[Person]) -> List[str]:
     uncertain = [p.id for p in people if p.status == "uncertain"]
     if uncertain:
         warnings.append("%d name(s) uncertain: %s" % (len(uncertain), uncertain))
+    for p in people:
+        if p.life == "living" and p.died:
+            warnings.append(
+                "life 'living' on '%s' contradicts died '%s'; the death date will be shown"
+                % (p.id, p.died)
+            )
     return warnings

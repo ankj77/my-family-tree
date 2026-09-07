@@ -108,5 +108,28 @@ class TestMotherIdValidation(unittest.TestCase):
         self.assertTrue(any(w.startswith("mother_id") for w in warnings))
 
 
+class TestLifeValidation(unittest.TestCase):
+    def test_living_with_a_death_date_warns(self):
+        people = [
+            Person(id="root", name="Root", gender="male", life="living", died="1961"),
+        ]
+        warnings = validate(people)
+        self.assertTrue(any(w.startswith("life") for w in warnings))
+
+    def test_deceased_with_a_death_date_does_not_warn(self):
+        people = [
+            Person(id="root", name="Root", gender="male", life="deceased", died="1961"),
+        ]
+        self.assertEqual([w for w in validate(people) if w.startswith("life")], [])
+
+    def test_died_without_life_does_not_warn(self):
+        people = [Person(id="root", name="Root", gender="male", died="1961")]
+        self.assertEqual([w for w in validate(people) if w.startswith("life")], [])
+
+    def test_living_without_a_death_date_does_not_warn(self):
+        people = [Person(id="root", name="Root", gender="male", life="living")]
+        self.assertEqual([w for w in validate(people) if w.startswith("life")], [])
+
+
 if __name__ == "__main__":
     unittest.main()
