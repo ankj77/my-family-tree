@@ -268,6 +268,15 @@ class TestLanguageToggle(unittest.TestCase):
         html = _payload_html()
         self.assertIn("lang: 'en'", html)
 
+    def test_the_language_choice_is_remembered(self):
+        html = _payload_html()
+        self.assertIn("localStorage.setItem('ft-lang'", html)
+        self.assertIn("localStorage.getItem('ft-lang')", html)
+
+    def test_the_stored_language_is_validated_before_use(self):
+        html = _payload_html()
+        self.assertIn("if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;", html)
+
     def test_the_meta_line_no_longer_repeats_a_name(self):
         html = _payload_html()
         self.assertNotIn("parts.push(p.name_hi)", html)

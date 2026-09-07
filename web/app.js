@@ -686,6 +686,7 @@ var FT = { views: {} };
 
   FT.cycleLang = function () {
     FT.state.lang = LANG_OTHER[FT.state.lang];
+    try { localStorage.setItem('ft-lang', FT.state.lang); } catch (e) {}
     markLang();
     FT.render();
   };
@@ -716,6 +717,10 @@ var FT = { views: {} };
   FT.init = function () {
     populateViewPicker();
     FT.collapseBelowOpenDepth();
+    var savedLang = null;
+    try { savedLang = localStorage.getItem('ft-lang'); } catch (e) {}
+    if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;
+    markLang();
     var saved = null;
     try { saved = localStorage.getItem('ft-view'); } catch (e) {}
     var preferred = saved && FT.views[saved]
