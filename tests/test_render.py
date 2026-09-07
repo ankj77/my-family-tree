@@ -147,5 +147,44 @@ class TestThemeTokens(unittest.TestCase):
         self.assertNotIn("@import", html)
 
 
+class TestCoupleCard(unittest.TestCase):
+    def test_card_constants_replace_the_box_constants(self):
+        html = _payload_html()
+        self.assertIn("FT.CARD_W = 250", html)
+        self.assertIn("FT.ROW_H = 52", html)
+        self.assertNotIn("FT.SPOUSE_W", html)
+        self.assertNotIn("FT.BAR", html)
+
+    def test_marriage_bar_is_gone(self):
+        self.assertNotIn("class=\"marriage\"", _payload_html())
+
+    def test_rail_is_drawn(self):
+        self.assertIn("card-rail", _payload_html())
+
+    def test_stack_flag_and_reader_are_gone(self):
+        html = _payload_html()
+        self.assertNotIn("FT.stacked", html)
+        self.assertNotIn("stack: true", html)
+
+    def test_lifespan_helper_is_present(self):
+        html = _payload_html()
+        self.assertIn("FT.lifespan", html)
+        self.assertIn("FT.metaLine", html)
+
+
+class TestLifePayload(unittest.TestCase):
+    def test_life_and_died_reach_the_payload(self):
+        people = [
+            Person(id="root", name="Root", gender="male", life="deceased", died="1962"),
+            Person(id="kid", name="Kid", gender="male", relation="father",
+                   relation_id="root", life="living"),
+        ]
+        root, unlinked, summary = build_tree(people)
+        html = render_html(root, unlinked, summary)
+        self.assertIn('"life": "deceased"', html)
+        self.assertIn('"died": "1962"', html)
+        self.assertIn('"life": "living"', html)
+
+
 if __name__ == "__main__":
     unittest.main()

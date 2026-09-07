@@ -36,8 +36,6 @@
   svg{width:100%;height:100%;display:block;}
   .edge{fill:none;stroke:var(--connector);stroke-width:1.25px;}
   .edge.hl{stroke:var(--hl);stroke-width:2.5px;}
-  .node text{font-size:12px;fill:var(--ink);pointer-events:none;}
-  .node text.hi{font-size:11px;fill:var(--ink-muted);}
   .branch{fill:none;stroke:var(--bark);stroke-linecap:round;}
   .branch.trunk{stroke-width:16px;stroke:var(--bark-trunk);}
   .branch.hl{stroke:var(--hl);}
@@ -46,22 +44,25 @@
   .leafnode.hl .leaf{stroke:var(--hl);stroke-width:2.5px;}
   .leaflabel{font-size:11px;fill:var(--ink);pointer-events:none;}
   #stage.hide-labels .leaflabel{display:none;}
-  .marriage{stroke:var(--rail-f);stroke-width:1.5px;}
   .toggle{fill:var(--rail-m);cursor:pointer;pointer-events:none;}
   .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
-  .badge{font-size:12px;fill:var(--warn);font-weight:bold;pointer-events:none;}
   #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:var(--card);
     border-left:1px solid var(--edge);border-bottom:1px solid var(--edge);padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
   #unlinked h4{margin:0 0 6px;}
   #unlinked.empty{display:none;}
-  .node .self rect{fill:var(--card);stroke:var(--rail-m);stroke-width:1.4px;cursor:pointer;}
-  .node.hl .self rect{stroke:var(--hl);stroke-width:2px;fill:var(--card);}
-  .node.uncertain .self rect{stroke-dasharray:4 3;fill:var(--card);}
-  .spouse rect{fill:var(--card);stroke:var(--rail-f);stroke-width:1.4px;cursor:pointer;}
-  .spouse.placeholder rect{fill:var(--canvas);stroke-dasharray:4 3;cursor:default;}
-  .spouse.placeholder text{fill:var(--ink-muted);font-style:italic;}
-  .spouse text{font-size:11px;fill:var(--ink);pointer-events:none;}
-  .thumb{pointer-events:none;}
+  .card-bg{fill:var(--card);stroke:var(--edge);stroke-width:1px;}
+  .card-shadow{fill:var(--ink);opacity:.09;pointer-events:none;}
+  .card-name{font-size:13.5px;font-weight:600;fill:var(--ink);pointer-events:none;}
+  .card-meta{font-size:11px;fill:var(--ink-muted);pointer-events:none;}
+  .living-dot{fill:var(--living);pointer-events:none;}
+  .card-row{cursor:pointer;}
+  .card-row.unfilled{cursor:default;}
+  .card-row.unfilled .card-name{fill:var(--ink-muted);font-style:italic;font-weight:400;}
+  .card-row.deceased .card-rail{opacity:.7;}
+  .card-row.deceased .card-name{fill:var(--ink-muted);}
+  .card-row.uncertain .card-name{fill:var(--warn);}
+  .card.hl .card-bg{stroke:var(--hl);stroke-width:2px;}
+  .avatar{pointer-events:none;}
   #sheet{position:absolute;right:0;top:0;bottom:0;width:320px;background:var(--card);
     border-left:1px solid var(--edge);box-shadow:var(--shadow-card);
     padding:16px;overflow:auto;z-index:20;box-sizing:border-box;font-size:13px;color:var(--ink);}

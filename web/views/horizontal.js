@@ -2,10 +2,9 @@ FT.views.horizontal = {
   id: 'horizontal',
   label: 'Left to right',
   nodeShape: 'box',
-  stack: true,
   layout: function (root) {
     var cursor = 0;
-    var COL = FT.SELF_W + 90;
+    var COL = FT.CARD_W + 90;
     function shiftDown(n, dy) {
       n.y += dy;
       FT.visibleChildren(n).forEach(function (c) { shiftDown(c, dy); });

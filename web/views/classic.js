@@ -3,7 +3,7 @@ FT.views.classic = {
   label: 'Classic (top-down)',
   nodeShape: 'box',
   layout: function (root) {
-    var slot = FT.SELF_W + FT.BAR + FT.SPOUSE_W + FT.H_GAP;
+    var slot = FT.CARD_W + FT.H_GAP;
     var rowHeight = [];
     (function measure(n, depth) {
       rowHeight[depth] = Math.max(rowHeight[depth] || 0, FT.nodeH(n));
