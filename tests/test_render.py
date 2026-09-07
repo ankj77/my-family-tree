@@ -132,5 +132,20 @@ class TestScriptConcatenationOrder(unittest.TestCase):
         self.assertLess(organic_pos, init_pos)
 
 
+class TestThemeTokens(unittest.TestCase):
+    def test_token_block_is_present(self):
+        html = _payload_html()
+        for token in ("--canvas", "--card", "--rail-m", "--rail-f", "--ink",
+                      "--ink-muted", "--living", "--connector", "--bark",
+                      "--leaf-1", "--font", "--shadow-card"):
+            self.assertIn(token, html)
+
+    def test_no_web_fonts(self):
+        html = _payload_html()
+        self.assertNotIn("fonts.googleapis.com", html)
+        self.assertNotIn("@font-face", html)
+        self.assertNotIn("@import", html)
+
+
 if __name__ == "__main__":
     unittest.main()
