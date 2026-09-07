@@ -45,6 +45,7 @@
   relation_id: udmi
 - id: richa
   name: Richa
+  name_hi: ऋचा
   gender: female
   relation: mother
   relation_id: udmi
