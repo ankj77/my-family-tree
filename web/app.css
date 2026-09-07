@@ -108,3 +108,11 @@
     #toolbar.show-extras #extras{display:flex;gap:8px;flex-wrap:wrap;}
     #toolbar .summary{font-size:11px;}
   }
+  .poster-ground{fill:var(--connector);opacity:.22;}
+  .poster-root{fill:none;stroke:var(--bark-trunk);stroke-linecap:round;opacity:.85;}
+  .poster-trunk{fill:var(--bark-trunk);}
+  .poster-branch{fill:none;stroke:var(--bark);stroke-linecap:round;}
+  .poster-branch.hl{stroke:var(--hl);}
+  .poster-leaf{stroke:none;}
+  #stage[data-view="poster"] .toggle,
+  #stage[data-view="poster"] .toggle-hit{display:none;}

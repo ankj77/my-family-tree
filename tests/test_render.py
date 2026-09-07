@@ -144,6 +144,33 @@ class TestParchmentTheme(unittest.TestCase):
         self.assertNotIn("@import", html)
 
 
+class TestPosterView(unittest.TestCase):
+    def test_poster_view_is_registered_and_listed(self):
+        html = _payload_html()
+        self.assertIn("FT.views.poster", html)
+        self.assertIn("Poster (illustrated)", html)
+        self.assertIn("'poster'", html)
+
+    def test_poster_caps_depth_and_the_core_honours_it(self):
+        html = _payload_html()
+        self.assertIn("maxDepth: 2", html)
+        self.assertIn("FT.maxDepth", html)
+
+    def test_poster_draws_its_own_trunk_roots_and_ground(self):
+        html = _payload_html()
+        self.assertIn("poster-trunk", html)
+        self.assertIn("poster-root", html)
+        self.assertIn("poster-ground", html)
+
+    def test_poster_leaf_fill_uses_inline_style_not_an_attribute(self):
+        html = _payload_html()
+        self.assertIn("e.style.fill = ramp[", html)
+
+    def test_collapse_toggles_are_hidden_in_the_poster(self):
+        html = _payload_html()
+        self.assertIn('#stage[data-view="poster"] .toggle', html)
+
+
 class TestOrganicView(unittest.TestCase):
     def test_organic_view_is_registered(self):
         self.assertIn("FT.views.organic", _payload_html())

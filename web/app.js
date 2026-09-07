@@ -14,6 +14,8 @@ var FT = { views: {} };
     return e;
   }
 
+  FT.el = el;
+
   FT.edge = function (g, d, childId) {
     var attrs = { 'class': 'edge', d: d };
     if (childId) attrs['data-edge'] = childId;
@@ -328,17 +330,25 @@ var FT = { views: {} };
     return g;
   };
 
+  FT.maxDepth = function () {
+    var view = FT.views[FT.state.viewId];
+    return view && view.maxDepth !== undefined ? view.maxDepth : Infinity;
+  };
+
   FT.render = function () {
     while (vp.firstChild) vp.removeChild(vp.firstChild);
     var view = FT.views[FT.state.viewId] || FT.views.classic;
     view.layout(tree);
     var edges = el('g', {}, vp);
     var nodes = el('g', {}, vp);
+    var cap = FT.maxDepth();
+    stage.setAttribute('data-view', view.id);
     view.drawEdges(edges, tree);
-    (function walk(n) {
+    (function walk(n, depth) {
       FT.drawNode(nodes, n);
-      FT.visibleChildren(n).forEach(walk);
-    })(tree);
+      if (depth >= cap) return;
+      FT.visibleChildren(n).forEach(function (c) { walk(c, depth + 1); });
+    })(tree, 0);
     if (FT.state.highlighted) highlight(FT.state.highlighted);
     apply();
   };
@@ -398,7 +408,7 @@ var FT = { views: {} };
   }, {passive:false});
   stage.addEventListener('touchend',function(e){ if(e.touches.length===0) touch=null; });
 
-  var VIEW_ORDER = ['classic', 'horizontal', 'organic'];
+  var VIEW_ORDER = ['classic', 'horizontal', 'organic', 'poster'];
 
   FT.placeholderName = function (owner, gender) {
     var en = (owner.name || owner.name_hi || owner.id) +
@@ -437,16 +447,22 @@ var FT = { views: {} };
   FT.fit = function () {
     var view = FT.views[FT.state.viewId];
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    (function walk(n) {
+    var cap = FT.maxDepth();
+    (function walk(n, depth) {
       var w = view.nodeShape === 'leaf' ? 30 : FT.nodeW(n);
       var h = view.nodeShape === 'leaf' ? 30 : FT.nodeH(n);
       minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
       minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
-      FT.visibleChildren(n).forEach(walk);
-    })(tree);
+      if (depth >= cap) return;
+      FT.visibleChildren(n).forEach(function (c) { walk(c, depth + 1); });
+    })(tree, 0);
     if (view.nodeShape === 'leaf') {
       minX = Math.min(minX, -10); maxX = Math.max(maxX, 10);
       minY = Math.min(minY, 30); maxY = Math.max(maxY, 50);
+    }
+    if (view.extentPad) {
+      minX = Math.min(minX, view.extentPad.minX); maxX = Math.max(maxX, view.extentPad.maxX);
+      minY = Math.min(minY, view.extentPad.minY); maxY = Math.max(maxY, view.extentPad.maxY);
     }
     var r = stage.getBoundingClientRect();
     var stageW = r.width > 0 ? r.width : window.innerWidth;
