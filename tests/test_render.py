@@ -168,20 +168,29 @@ class TestPosterView(unittest.TestCase):
 
     def test_the_poster_cards_carry_a_plus_minus_knob(self):
         html = _payload_html()
-        self.assertIn("togglePos: function (n) { return { x: FT.jointX(n), y: -14 }; }", html)
+        self.assertIn("if (n.depth && (n.children || []).length) FT.knob(", html)
         self.assertNotIn('#stage[data-view="poster"] .toggle', html)
 
 
-class TestOneCardEverywhere(unittest.TestCase):
-    def test_the_parents_only_card_is_gone(self):
+class TestPosterParentCards(unittest.TestCase):
+    def test_poster_declares_the_parents_card_style(self):
         html = _payload_html()
-        self.assertNotIn("cardStyle", html)
-        self.assertNotIn("FT.drawParentCard", html)
-        self.assertNotIn("FT.POSTER_CARD_H", html)
+        self.assertIn("cardStyle: 'parents'", html)
+        self.assertIn("FT.drawParentCard", html)
 
-    def test_every_view_draws_the_same_card(self):
+    def test_parent_resolution_helper_exists(self):
         html = _payload_html()
-        self.assertIn("FT.drawNode = function (parent, n) {\n    var g = el('g', {", html)
+        self.assertIn("FT.parentsOf", html)
+
+    def test_card_shows_father_and_mother_with_unknown_fallback(self):
+        html = _payload_html()
+        self.assertIn("'Father'", html)
+        self.assertIn("'Mother'", html)
+        self.assertIn("(Unknown)", html)
+
+    def test_parent_card_height_is_its_own_constant(self):
+        html = _payload_html()
+        self.assertIn("FT.POSTER_CARD_H", html)
 
     def test_the_root_art_is_shared_by_all_three_views(self):
         html = _payload_html()

@@ -2,7 +2,7 @@ FT.views.poster = {
   id: 'poster',
   label: 'Tree (organic)',
   nodeShape: 'box',
-  togglePos: function (n) { return { x: FT.jointX(n), y: -14 }; },
+  cardStyle: 'parents',
   maxDepth: 2,
   extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },
   rowTop: function (depth) {
