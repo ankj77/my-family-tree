@@ -121,6 +121,29 @@ class TestPlaceholderSpouseIsNamedAfterItsPartner(unittest.TestCase):
         self.assertIn("के पति", html)
 
 
+class TestParchmentTheme(unittest.TestCase):
+    def test_serif_display_stack_is_declared_and_used(self):
+        html = _payload_html()
+        self.assertIn("--serif", html)
+        self.assertIn("font-family:var(--serif)", html)
+
+    def test_card_name_ink_is_its_own_token(self):
+        html = _payload_html()
+        self.assertIn("--name-ink", html)
+
+    def test_tagline_ornaments_are_present(self):
+        html = _payload_html()
+        self.assertIn('id="ornament-motto"', html)
+        self.assertIn('id="ornament-story"', html)
+        self.assertIn("roots stay forever", html)
+
+    def test_theme_still_ships_no_web_fonts(self):
+        html = _payload_html()
+        self.assertNotIn("fonts.googleapis.com", html)
+        self.assertNotIn("@font-face", html)
+        self.assertNotIn("@import", html)
+
+
 class TestOrganicView(unittest.TestCase):
     def test_organic_view_is_registered(self):
         self.assertIn("FT.views.organic", _payload_html())
