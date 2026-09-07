@@ -53,7 +53,8 @@
   .leafnode.hl .leaf{stroke:var(--hl);stroke-width:2.5px;}
   .leafnode.deceased .leaf{opacity:.7;}
   .leafnode.deceased .leaflabel{fill:var(--ink-muted);}
-  .leaflabel{font-size:11px;fill:var(--ink);pointer-events:none;}
+  .leaflabel{font-size:11.5px;font-weight:600;font-family:var(--serif);
+    fill:var(--name-ink);pointer-events:none;}
   #stage.hide-labels .leaflabel{display:none;}
   .toggle{fill:var(--rail-m);cursor:pointer;pointer-events:none;}
   .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
@@ -125,8 +126,11 @@
   .poster-leaf{stroke:none;}
   #stage[data-view="poster"] .toggle,
   #stage[data-view="poster"] .toggle-hit{display:none;}
-  .leaf-chip{fill:var(--card);stroke:var(--edge);stroke-width:1px;opacity:.96;pointer-events:none;}
-  #stage.hide-labels .leaf-chip{display:none;}
+  .leaf-card{fill:var(--card);stroke:var(--edge);stroke-width:1.25px;pointer-events:none;}
+  #stage.hide-labels .leaf-card{display:none;}
+  .leaf-meta{font-size:9.5px;fill:var(--ink-muted);pointer-events:none;}
+  #stage.hide-labels .leaf-meta{display:none;}
+  .leafnode.deceased .leaf-meta{fill:var(--ink-muted);}
   .parent-card .pc-name{font-family:var(--serif);font-size:14.5px;font-weight:600;
     fill:var(--name-ink);pointer-events:none;}
   .pc-rule{stroke:var(--rule);stroke-width:1px;}
@@ -464,13 +468,27 @@
       var spouse = el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
       spouse.style.fill = 'var(--leaf-spouse)';
     }
-    var t = el('text', { y: -r - 9, 'text-anchor': 'middle', 'class': 'leaflabel' }, g);
-    t.textContent = FT.label(n)[0];
-    var w = t.getComputedTextLength() + 16;
-    var chip = el('rect', {
-      'class': 'leaf-chip', x: -w / 2, y: -r - 22, width: w, height: 18, rx: 9
+    var cardBottom = -r * 0.72;
+    var span = FT.lifespan(n);
+    var cardH = span ? 38 : 25;
+    var name = el('text', {
+      y: cardBottom - (span ? 24 : 9), 'text-anchor': 'middle', 'class': 'leaflabel'
+    }, g);
+    name.textContent = FT.label(n)[0];
+    var w = name.getComputedTextLength();
+    var meta = null;
+    if (span) {
+      meta = el('text', {
+        y: cardBottom - 9, 'text-anchor': 'middle', 'class': 'leaf-meta'
+      }, g);
+      meta.textContent = span;
+      w = Math.max(w, meta.getComputedTextLength());
+    }
+    w = Math.max(60, w + 18);
+    var card = el('rect', {
+      'class': 'leaf-card', x: -w / 2, y: cardBottom - cardH, width: w, height: cardH, rx: 8
     });
-    g.insertBefore(chip, t);
+    g.insertBefore(card, name);
     g.addEventListener('click', function () { FT.select(n.id, n); });
     return g;
   };

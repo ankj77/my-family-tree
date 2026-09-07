@@ -300,13 +300,27 @@ var FT = { views: {} };
       var spouse = el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
       spouse.style.fill = 'var(--leaf-spouse)';
     }
-    var t = el('text', { y: -r - 9, 'text-anchor': 'middle', 'class': 'leaflabel' }, g);
-    t.textContent = FT.label(n)[0];
-    var w = t.getComputedTextLength() + 16;
-    var chip = el('rect', {
-      'class': 'leaf-chip', x: -w / 2, y: -r - 22, width: w, height: 18, rx: 9
+    var cardBottom = -r * 0.72;
+    var span = FT.lifespan(n);
+    var cardH = span ? 38 : 25;
+    var name = el('text', {
+      y: cardBottom - (span ? 24 : 9), 'text-anchor': 'middle', 'class': 'leaflabel'
+    }, g);
+    name.textContent = FT.label(n)[0];
+    var w = name.getComputedTextLength();
+    var meta = null;
+    if (span) {
+      meta = el('text', {
+        y: cardBottom - 9, 'text-anchor': 'middle', 'class': 'leaf-meta'
+      }, g);
+      meta.textContent = span;
+      w = Math.max(w, meta.getComputedTextLength());
+    }
+    w = Math.max(60, w + 18);
+    var card = el('rect', {
+      'class': 'leaf-card', x: -w / 2, y: cardBottom - cardH, width: w, height: cardH, rx: 8
     });
-    g.insertBefore(chip, t);
+    g.insertBefore(card, name);
     g.addEventListener('click', function () { FT.select(n.id, n); });
     return g;
   };

@@ -202,6 +202,25 @@ class TestPlaceholderHindiIsConditional(unittest.TestCase):
         self.assertIn("return hi ? [en, hi] : [en];", html)
 
 
+class TestTreeNodeCards(unittest.TestCase):
+    def test_the_floating_chip_is_replaced_by_an_attached_card(self):
+        html = _payload_html()
+        self.assertIn("leaf-card", html)
+        self.assertNotIn("'class': 'leaf-chip'", html)
+
+    def test_the_card_carries_a_lifespan_line(self):
+        html = _payload_html()
+        self.assertIn("leaf-meta", html)
+
+    def test_the_card_is_flush_with_the_leaf_not_floating(self):
+        html = _payload_html()
+        self.assertIn("var cardBottom = -r * 0.72;", html)
+
+    def test_cards_still_hide_when_zoomed_out(self):
+        html = _payload_html()
+        self.assertIn("#stage.hide-labels .leaf-card", html)
+
+
 class TestOrganicView(unittest.TestCase):
     def test_organic_view_is_registered(self):
         self.assertIn("FT.views.organic", _payload_html())
