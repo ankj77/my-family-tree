@@ -24,6 +24,8 @@ person — a `relation` type plus the `relation_id` it points to:
   relation_id: parent_id   # the id of the related person
   order: 1                 # optional: sibling order, lower = further left
   born: "free text"        # optional
+  life: deceased           # optional: living | deceased (omitted = not known)
+  died: "1961"             # optional, free text like born
   note: "free text"        # optional
   status: uncertain        # optional: uncertain | needs-parent
   mother_id: wife_id       # optional: only when the father has 2+ recorded wives
@@ -80,6 +82,48 @@ hang from the man's own line.
   successful build looks the same either way, **check the output of
   `python3 build.py` after adding or changing a `mother_id`** to make sure no such
   warning appeared.
+
+## Recording a death — or that someone is living
+
+Two more optional fields, written the same free-text way as `born`:
+
+```yaml
+  life: deceased           # optional: living | deceased (omitted = not known)
+  died: "1961"             # optional, free text like born
+```
+
+What shows up on the card depends on which of `born`, `life` and `died` you filled in:
+
+| You wrote | The card shows |
+|---|---|
+| `born: 1884`, `life: deceased`, `died: "1961"` | `1884–1961` |
+| `born: 1884`, `life: deceased` (no `died`) | `1884–Deceased` |
+| `born: 1992`, `life: living` | `1992–Living`, with a small green dot |
+| `born: 1884` only, no `life`/`died` | `b. 1884` |
+| `died: "1961"` only, no `born` | `d. 1961` |
+| none of the three | just the Devanagari name, or nothing at all |
+
+The same rule shows up everywhere a person appears — the card, the organic tree's leaf, and the
+detail sheet — and a deceased person's name and rail are always drawn a little dimmer than a living
+one's, so a glance at the tree tells you who is still living.
+
+**Leaving `life` out entirely means "we don't know" — it never means "living".** This is
+deliberate. Most of the 105 people in this file are ancestors who are certainly no longer living,
+but nobody recorded when they died. If a missing `life` were treated as "living", every one of them
+would show up on the tree as alive today, and a newly added relative who has in fact passed away
+would silently render as living until someone happened to notice. So when in doubt, write nothing —
+the card will simply not claim to know, rather than guess wrong.
+
+Two mistakes are easy to make here, and they are **not** treated the same way:
+
+- **Quiet warning.** Writing `life: living` on someone who also has a `died` date does not stop the
+  build. `python3 build.py` prints a warning line, but `family-tree.html` is still written — and the
+  death date wins: that person renders as deceased regardless of the `living` flag. If you don't read
+  the build's terminal output, you will not see this warning, so it's worth a habit of glancing at it
+  after editing these fields.
+- **Loud error.** Writing any `life` value other than `living` or `deceased` (a typo, a stray capital
+  letter, anything else) **stops the build**. No new `family-tree.html` is written until you fix it,
+  so this one you cannot miss.
 
 ## Photos
 
