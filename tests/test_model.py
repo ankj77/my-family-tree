@@ -218,5 +218,45 @@ class TestResolvePhotos(unittest.TestCase):
         self.assertEqual(resolve_photos([Person(id="k", name="K")], "/nonexistent/dir"), [])
 
 
+class TestLifeAndDied(unittest.TestCase):
+    def test_parses_life_and_died(self):
+        people = load_people(
+            _write(
+                "- id: x\n"
+                "  name: X\n"
+                "  born: \"1884\"\n"
+                "  life: deceased\n"
+                "  died: \"1961\"\n"
+            )
+        )
+        self.assertEqual(people[0].life, "deceased")
+        self.assertEqual(people[0].died, "1961")
+
+    def test_life_living_is_allowed(self):
+        people = load_people(_write("- id: x\n  name: X\n  life: living\n"))
+        self.assertEqual(people[0].life, "living")
+
+    def test_missing_life_and_died_are_none(self):
+        people = load_people(_write("- id: x\n  name: X\n"))
+        self.assertIsNone(people[0].life)
+        self.assertIsNone(people[0].died)
+
+    def test_invalid_life_raises(self):
+        with self.assertRaises(LoadError):
+            load_people(_write("- id: x\n  name: X\n  life: undead\n"))
+
+    def test_numeric_died_is_stringified(self):
+        people = load_people(_write("- id: x\n  name: X\n  died: 1961\n"))
+        self.assertEqual(people[0].died, "1961")
+
+    def test_numeric_born_is_stringified(self):
+        people = load_people(_write("- id: x\n  name: X\n  born: 1961\n"))
+        self.assertEqual(people[0].born, "1961")
+
+    def test_died_accepts_free_text(self):
+        people = load_people(_write("- id: x\n  name: X\n  died: c. 1961 (Samvat 2018)\n"))
+        self.assertEqual(people[0].died, "c. 1961 (Samvat 2018)")
+
+
 if __name__ == "__main__":
     unittest.main()

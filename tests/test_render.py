@@ -132,5 +132,127 @@ class TestScriptConcatenationOrder(unittest.TestCase):
         self.assertLess(organic_pos, init_pos)
 
 
+class TestThemeTokens(unittest.TestCase):
+    def test_token_block_is_present(self):
+        html = _payload_html()
+        for token in ("--canvas", "--card", "--rail-m", "--rail-f", "--ink",
+                      "--ink-muted", "--living", "--connector", "--bark",
+                      "--leaf-1", "--font", "--shadow-card"):
+            self.assertIn(token, html)
+
+    def test_no_web_fonts(self):
+        html = _payload_html()
+        self.assertNotIn("fonts.googleapis.com", html)
+        self.assertNotIn("@font-face", html)
+        self.assertNotIn("@import", html)
+
+
+class TestCoupleCard(unittest.TestCase):
+    def test_card_constants_replace_the_box_constants(self):
+        html = _payload_html()
+        self.assertIn("FT.CARD_W = 250", html)
+        self.assertIn("FT.ROW_H = 52", html)
+        self.assertNotIn("FT.SPOUSE_W", html)
+        self.assertNotIn("FT.BAR", html)
+
+    def test_marriage_bar_is_gone(self):
+        html = _payload_html()
+        self.assertNotIn("'marriage'", html)
+        self.assertNotIn("FT.NODE_H", html)
+
+    def test_rail_is_drawn(self):
+        self.assertIn("card-rail", _payload_html())
+
+    def test_every_row_gets_full_width_hit_geometry(self):
+        html = _payload_html()
+        self.assertIn("'class': 'card-hit', x: 0, y: 0, width: FT.CARD_W, height: FT.ROW_H", html)
+        self.assertIn(".card-hit{fill:transparent;pointer-events:all;}", html)
+
+    def test_long_text_is_truncated_to_the_card_width(self):
+        html = _payload_html()
+        self.assertIn("fitText(name, FT.CARD_W - textX - 10)", html)
+        self.assertIn("fitText(m, FT.CARD_W - metaX - 10)", html)
+        self.assertIn("getComputedTextLength", html)
+
+    def test_collapse_dot_clears_the_card_border(self):
+        self.assertIn("FT.jointY(n) + 8", _payload_html())
+
+    def test_stack_flag_and_reader_are_gone(self):
+        html = _payload_html()
+        self.assertNotIn("FT.stacked", html)
+        self.assertNotIn("stack: true", html)
+
+    def test_a_died_value_wins_over_a_living_flag(self):
+        html = _payload_html()
+        self.assertIn("FT.isDeceased(p) ? ' deceased' : ''", html)
+        self.assertIn("dot: !FT.isDeceased(p) && p.life === 'living'", html)
+        self.assertIn("if (p.born && p.died) return p.born + '\u2013' + p.died;", html)
+
+
+class TestLifePayload(unittest.TestCase):
+    def test_life_and_died_reach_the_payload(self):
+        people = [
+            Person(id="root", name="Root", gender="male", life="deceased", died="1962"),
+            Person(id="kid", name="Kid", gender="male", relation="father",
+                   relation_id="root", life="living"),
+        ]
+        root, unlinked, summary = build_tree(people)
+        html = render_html(root, unlinked, summary)
+        self.assertIn('"life": "deceased"', html)
+        self.assertIn('"died": "1962"', html)
+        self.assertIn('"life": "living"', html)
+
+    def test_a_living_flag_and_a_died_value_both_reach_the_payload(self):
+        people = [
+            Person(id="root", name="Root", gender="male", life="living", died="1962"),
+        ]
+        root, unlinked, summary = build_tree(people)
+        html = render_html(root, unlinked, summary)
+        self.assertIn('"life": "living"', html)
+        self.assertIn('"died": "1962"', html)
+
+
+class TestSheetRendersLifeStatus(unittest.TestCase):
+    def _html(self):
+        people = [
+            Person(id="root", name="Root", gender="male", born="1884",
+                   life="deceased", died="1961"),
+            Person(id="kid", name="Kid", gender="male", relation="father",
+                   relation_id="root", born="1992", life="living"),
+        ]
+        root, unlinked, summary = build_tree(people)
+        return render_html(root, unlinked, summary)
+
+    def test_sheet_renders_life_status(self):
+        html = self._html()
+        self.assertIn("Died", html)
+        self.assertIn("Status", html)
+        self.assertIn("FT.isDeceased(p) ? 'Deceased' : 'Living'", html)
+
+
+class TestIsDeceasedIsCentralized(unittest.TestCase):
+    def test_isDeceased_is_defined_once_and_used_by_card_sheet_and_leaf(self):
+        html = _payload_html()
+        self.assertIn(
+            "FT.isDeceased = function (p) {\n"
+            "    return !!(p.died || p.life === 'deceased');\n"
+            "  };",
+            html,
+        )
+        self.assertIn("FT.isDeceased(p) ? ' deceased' : ''", html)
+        self.assertIn("FT.isDeceased(p) ? 'Deceased' : 'Living'", html)
+        self.assertIn("var deceased = FT.isDeceased(n);", html)
+
+
+class TestOrganicLeafFillSurvivesTheCascade(unittest.TestCase):
+    def test_leaf_fill_is_set_via_style_not_a_presentation_attribute(self):
+        html = _payload_html()
+        self.assertIn(
+            "leaf.style.fill = LEAF_RAMP[(n.depth || 0) % LEAF_RAMP.length];", html
+        )
+        self.assertIn("spouse.style.fill = 'var(--leaf-spouse)';", html)
+        self.assertNotIn("'class': 'leaf', fill:", html)
+
+
 if __name__ == "__main__":
     unittest.main()

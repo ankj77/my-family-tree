@@ -7,10 +7,12 @@ import yaml
 ALLOWED_KEYS = {
     "id", "name", "name_hi", "gender", "relation", "relation_id",
     "order", "born", "note", "status", "address", "mother_id",
+    "life", "died",
 }
 ALLOWED_STATUS = {"uncertain", "needs-parent"}
 ALLOWED_RELATION = {"father", "mother", "husband", "wife"}
 ALLOWED_GENDER = {"male", "female"}
+ALLOWED_LIFE = {"living", "deceased"}
 
 # A person attaches to the tree by one relation to another person:
 #   father / mother  -> relation_id is this person's parent (this person is their child)
@@ -73,6 +75,8 @@ class Person:
     mother_id: Optional[str] = None
     order: Optional[int] = None
     born: Optional[str] = None
+    life: Optional[str] = None
+    died: Optional[str] = None
     note: Optional[str] = None
     status: Optional[str] = None
     address: Address = field(default_factory=Address)
@@ -114,6 +118,11 @@ def load_people(path: str) -> List[Person]:
         order = entry.get("order")
         if order is not None and not isinstance(order, int):
             raise LoadError("Person '%s' has non-integer order '%r'" % (pid, order))
+        life = entry.get("life")
+        if life is not None and life not in ALLOWED_LIFE:
+            raise LoadError("Person '%s' has invalid life '%s'" % (pid, life))
+        born = entry.get("born")
+        died = entry.get("died")
         address = _parse_address(str(pid), entry.get("address"))
         mother_id = entry.get("mother_id")
         if mother_id is not None and not isinstance(mother_id, (str, int)):
@@ -128,7 +137,9 @@ def load_people(path: str) -> List[Person]:
                 relation_id=entry.get("relation_id"),
                 mother_id=None if mother_id is None else str(mother_id),
                 order=order,
-                born=entry.get("born"),
+                born=None if born is None else str(born),
+                life=life,
+                died=None if died is None else str(died),
                 note=entry.get("note"),
                 status=status,
                 address=address,

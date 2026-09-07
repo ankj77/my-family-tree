@@ -30,6 +30,8 @@ def _person_json(p: Person) -> dict:
         "name_hi": p.name_hi,
         "gender": p.gender,
         "born": p.born,
+        "life": p.life,
+        "died": p.died,
         "note": p.note,
         "status": p.status,
         "photo": p.photo,

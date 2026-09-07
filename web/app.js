@@ -20,8 +20,8 @@ var FT = { views: {} };
     return el('path', attrs, g);
   };
 
-  FT.SELF_W = 150; FT.SPOUSE_W = 120; FT.NODE_H = 46;
-  FT.BAR = 22; FT.H_GAP = 40; FT.V_GAP = 100;
+  FT.CARD_W = 250; FT.ROW_H = 52; FT.RAIL_W = 5; FT.AVATAR = 32;
+  FT.H_GAP = 40; FT.V_GAP = 100;
 
   FT.state = { lang: 'both', viewId: 'classic', collapsed: {}, selected: null, highlighted: null };
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
@@ -41,14 +41,6 @@ var FT = { views: {} };
     if (n.placeholder) return [{ id: null, placeholder: true, gender: n.placeholder }];
     return [];
   };
-  FT.stacked = function (n) {
-    var view = FT.views[FT.state.viewId];
-    return !!(view && view.stack);
-  };
-  FT.leafShaped = function () {
-    var view = FT.views[FT.state.viewId];
-    return !!(view && view.nodeShape === 'leaf');
-  };
   FT.hash01 = function (s) {
     var h = 2166136261;
     for (var i = 0; i < s.length; i++) {
@@ -62,26 +54,43 @@ var FT = { views: {} };
     if (!kids.length) return 1;
     return kids.reduce(function (sum, c) { return sum + FT.leafCount(c); }, 0);
   };
-  FT.nodeW = function (n) {
-    if (FT.stacked(n)) return FT.SELF_W;
-    return FT.hasPartner(n) ? FT.SELF_W + FT.BAR + FT.SPOUSE_W : FT.SELF_W;
+  FT.rows = function (n) {
+    var partners = FT.partners(n).length;
+    return 1 + partners;
   };
-  FT.nodeH = function (n) {
-    var rows = Math.max(1, FT.partners(n).length);
-    if (FT.stacked(n)) return FT.NODE_H * (1 + (FT.hasPartner(n) ? rows : 0)) + 4;
-    return FT.NODE_H + (rows - 1) * (FT.NODE_H + 6);
+  FT.nodeW = function () { return FT.CARD_W; };
+  FT.nodeH = function (n) { return FT.rows(n) * FT.ROW_H; };
+  FT.jointX = function () {
+    var view = FT.views[FT.state.viewId];
+    return view && view.nodeShape === 'leaf' ? 0 : FT.CARD_W / 2;
   };
-  FT.jointX = function (n) {
-    if (FT.leafShaped()) return 0;
-    if (FT.stacked(n)) return FT.SELF_W;
-    return FT.hasPartner(n) ? FT.SELF_W + FT.BAR / 2 : FT.SELF_W / 2;
-  };
-  FT.jointY = function (n) {
-    return FT.stacked(n) ? FT.nodeH(n) / 2 : FT.nodeH(n);
-  };
+  FT.jointY = function (n) { return FT.nodeH(n); };
 
   FT.visibleChildren = function (n) {
     return FT.state.collapsed[n.id] ? [] : (n.children || []);
+  };
+
+  FT.metaLine = function (p) {
+    var parts = [];
+    if (FT.state.lang !== 'en' && p.name_hi) parts.push(p.name_hi);
+    var span = FT.lifespan(p);
+    if (span) parts.push(span);
+    return { text: parts.join(' · '), dot: !FT.isDeceased(p) && p.life === 'living' };
+  };
+
+  FT.isDeceased = function (p) {
+    return !!(p.died || p.life === 'deceased');
+  };
+
+  FT.lifespan = function (p) {
+    if (p.born && p.died) return p.born + '–' + p.died;
+    if (p.born && p.life === 'deceased') return p.born + '–Deceased';
+    if (p.born && p.life === 'living') return p.born + '–Living';
+    if (p.born) return 'b. ' + p.born;
+    if (p.died) return 'd. ' + p.died;
+    if (p.life === 'living') return 'Living';
+    if (p.life === 'deceased') return 'Deceased';
+    return '';
   };
 
   FT.label = function (p) {
@@ -123,6 +132,11 @@ var FT = { views: {} };
     if (p.name_hi) h += '<p class="sheet-hi">' + esc(p.name_hi) + '</p>';
     var rows = '';
     if (p.born) rows += '<dt>Born</dt><dd>' + esc(p.born) + '</dd>';
+    if (p.died) rows += '<dt>Died</dt><dd>' + esc(p.died) + '</dd>';
+    if (p.life || p.died) {
+      rows += '<dt>Status</dt><dd>' +
+        (FT.isDeceased(p) ? 'Deceased' : 'Living') + '</dd>';
+    }
     ADDRESS_ROWS.forEach(function (r) {
       var v = (p.address || {})[r[0]];
       if (v) rows += '<dt>' + r[1] + '</dt><dd>' + esc(v) + '</dd>';
@@ -166,6 +180,8 @@ var FT = { views: {} };
     FT.state.highlighted = node.id;
     highlight(node.id);
     sheetBody.innerHTML = sheetHtml(person, node);
+    sheet.style.borderLeftColor = person.gender === 'female' ? 'var(--rail-f)' :
+      person.gender === 'male' ? 'var(--rail-m)' : 'var(--rail-unknown)';
     sheet.classList.remove('hidden');
   };
 
@@ -197,55 +213,81 @@ var FT = { views: {} };
     FT.focus(a.getAttribute('data-goto'));
   });
 
-  function textLines(g, lines, cx, y) {
-    lines.forEach(function (t, i) {
-      var te = el('text', { x: cx, y: y + i * 14, 'text-anchor': 'middle' }, g);
-      if (i > 0) te.setAttribute('class', 'hi');
-      te.textContent = t;
-    });
+  function fitText(t, avail) {
+    var full = t.getComputedTextLength();
+    if (full <= avail) return;
+    var s = t.textContent;
+    var keep = Math.max(1, Math.floor(s.length * avail / full) - 1);
+    t.textContent = s.slice(0, keep) + '…';
+    while (keep > 1 && t.getComputedTextLength() > avail) {
+      keep -= 1;
+      t.textContent = s.slice(0, keep) + '…';
+    }
   }
 
-  function drawBox(parent, p, x, y, w, role, owner) {
-    var unfilled = role === 'spouse' && !!p.placeholder;
-    var cls = role + (p.status === 'uncertain' ? ' uncertain' : '') +
-      (unfilled ? ' placeholder' : '');
-    var g = el('g', { 'class': cls, transform: 'translate(' + x + ',' + y + ')' }, parent);
-    el('rect', { width: w, height: FT.NODE_H, rx: 6 }, g);
-    var textX = w / 2, thumb = 0;
+  function drawRow(parent, p, rowIndex, owner) {
+    var y = rowIndex * FT.ROW_H;
+    var unfilled = !p.id;
+    var cls = 'card-row' + (unfilled ? ' unfilled' : '') +
+      (FT.isDeceased(p) ? ' deceased' : '') +
+      (p.status === 'uncertain' ? ' uncertain' : '');
+    var g = el('g', { 'class': cls, transform: 'translate(0,' + y + ')' }, parent);
+    el('rect', {
+      'class': 'card-hit', x: 0, y: 0, width: FT.CARD_W, height: FT.ROW_H
+    }, g);
+    el('rect', {
+      'class': 'card-rail', x: 0, y: 0, width: FT.RAIL_W, height: FT.ROW_H,
+      fill: unfilled ? 'var(--rail-unknown)'
+        : (p.gender === 'female' ? 'var(--rail-f)' : 'var(--rail-m)')
+    }, g);
+    var textX = FT.RAIL_W + 12;
     if (p.photo) {
-      thumb = 16;
       var img = el('image', {
-        href: p.photo, x: 6, y: FT.NODE_H / 2 - thumb, width: thumb * 2, height: thumb * 2,
-        preserveAspectRatio: 'xMidYMid slice', 'clip-path': 'inset(0 round 50%)', 'class': 'thumb'
+        href: p.photo, x: textX, y: (FT.ROW_H - FT.AVATAR) / 2,
+        width: FT.AVATAR, height: FT.AVATAR,
+        preserveAspectRatio: 'xMidYMid slice',
+        'clip-path': 'inset(0 round 50%)', 'class': 'avatar'
       }, g);
-      img.addEventListener('error', function () {
-        g.removeChild(img);
-        [].forEach.call(g.querySelectorAll('text:not(.badge)'), function (t) {
-          t.setAttribute('x', w / 2);
-        });
-      });
-      textX = (w + thumb * 2 + 6) / 2;
+      img.addEventListener('error', function () { g.removeChild(img); });
+      textX += FT.AVATAR + 10;
     }
-    textLines(g, unfilled ? ['Unknown'] : FT.label(p), textX, 18);
-    if (p.status === 'uncertain') {
-      var b = el('text', { x: w - 12, y: 15, 'class': 'badge' }, g);
-      b.textContent = '?';
+    var name = el('text', { 'class': 'card-name', x: textX, y: 21 }, g);
+    name.textContent = unfilled ? 'Unknown' : FT.label(p)[0];
+    fitText(name, FT.CARD_W - textX - 10);
+    var meta = FT.metaLine(p);
+    if (meta.dot) {
+      el('circle', { 'class': 'living-dot', cx: textX + 3, cy: 34, r: 3 }, g);
+    }
+    if (meta.text) {
+      var metaX = textX + (meta.dot ? 12 : 0);
+      var m = el('text', { 'class': 'card-meta', x: metaX, y: 38 }, g);
+      m.textContent = meta.text;
+      fitText(m, FT.CARD_W - metaX - 10);
     }
     if (!unfilled) {
-      g.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(p.id, owner); });
+      g.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        FT.select(p.id, owner);
+      });
     }
     return g;
   }
 
+  var LEAF_RAMP = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];
+
   FT.drawLeaf = function (parent, n) {
+    var deceased = FT.isDeceased(n);
     var g = el('g', {
-      'class': 'leafnode' + (FT.hasPartner(n) ? ' paired' : ''),
+      'class': 'leafnode' + (FT.hasPartner(n) ? ' paired' : '') +
+        (deceased ? ' deceased' : ''),
       'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
     }, parent);
     var r = 7 + Math.min(6, Math.sqrt(FT.leafCount(n)));
-    el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf' }, g);
+    var leaf = el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf' }, g);
+    leaf.style.fill = LEAF_RAMP[(n.depth || 0) % LEAF_RAMP.length];
     if (FT.hasPartner(n)) {
-      el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
+      var spouse = el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
+      spouse.style.fill = 'var(--leaf-spouse)';
     }
     var t = el('text', { y: -r - 5, 'text-anchor': 'middle', 'class': 'leaflabel' }, g);
     t.textContent = FT.label(n)[0];
@@ -254,36 +296,24 @@ var FT = { views: {} };
   };
 
   FT.drawNode = function (parent, n) {
-    if (FT.leafShaped()) return FT.drawLeaf(parent, n);
+    var view = FT.views[FT.state.viewId];
+    if (view && view.nodeShape === 'leaf') return FT.drawLeaf(parent, n);
     var g = el('g', {
-      'class': 'node' + (n.status === 'uncertain' ? ' uncertain' : ''),
-      'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
+      'class': 'card', 'data-id': n.id,
+      transform: 'translate(' + n.x + ',' + n.y + ')'
     }, parent);
-    drawBox(g, n, 0, 0, FT.SELF_W, 'self', n);
-    FT.partners(n).forEach(function (p, i) {
-      var sg;
-      if (FT.stacked(n)) {
-        var y = FT.NODE_H * (i + 1) + 4;
-        el('line', {
-          'class': 'marriage', x1: FT.SELF_W / 2, y1: FT.NODE_H,
-          x2: FT.SELF_W / 2, y2: y
-        }, g);
-        sg = drawBox(g, p, 0, y, FT.SELF_W, 'spouse', n);
-      } else {
-        var yy = i * (FT.NODE_H + 6);
-        el('line', {
-          'class': 'marriage', x1: FT.SELF_W, y1: FT.NODE_H / 2,
-          x2: FT.SELF_W + FT.BAR, y2: yy + FT.NODE_H / 2
-        }, g);
-        sg = drawBox(g, p, FT.SELF_W + FT.BAR, yy, FT.SPOUSE_W, 'spouse', n);
-      }
-      sg.setAttribute('data-spouse-of', n.id);
-    });
+    el('rect', {
+      'class': 'card-shadow', y: 3, width: FT.CARD_W, height: FT.nodeH(n), rx: 8
+    }, g);
+    el('rect', {
+      'class': 'card-bg', width: FT.CARD_W, height: FT.nodeH(n), rx: 8
+    }, g);
+    drawRow(g, n, 0, n);
+    FT.partners(n).forEach(function (p, i) { drawRow(g, p, i + 1, n); });
     if ((n.children || []).length) {
-      var toggleCx = FT.jointX(n) + (FT.stacked(n) ? 14 : 0);
-      var toggleCy = FT.stacked(n) ? FT.jointY(n) : FT.jointY(n) + 10;
-      var hit = el('circle', { 'class': 'toggle-hit', cx: toggleCx, cy: toggleCy, r: 22 }, g);
-      el('circle', { 'class': 'toggle', cx: toggleCx, cy: toggleCy, r: 11 }, g);
+      var cx = FT.jointX(n), cy = FT.jointY(n) + 8;
+      var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
+      el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 11 }, g);
       hit.addEventListener('click', function (ev) {
         ev.stopPropagation();
         FT.state.collapsed[n.id] = !FT.state.collapsed[n.id];

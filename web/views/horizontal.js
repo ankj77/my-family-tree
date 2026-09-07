@@ -2,10 +2,9 @@ FT.views.horizontal = {
   id: 'horizontal',
   label: 'Left to right',
   nodeShape: 'box',
-  stack: true,
   layout: function (root) {
     var cursor = 0;
-    var COL = FT.SELF_W + 90;
+    var COL = FT.CARD_W + 90;
     function shiftDown(n, dy) {
       n.y += dy;
       FT.visibleChildren(n).forEach(function (c) { shiftDown(c, dy); });
@@ -16,7 +15,7 @@ FT.views.horizontal = {
       var kids = FT.visibleChildren(n);
       if (!kids.length) {
         n.y = cursor;
-        cursor += FT.nodeH(n) + 18;
+        cursor += FT.nodeH(n) + 34;
         return;
       }
       var subtreeTop = cursor;
@@ -29,7 +28,7 @@ FT.views.horizontal = {
         kids.forEach(function (c) { shiftDown(c, dy); });
         n.y = subtreeTop;
       }
-      cursor = Math.max(cursor + dy, n.y + FT.nodeH(n) + 18);
+      cursor = Math.max(cursor + dy, n.y + FT.nodeH(n) + 34);
     })(root, 0);
   },
   drawEdges: function (g, root) {
