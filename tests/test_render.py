@@ -166,9 +166,10 @@ class TestPosterView(unittest.TestCase):
         html = _payload_html()
         self.assertIn("e.style.fill = ramp[", html)
 
-    def test_collapse_toggles_are_hidden_in_the_poster(self):
+    def test_the_poster_cards_carry_a_plus_minus_knob(self):
         html = _payload_html()
-        self.assertIn('#stage[data-view="poster"] .toggle', html)
+        self.assertIn("if (n.depth && (n.children || []).length) FT.knob(", html)
+        self.assertNotIn('#stage[data-view="poster"] .toggle', html)
 
 
 class TestPosterParentCards(unittest.TestCase):
@@ -207,11 +208,15 @@ class TestProgressiveGenerations(unittest.TestCase):
         html = _payload_html()
         self.assertIn("FT.state.depthCap", html)
 
-    def test_deeper_and_shallower_controls_exist(self):
+    def test_the_knob_grows_one_generation_past_the_cap(self):
         html = _payload_html()
-        self.assertIn('id="deeper"', html)
-        self.assertIn('id="shallower"', html)
-        self.assertIn("FT.deepen", html)
+        self.assertIn("FT.state.grown[n.id] = true;", html)
+        self.assertIn("if (depth >= FT.maxDepth() && !FT.state.grown[n.id]) return [];", html)
+
+    def test_the_generation_buttons_are_gone(self):
+        html = _payload_html()
+        self.assertNotIn('id="deeper"', html)
+        self.assertNotIn('id="shallower"', html)
 
     def test_expand_all_lifts_the_cap(self):
         html = _payload_html()
@@ -308,7 +313,7 @@ class TestOrganicBranches(unittest.TestCase):
 
     def test_the_toggle_reads_plus_or_minus(self):
         html = _payload_html()
-        self.assertIn("FT.state.collapsed[n.id] ? '+'", html)
+        self.assertIn("FT.kidsAt(n, n.depth || 0).length ? '\\u2212' : '+'", html)
 
 
 class TestPlaceOnTheCard(unittest.TestCase):

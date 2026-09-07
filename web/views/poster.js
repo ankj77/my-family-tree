@@ -4,19 +4,17 @@ FT.views.poster = {
   nodeShape: 'box',
   cardStyle: 'parents',
   maxDepth: 2,
-  hideToggles: true,
   extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },
   rowTop: function (depth) {
     return depth === 0 ? 210 : -470 - (depth - 1) * 360;
   },
   layout: function (root) {
     var SLOT = FT.CARD_W + FT.H_GAP;
-    var cap = FT.maxDepth();
     var view = this;
     var cursor = 0;
     (function place(n, depth) {
       n.depth = depth;
-      var kids = depth >= cap ? [] : FT.visibleChildren(n);
+      var kids = FT.kidsAt(n, depth);
       if (!kids.length) {
         n.x = cursor;
         cursor += SLOT;
@@ -84,10 +82,8 @@ FT.views.poster = {
       view.leaves(g, x1, y1, mx, my, x2, y2, id);
     }
 
-    var cap = FT.maxDepth();
     (function walk(n, depth) {
-      if (depth >= cap) return;
-      FT.visibleChildren(n).forEach(function (c) {
+      FT.kidsAt(n, depth).forEach(function (c) {
         var x1 = depth === 0 ? cx : n.x + FT.CARD_W / 2;
         var y1 = depth === 0 ? TRUNK_TOP + 10 : n.y;
         var thickness = depth === 0 ? 2.4 : 1.7;

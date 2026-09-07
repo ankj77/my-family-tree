@@ -25,7 +25,7 @@ var FT = { views: {} };
   FT.CARD_W = 250; FT.ROW_H = 52; FT.RAIL_W = 5; FT.AVATAR = 32;
   FT.H_GAP = 40; FT.V_GAP = 100;
 
-  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, only: null, picks: [], selected: null, highlighted: null };
+  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, grown: {}, only: null, picks: [], selected: null, highlighted: null };
   FT.OPEN_DEPTH = 2;
   FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
@@ -59,19 +59,6 @@ var FT = { views: {} };
 
   FT.revealDepth = function (d) {
     if (FT.maxDepth() < d) FT.state.depthCap = d;
-  };
-
-  FT.deepen = function (step) {
-    FT.clearPicks();
-    var cap = FT.maxDepth();
-    if (cap === Infinity) return;
-    var next = Math.min(FT.treeDepth(), Math.max(1, cap + step));
-    FT.state.depthCap = next;
-    FT.nodes.forEach(function (n) {
-      if (FT.depthOf(n.id) < next) delete FT.state.collapsed[n.id];
-    });
-    FT.render();
-    FT.fit();
   };
 
   FT.hasPartner = function (n) {
@@ -156,6 +143,22 @@ var FT = { views: {} };
   };
   FT.jointX = function () { return FT.CARD_W / 2; };
   FT.jointY = function (n) { return FT.nodeH(n); };
+
+  FT.kidsAt = function (n, depth) {
+    if (depth >= FT.maxDepth() && !FT.state.grown[n.id]) return [];
+    return FT.visibleChildren(n);
+  };
+
+  FT.toggleKids = function (n, depth) {
+    if (FT.kidsAt(n, depth).length) {
+      FT.state.collapsed[n.id] = true;
+    } else {
+      FT.state.collapsed[n.id] = false;
+      FT.state.grown[n.id] = true;
+    }
+    FT.clearPicks();
+    FT.render();
+  };
 
   FT.visibleChildren = function (n) {
     if (FT.state.collapsed[n.id]) return [];
@@ -439,6 +442,19 @@ var FT = { views: {} };
     body.style.fill = tint;
   }
 
+  FT.knob = function (g, n, cx, cy) {
+    var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
+    el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 10 }, g);
+    var sign = el('text', {
+      'class': 'toggle-sign', x: cx, y: cy + 5, 'text-anchor': 'middle'
+    }, g);
+    sign.textContent = FT.kidsAt(n, n.depth || 0).length ? '\u2212' : '+';
+    hit.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      FT.toggleKids(n, n.depth || 0);
+    });
+  };
+
   FT.drawParentCard = function (parent, n) {
     var H = FT.POSTER_CARD_H;
     var g = el('g', {
@@ -464,6 +480,7 @@ var FT = { views: {} };
       val.textContent = row[1] ? FT.label(row[1])[0] : '(Unknown)';
       fitText(val, FT.CARD_W - 52 - 14);
     });
+    if (n.depth && (n.children || []).length) FT.knob(g, n, FT.CARD_W / 2, -12);
     g.addEventListener('click', function () { FT.select(n.id, n); });
     return g;
   };
@@ -485,21 +502,9 @@ var FT = { views: {} };
     FT.partners(n).forEach(function (p, i) { drawRow(g, p, i + 1, n); });
     if ((n.children || []).length) {
       var tview = FT.views[FT.state.viewId];
-      var knob = tview && tview.togglePos ? tview.togglePos(n)
+      var at = tview && tview.togglePos ? tview.togglePos(n)
         : { x: FT.jointX(n), y: FT.jointY(n) + 8 };
-      var cx = knob.x, cy = knob.y;
-      var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
-      el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 10 }, g);
-      var sign = el('text', {
-        'class': 'toggle-sign', x: cx, y: cy + 5, 'text-anchor': 'middle'
-      }, g);
-      sign.textContent = FT.state.collapsed[n.id] ? '+' : '\u2212';
-      hit.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        FT.clearPicks();
-        FT.state.collapsed[n.id] = !FT.state.collapsed[n.id];
-        FT.render();
-      });
+      FT.knob(g, n, at.x, at.y);
     }
     g.addEventListener('click', function () { FT.select(n.id, n); });
     return g;
@@ -516,13 +521,11 @@ var FT = { views: {} };
     view.layout(tree);
     var edges = el('g', {}, vp);
     var nodes = el('g', {}, vp);
-    var cap = FT.maxDepth();
     stage.setAttribute('data-view', view.id);
     view.drawEdges(edges, tree);
     (function walk(n, depth) {
       FT.drawNode(nodes, n);
-      if (depth >= cap) return;
-      FT.visibleChildren(n).forEach(function (c) { walk(c, depth + 1); });
+      FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
     })(tree, 0);
     if (FT.state.picks.length) {
       clearHl();
@@ -620,8 +623,6 @@ var FT = { views: {} };
     FT.state.viewId = id;
     FT.clearPicks();
     FT.state.depthCap = null;
-    document.getElementById('toolbar')
-      .classList.toggle('capped', FT.viewCap() !== Infinity);
     try { localStorage.setItem('ft-view', id); } catch (e) {}
     document.getElementById('view-picker').value = id;
     FT.render();
@@ -631,14 +632,12 @@ var FT = { views: {} };
   FT.fit = function () {
     var view = FT.views[FT.state.viewId];
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    var cap = FT.maxDepth();
     (function walk(n, depth) {
       var w = FT.nodeW(n);
       var h = FT.nodeH(n);
       minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
       minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
-      if (depth >= cap) return;
-      FT.visibleChildren(n).forEach(function (c) { walk(c, depth + 1); });
+      FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
     })(tree, 0);
     if (view.extentPad) {
       minX = Math.min(minX, view.extentPad.minX); maxX = Math.max(maxX, view.extentPad.maxX);
@@ -861,8 +860,6 @@ var FT = { views: {} };
 
   document.getElementById('reset').addEventListener('click', FT.fit);
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
-  document.getElementById('deeper').addEventListener('click', function () { FT.deepen(1); });
-  document.getElementById('shallower').addEventListener('click', function () { FT.deepen(-1); });
 
   document.getElementById('summary').textContent=
     'People '+summary.total+' · Generations '+summary.generations+

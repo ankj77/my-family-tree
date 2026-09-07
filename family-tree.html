@@ -118,9 +118,6 @@
   .poster-branch{fill:none;stroke:var(--bark);stroke-linecap:round;}
   .poster-branch.hl{stroke:var(--hl);}
   .poster-leaf{stroke:none;}
-  #stage[data-view="poster"] .toggle-sign,
-  #stage[data-view="poster"] .toggle,
-  #stage[data-view="poster"] .toggle-hit{display:none;}
   .parent-card .pc-name{font-family:var(--serif);font-size:14.5px;font-weight:600;
     fill:var(--name-ink);pointer-events:none;}
   .pc-rule{stroke:var(--rule);stroke-width:1px;}
@@ -128,8 +125,6 @@
   .pc-value{font-size:12.5px;fill:var(--ink);pointer-events:none;}
   .pc-icon-bg{opacity:.28;pointer-events:none;}
   .pc-icon-fg{opacity:.95;pointer-events:none;}
-  #deeper,#shallower{display:none;}
-  #toolbar.capped #deeper,#toolbar.capped #shallower{display:inline-block;}
   #picks{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
     padding-top:2px;}
   #picks:empty{display:none;}
@@ -166,8 +161,6 @@
   <button id="more" aria-label="More options">⋯</button>
   <span id="extras">
     <button id="lang" title="Switch names: EN → हिं → EN+हिं">EN+हिं</button>
-    <button id="shallower" title="Show one generation less">− Generation</button>
-    <button id="deeper" title="Show one more generation">+ Generation</button>
     <button id="expand-all">Expand all</button>
     <button id="reset">Fit to screen</button>
   </span>
@@ -214,7 +207,7 @@
   FT.CARD_W = 250; FT.ROW_H = 52; FT.RAIL_W = 5; FT.AVATAR = 32;
   FT.H_GAP = 40; FT.V_GAP = 100;
 
-  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, only: null, picks: [], selected: null, highlighted: null };
+  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, grown: {}, only: null, picks: [], selected: null, highlighted: null };
   FT.OPEN_DEPTH = 2;
   FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
@@ -248,19 +241,6 @@
 
   FT.revealDepth = function (d) {
     if (FT.maxDepth() < d) FT.state.depthCap = d;
-  };
-
-  FT.deepen = function (step) {
-    FT.clearPicks();
-    var cap = FT.maxDepth();
-    if (cap === Infinity) return;
-    var next = Math.min(FT.treeDepth(), Math.max(1, cap + step));
-    FT.state.depthCap = next;
-    FT.nodes.forEach(function (n) {
-      if (FT.depthOf(n.id) < next) delete FT.state.collapsed[n.id];
-    });
-    FT.render();
-    FT.fit();
   };
 
   FT.hasPartner = function (n) {
@@ -345,6 +325,22 @@
   };
   FT.jointX = function () { return FT.CARD_W / 2; };
   FT.jointY = function (n) { return FT.nodeH(n); };
+
+  FT.kidsAt = function (n, depth) {
+    if (depth >= FT.maxDepth() && !FT.state.grown[n.id]) return [];
+    return FT.visibleChildren(n);
+  };
+
+  FT.toggleKids = function (n, depth) {
+    if (FT.kidsAt(n, depth).length) {
+      FT.state.collapsed[n.id] = true;
+    } else {
+      FT.state.collapsed[n.id] = false;
+      FT.state.grown[n.id] = true;
+    }
+    FT.clearPicks();
+    FT.render();
+  };
 
   FT.visibleChildren = function (n) {
     if (FT.state.collapsed[n.id]) return [];
@@ -628,6 +624,19 @@
     body.style.fill = tint;
   }
 
+  FT.knob = function (g, n, cx, cy) {
+    var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
+    el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 10 }, g);
+    var sign = el('text', {
+      'class': 'toggle-sign', x: cx, y: cy + 5, 'text-anchor': 'middle'
+    }, g);
+    sign.textContent = FT.kidsAt(n, n.depth || 0).length ? '\u2212' : '+';
+    hit.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      FT.toggleKids(n, n.depth || 0);
+    });
+  };
+
   FT.drawParentCard = function (parent, n) {
     var H = FT.POSTER_CARD_H;
     var g = el('g', {
@@ -653,6 +662,7 @@
       val.textContent = row[1] ? FT.label(row[1])[0] : '(Unknown)';
       fitText(val, FT.CARD_W - 52 - 14);
     });
+    if (n.depth && (n.children || []).length) FT.knob(g, n, FT.CARD_W / 2, -12);
     g.addEventListener('click', function () { FT.select(n.id, n); });
     return g;
   };
@@ -674,21 +684,9 @@
     FT.partners(n).forEach(function (p, i) { drawRow(g, p, i + 1, n); });
     if ((n.children || []).length) {
       var tview = FT.views[FT.state.viewId];
-      var knob = tview && tview.togglePos ? tview.togglePos(n)
+      var at = tview && tview.togglePos ? tview.togglePos(n)
         : { x: FT.jointX(n), y: FT.jointY(n) + 8 };
-      var cx = knob.x, cy = knob.y;
-      var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
-      el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 10 }, g);
-      var sign = el('text', {
-        'class': 'toggle-sign', x: cx, y: cy + 5, 'text-anchor': 'middle'
-      }, g);
-      sign.textContent = FT.state.collapsed[n.id] ? '+' : '\u2212';
-      hit.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        FT.clearPicks();
-        FT.state.collapsed[n.id] = !FT.state.collapsed[n.id];
-        FT.render();
-      });
+      FT.knob(g, n, at.x, at.y);
     }
     g.addEventListener('click', function () { FT.select(n.id, n); });
     return g;
@@ -705,13 +703,11 @@
     view.layout(tree);
     var edges = el('g', {}, vp);
     var nodes = el('g', {}, vp);
-    var cap = FT.maxDepth();
     stage.setAttribute('data-view', view.id);
     view.drawEdges(edges, tree);
     (function walk(n, depth) {
       FT.drawNode(nodes, n);
-      if (depth >= cap) return;
-      FT.visibleChildren(n).forEach(function (c) { walk(c, depth + 1); });
+      FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
     })(tree, 0);
     if (FT.state.picks.length) {
       clearHl();
@@ -809,8 +805,6 @@
     FT.state.viewId = id;
     FT.clearPicks();
     FT.state.depthCap = null;
-    document.getElementById('toolbar')
-      .classList.toggle('capped', FT.viewCap() !== Infinity);
     try { localStorage.setItem('ft-view', id); } catch (e) {}
     document.getElementById('view-picker').value = id;
     FT.render();
@@ -820,14 +814,12 @@
   FT.fit = function () {
     var view = FT.views[FT.state.viewId];
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    var cap = FT.maxDepth();
     (function walk(n, depth) {
       var w = FT.nodeW(n);
       var h = FT.nodeH(n);
       minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
       minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
-      if (depth >= cap) return;
-      FT.visibleChildren(n).forEach(function (c) { walk(c, depth + 1); });
+      FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
     })(tree, 0);
     if (view.extentPad) {
       minX = Math.min(minX, view.extentPad.minX); maxX = Math.max(maxX, view.extentPad.maxX);
@@ -1050,8 +1042,6 @@
 
   document.getElementById('reset').addEventListener('click', FT.fit);
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
-  document.getElementById('deeper').addEventListener('click', function () { FT.deepen(1); });
-  document.getElementById('shallower').addEventListener('click', function () { FT.deepen(-1); });
 
   document.getElementById('summary').textContent=
     'People '+summary.total+' · Generations '+summary.generations+
@@ -1197,19 +1187,17 @@ FT.views.poster = {
   nodeShape: 'box',
   cardStyle: 'parents',
   maxDepth: 2,
-  hideToggles: true,
   extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },
   rowTop: function (depth) {
     return depth === 0 ? 210 : -470 - (depth - 1) * 360;
   },
   layout: function (root) {
     var SLOT = FT.CARD_W + FT.H_GAP;
-    var cap = FT.maxDepth();
     var view = this;
     var cursor = 0;
     (function place(n, depth) {
       n.depth = depth;
-      var kids = depth >= cap ? [] : FT.visibleChildren(n);
+      var kids = FT.kidsAt(n, depth);
       if (!kids.length) {
         n.x = cursor;
         cursor += SLOT;
@@ -1277,10 +1265,8 @@ FT.views.poster = {
       view.leaves(g, x1, y1, mx, my, x2, y2, id);
     }
 
-    var cap = FT.maxDepth();
     (function walk(n, depth) {
-      if (depth >= cap) return;
-      FT.visibleChildren(n).forEach(function (c) {
+      FT.kidsAt(n, depth).forEach(function (c) {
         var x1 = depth === 0 ? cx : n.x + FT.CARD_W / 2;
         var y1 = depth === 0 ? TRUNK_TOP + 10 : n.y;
         var thickness = depth === 0 ? 2.4 : 1.7;
