@@ -62,8 +62,9 @@
   gender: male
   relation: mother
   relation_id: kannu
-- id: moladhrnal
-  name: Moladhrnal
+- id: moladhmal
+  name: Moladh Mal
+  name_hi: मोलाध मल
   gender: male
   relation: father
   relation_id: bhagmal
@@ -72,12 +73,12 @@
   name: Ram Narayan
   gender: male
   relation: father
-  relation_id: moladhrnal
+  relation_id: moladhmal
 - id: ramlal
   name: Ram Lal
   gender: male
   relation: father
-  relation_id: moladhrnal
+  relation_id: moladhmal
 - id: jagdishchand
   name: Jagdish Chand
   gender: male
@@ -219,8 +220,8 @@
   name: Jai Narayan
   gender: male
   relation: father
-  relation_id: moladhrnal
-  note: son of Moladhrnal
+  relation_id: moladhmal
+  note: son of Moladh Mal
 - id: mayachand
   name: Mayachand
   gender: male
@@ -377,6 +378,7 @@
   relation_id: naresh
 - id: prashan
   name: Prashan
+  name_hi: प्रशान
   gender: male
   relation: father
   relation_id: arun
