@@ -71,103 +71,123 @@
   note: son of Dada Bhagmal
 - id: ramnarayan
   name: Ram Narayan
+  name_hi: राम नारायण
   gender: male
   relation: father
   relation_id: moladhmal
 - id: ramlal
   name: Ram Lal
+  name_hi: राम लाल
   gender: male
   relation: father
   relation_id: moladhmal
 - id: jagdishchand
   name: Jagdish Chand
+  name_hi: जगदीश चंद
   gender: male
   relation: father
   relation_id: ramnarayan
 - id: naveen
   name: Naveen
+  name_hi: नवीन
   gender: male
   relation: father
   relation_id: ramnarayan
 - id: ravi
   name: Ravi
+  name_hi: रवि
   gender: male
   relation: father
   relation_id: jagdishchand
 - id: sanjay
   name: Sanjay
+  name_hi: संजय
   gender: male
   relation: father
   relation_id: ramlal
 - id: sandeep
   name: Sandeep
+  name_hi: संदीप
   gender: male
   relation: father
   relation_id: ramlal
 - id: guddu
   name: Guddu
+  name_hi: गुड्डू
   gender: male
   relation: father
   relation_id: sanjay
 - id: bhanuprakash
   name: Bhanu Prakash
+  name_hi: भानु प्रकाश
   gender: male
   relation: father
   relation_id: jainarayan
 - id: satyaprakash
   name: Satya Prakash
+  name_hi: सत्य प्रकाश
   gender: male
   relation: father
   relation_id: jainarayan
 - id: kamal
   name: Kamal
+  name_hi: कमल
   gender: male
   relation: father
   relation_id: bhanuprakash
 - id: ankit
   name: Ankit
+  name_hi: अंकित
   gender: male
   relation: father
   relation_id: bhanuprakash
 - id: ashish
   name: Ashish
+  name_hi: आशीष
   gender: male
   relation: father
   relation_id: satyaprakash
 - id: saurabh
   name: Saurabh
+  name_hi: सौरभ
   gender: male
   relation: father
   relation_id: satyaprakash
 - id: satyam
   name: Satyam
+  name_hi: सत्यम
   gender: male
   relation: father
   relation_id: kamal
   note: 'GUESS: verify parent'
 - id: tejas
   name: Tejas
+  name_hi: तेजस
   gender: male
   relation: father
   relation_id: ankit
   note: 'GUESS: verify parent'
 - id: subhashchand
   name: Subhash Chand
+  name_hi: सुभाष चंद
   gender: male
   relation: father
   relation_id: pooranchand
 - id: anshul
   name: Anshul
+  name_hi: अंशुल
   gender: male
   relation: father
   relation_id: subhashchand
 - id: narendra
   name: Narendra
+  name_hi: नरेंद्र
   gender: male
   relation: father
   relation_id: pooranchand
 - id: hardik
   name: Hardik
+  name_hi: हार्दिक
   gender: male
   relation: father
   relation_id: narendra
@@ -186,6 +206,7 @@
   note: child of Richa (was read as 'Nisar')
 - id: lekhram
   name: Lekhram
+  name_hi: लेखराम
   gender: male
   relation: mother
   relation_id: richa
@@ -200,12 +221,14 @@
   note: '''Till 1925''; handwritten word nearby (नवरात्नी?) may be a wife — verify'
 - id: pooranchand
   name: Pooranchand
+  name_hi: पूरनचंद
   gender: male
   relation: father
   relation_id: netram
   note: son of Netram
 - id: netram
   name: Netram
+  name_hi: नेतराम
   gender: male
   relation: father
   relation_id: bhagmal
@@ -213,139 +236,166 @@
   note: son of Dada Bhagmal ('Till 1945')
 - id: khushiram
   name: Khushiram
+  name_hi: खुशीराम
   gender: male
   relation: father
   relation_id: bhagmal
   note: son of Dada Bhagmal; no biological son — adopted Mayachand (Netram's son)
 - id: jainarayan
   name: Jai Narayan
+  name_hi: जय नारायण
   gender: male
   relation: father
   relation_id: moladhmal
   note: son of Moladh Mal
 - id: mayachand
   name: Mayachand
+  name_hi: मायाचंद
   gender: male
   relation: father
   relation_id: netram
   note: biological son of Netram; adopted by Khushiram
 - id: ramesh
   name: Ramesh
+  name_hi: रमेश
   gender: male
   relation: father
   relation_id: mayachand
 - id: manish
   name: Manish
+  name_hi: मनीष
   gender: male
   relation: father
   relation_id: ramesh
 - id: aayush
   name: Aayush
+  name_hi: आयुष
   gender: male
   relation: father
   relation_id: manish
 - id: mukesh_m
   name: Mukesh
+  name_hi: मुकेश
   gender: male
   relation: father
   relation_id: mayachand
 - id: akshay
   name: Akshay
+  name_hi: अक्षय
   gender: male
   relation: father
   relation_id: mukesh_m
 - id: jaiprakash
   name: Jai Prakash
+  name_hi: जय प्रकाश
   gender: male
   relation: father
   relation_id: jainarayan
 - id: shribhagwan
   name: Shri Bhagwan
+  name_hi: श्री भगवान
   gender: male
   relation: father
   relation_id: jainarayan
 - id: rajiv
   name: Rajiv
+  name_hi: राजीव
   gender: male
   relation: father
   relation_id: jaiprakash
 - id: sanjiv
   name: Sanjiv
+  name_hi: संजीव
   gender: male
   relation: father
   relation_id: jaiprakash
 - id: girish
   name: Girish
+  name_hi: गिरीश
   gender: male
   relation: father
   relation_id: shribhagwan
 - id: kanishka
   name: Kanishka
+  name_hi: कनिष्क
   gender: male
   relation: father
   relation_id: sanjiv
 - id: kartik
   name: Kartik
+  name_hi: कार्तिक
   gender: male
   relation: father
   relation_id: rajiv
 - id: vinayak
   name: Vinayak
+  name_hi: विनायक
   gender: male
   relation: father
   relation_id: rajiv
 - id: jaibhagvan
   name: Jai Bhagwan
+  name_hi: जय भगवान
   gender: male
   relation: father
   relation_id: pooranchand
 - id: abhinandan
   name: Abhinandan
+  name_hi: अभिनंदन
   gender: male
   relation: father
   relation_id: jaibhagvan
 - id: surender
   name: Surender
+  name_hi: सुरेंद्र
   gender: male
   relation: father
   relation_id: jaibhagvan
 - id: pankaj
   name: Pankaj
+  name_hi: पंकज
   gender: male
   relation: father
   relation_id: jaibhagvan
 - id: harsh
   name: Harsh
+  name_hi: हर्ष
   gender: male
   relation: father
   relation_id: abhinandan
 - id: anand
   name: Anand
+  name_hi: आनंद
   gender: male
   relation: father
   relation_id: abhinandan
 - id: jawaharlal
   name: Jawahar Lal
+  name_hi: जवाहर लाल
   gender: male
   relation: father
   relation_id: pooranchand
 - id: nishant_j
   name: Nishant
+  name_hi: निशांत
   gender: male
   relation: father
   relation_id: jawaharlal
 - id: aadit
   name: Aadit
+  name_hi: आदित
   gender: male
   relation: father
   relation_id: nishant_j
 - id: agrim
   name: Agrim
+  name_hi: अग्रिम
   gender: male
   relation: father
   relation_id: nishant_j
 - id: chandgiram
   name: Chandgiram
+  name_hi: चंदगीराम
   gender: male
   relation: father
   relation_id: netram
@@ -353,27 +403,32 @@
   note: son of Netram; 4 sons (Kanwarsen, Jugmandar das, Surajbhan, Ramratan)
 - id: kanwarsen
   name: Kanwarsen
+  name_hi: कंवरसेन
   gender: male
   relation: father
   relation_id: chandgiram
   order: 1
 - id: jugmandardas
   name: Jugmandar das
+  name_hi: जुगमंदर दास
   gender: male
   relation: father
   relation_id: chandgiram
 - id: naresh
   name: Naresh
+  name_hi: नरेश
   gender: male
   relation: father
   relation_id: jugmandardas
 - id: arun
   name: Arun
+  name_hi: अरुण
   gender: male
   relation: father
   relation_id: naresh
 - id: varun
   name: Varun
+  name_hi: वरुण
   gender: male
   relation: father
   relation_id: naresh
@@ -385,52 +440,62 @@
   relation_id: arun
 - id: arham
   name: Arham
+  name_hi: अर्हम
   gender: male
   relation: father
   relation_id: varun
 - id: kapoorchand
   name: Kapoorchand
+  name_hi: कपूरचंद
   gender: male
   relation: father
   relation_id: netram
   note: brother of Chandgiram (son of Netram); no son
 - id: surajbhan
   name: Surajbhan
+  name_hi: सूरजभान
   gender: male
   relation: father
   relation_id: chandgiram
 - id: ramratan
   name: Ramratan
+  name_hi: रामरतन
   gender: male
   relation: father
   relation_id: chandgiram
 - id: rajesh
   name: Rajesh
+  name_hi: राजेश
   gender: male
   relation: father
   relation_id: surajbhan
 - id: vipul
   name: Vipul
+  name_hi: विपुल
   gender: male
   relation: father
   relation_id: rajesh
 - id: dinesh
   name: Dinesh
+  name_hi: दिनेश
   gender: male
   relation: father
   relation_id: ramratan
 - id: abhishek
   name: Abhishek
+  name_hi: अभिषेक
   gender: male
   relation: father
   relation_id: dinesh
 - id: mukesh_l
   name: Mukesh
+  name_hi: मुकेश
   gender: male
   relation: father
   relation_id: ramratan
 - id: vinay
   name: Vinay
+  name_hi: विनय
   gender: male
   relation: father
   relation_id: ramratan
@@ -443,127 +508,152 @@
   note: son of Jugmandar das
 - id: pushkar
   name: Pushkar
+  name_hi: पुष्कर
   gender: male
   relation: father
   relation_id: parveen
 - id: rajendra
   name: Rajendra
+  name_hi: राजेंद्र
   gender: male
   relation: father
   relation_id: kanwarsen
 - id: sachin
   name: Sachin
+  name_hi: सचिन
   gender: male
   relation: father
   relation_id: rajendra
 - id: nishant_r
   name: Nishant
+  name_hi: निशांत
   gender: male
   relation: father
   relation_id: rajendra
 - id: aaditya
   name: Aaditya
+  name_hi: आदित्य
   gender: male
   relation: father
   relation_id: sachin
 - id: kannav
   name: Kannav
+  name_hi: कन्नव
   gender: male
   relation: father
   relation_id: nishant_r
 - id: anil
   name: Anil
+  name_hi: अनिल
   gender: male
   relation: father
   relation_id: kanwarsen
 - id: sunny
   name: Sunny
+  name_hi: सनी
   gender: male
   relation: father
   relation_id: anil
 - id: rahul
   name: Rahul
+  name_hi: राहुल
   gender: male
   relation: father
   relation_id: anil
 - id: aarav
   name: Aarav
+  name_hi: आरव
   gender: male
   relation: father
   relation_id: sunny
 - id: vijay
   name: Vijay
+  name_hi: विजय
   gender: male
   relation: father
   relation_id: kanwarsen
 - id: ankur
   name: Ankur
+  name_hi: अंकुर
   gender: male
   relation: father
   relation_id: vijay
 - id: pawan
   name: Pawan
+  name_hi: पवन
   gender: male
   relation: father
   relation_id: kanwarsen
 - id: abhinav
   name: Abhinav
+  name_hi: अभिनव
   gender: male
   relation: father
   relation_id: pawan
 - id: deepak
   name: Deepak
+  name_hi: दीपक
   gender: male
   relation: father
   relation_id: kanwarsen
 - id: jinendra
   name: Jinendra
+  name_hi: जिनेंद्र
   gender: male
   relation: father
   relation_id: deepak
 - id: gulabchand
   name: Gulab Chand
+  name_hi: गुलाब चंद
   gender: male
   relation: father
   relation_id: pooranchand
 - id: sreyans
   name: Sreyans
+  name_hi: श्रेयांस
   gender: male
   relation: father
   relation_id: gulabchand
 - id: shaurya
   name: Shaurya
+  name_hi: शौर्य
   gender: male
   relation: father
   relation_id: sreyans
 - id: mahavirprasad
   name: Mahavir Prasad
+  name_hi: महावीर प्रसाद
   gender: male
   relation: father
   relation_id: pooranchand
 - id: rishabh
   name: Rishabh
+  name_hi: ऋषभ
   gender: male
   relation: father
   relation_id: mahavirprasad
   note: son of Mahavir Prasad
 - id: ramnivas
   name: Ram Nivas
+  name_hi: राम निवास
   gender: male
   relation: father
   relation_id: pooranchand
 - id: vikas
   name: Vikas
+  name_hi: विकास
   gender: male
   relation: father
   relation_id: ramnivas
 - id: sanyam
   name: Sanyam
+  name_hi: संयम
   gender: male
   relation: father
   relation_id: vikas
 - id: avyukt
   name: Avyukt
+  name_hi: अव्युक्त
   gender: male
   relation: father
   relation_id: ankur
