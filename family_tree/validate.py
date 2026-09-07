@@ -44,13 +44,6 @@ def validate(people: List[Person]) -> List[str]:
             )
         if has_rid and p.relation_id == p.id:
             raise ValidationError("Person '%s' is related to itself" % p.id)
-        if p.mother_id is not None:
-            if p.mother_id not in by_id:
-                raise ValidationError(
-                    "Person '%s' mother_id '%s' does not exist" % (p.id, p.mother_id)
-                )
-            if p.mother_id == p.id:
-                raise ValidationError("Person '%s' is their own mother" % p.id)
 
     cyc = _first_cycle(people)
     if cyc is not None:
@@ -80,15 +73,6 @@ def validate(people: List[Person]) -> List[str]:
             )
 
     warnings = []
-    for p in people:
-        if p.mother_id is None or p.relation_id is None:
-            continue
-        if p.mother_id not in spouses_of.get(p.relation_id, set()):
-            warnings.append(
-                "mother_id '%s' on '%s' is not a recorded spouse of '%s'; "
-                "the child will hang from the parent's own line"
-                % (p.mother_id, p.id, p.relation_id)
-            )
     needs = [p.id for p in people if p.status == "needs-parent"]
     if needs:
         warnings.append("%d person(s) need a parent: %s" % (len(needs), needs))

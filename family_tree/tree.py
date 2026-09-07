@@ -19,27 +19,11 @@ def _child_groups(children, spouses):
     child_ids = [c["person"].id for c in children]
     if not child_ids:
         return []
-    if len(spouses) <= 1:
-        return [{
-            "spouse_id": spouses[0].id if spouses else None,
-            "unattributed": False,
-            "child_ids": child_ids,
-        }]
-    groups = [
-        {"spouse_id": s.id, "unattributed": False, "child_ids": []}
-        for s in spouses
-    ]
-    by_spouse = {g["spouse_id"]: g for g in groups}
-    loose = []
-    for c in children:
-        group = by_spouse.get(c["person"].mother_id)
-        if group is None:
-            loose.append(c["person"].id)
-        else:
-            group["child_ids"].append(c["person"].id)
-    if loose:
-        groups.append({"spouse_id": None, "unattributed": True, "child_ids": loose})
-    return groups
+    return [{
+        "spouse_id": spouses[0].id if spouses else None,
+        "unattributed": False,
+        "child_ids": child_ids,
+    }]
 
 
 def _node(person, children_by_parent, spouses_by_person):

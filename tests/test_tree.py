@@ -146,32 +146,6 @@ class TestCouples(unittest.TestCase):
             {"spouse_id": None, "unattributed": False, "child_ids": ["a"]}
         ])
 
-    def test_two_spouses_split_children_by_mother_id(self):
-        root = self._tree([
-            Person(id="root", name="Root", gender="male"),
-            Person(id="w1", name="W1", gender="female", relation="wife", relation_id="root"),
-            Person(id="w2", name="W2", gender="female", relation="wife", relation_id="root"),
-            Person(id="a", name="A", relation="father", relation_id="root", mother_id="w1"),
-            Person(id="b", name="B", relation="father", relation_id="root", mother_id="w2"),
-        ])
-        self.assertEqual(root["child_groups"], [
-            {"spouse_id": "w1", "unattributed": False, "child_ids": ["a"]},
-            {"spouse_id": "w2", "unattributed": False, "child_ids": ["b"]},
-        ])
-
-    def test_two_spouses_unattributed_children_form_their_own_group(self):
-        root = self._tree([
-            Person(id="root", name="Root", gender="male"),
-            Person(id="w1", name="W1", gender="female", relation="wife", relation_id="root"),
-            Person(id="w2", name="W2", gender="female", relation="wife", relation_id="root"),
-            Person(id="a", name="A", relation="father", relation_id="root", mother_id="w1"),
-            Person(id="b", name="B", relation="father", relation_id="root"),
-        ])
-        self.assertEqual(root["child_groups"], [
-            {"spouse_id": "w1", "unattributed": False, "child_ids": ["a"]},
-            {"spouse_id": "w2", "unattributed": False, "child_ids": []},
-            {"spouse_id": None, "unattributed": True, "child_ids": ["b"]},
-        ])
 
     def test_child_groups_preserve_sibling_order(self):
         root = self._tree([

@@ -125,24 +125,10 @@ class TestAddress(unittest.TestCase):
         self.assertEqual(people[0].address.line, "214")
 
 
-class TestMotherId(unittest.TestCase):
-    def test_mother_id_is_parsed(self):
-        people = load_people(
-            _write(
-                "- id: dad\n  name: Dad\n"
-                "- id: kid\n  name: Kid\n  relation: father\n  relation_id: dad\n"
-                "  mother_id: mom\n"
-            )
-        )
-        self.assertEqual(people[1].mother_id, "mom")
-
-    def test_missing_mother_id_is_none(self):
-        people = load_people(_write("- id: x\n  name: X\n"))
-        self.assertIsNone(people[0].mother_id)
-
-    def test_non_scalar_mother_id_raises(self):
+class TestMotherIdIsGone(unittest.TestCase):
+    def test_mother_id_is_now_an_unknown_key(self):
         with self.assertRaises(LoadError):
-            load_people(_write("- id: x\n  name: X\n  mother_id: [a, b]\n"))
+            load_people(_write("- id: x\n  name: X\n  mother_id: mom\n"))
 
 
 class TestResolvePhotos(unittest.TestCase):
