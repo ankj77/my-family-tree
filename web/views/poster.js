@@ -98,24 +98,6 @@ FT.views.poster = {
     })(root, 0);
   },
   leaves: function (g, x1, y1, mx, my, x2, y2, id) {
-    var ramp = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];
-    for (var k = 0; k < 7; k++) {
-      var h = FT.hash01(id + 'leaf' + k);
-      var t = 0.18 + (k / 7) * 0.74 + h * 0.06;
-      var u = 1 - t;
-      var px = u * u * x1 + 2 * u * t * mx + t * t * x2;
-      var py = u * u * y1 + 2 * u * t * my + t * t * y2;
-      var side = k % 2 ? 1 : -1;
-      var off = 11 + h * 13;
-      var lx = px + side * off;
-      var ly = py + (h - 0.5) * 16;
-      var e = FT.el('ellipse', {
-        'class': 'poster-leaf',
-        cx: lx, cy: ly,
-        rx: 12 + h * 6, ry: 6.5 + h * 3,
-        transform: 'rotate(' + (side * (25 + h * 50) - 20) + ',' + lx + ',' + ly + ')'
-      }, g);
-      e.style.fill = ramp[(k + Math.floor(h * 3)) % ramp.length];
-    }
+    FT.leaves(g, id, FT.quadAt(x1, y1, mx, my, x2, y2), 7, 1);
   }
 };

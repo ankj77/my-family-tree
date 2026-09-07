@@ -33,15 +33,17 @@ FT.views.classic = {
     (function walk(n) {
       var kids = FT.visibleChildren(n);
       if (!kids.length) return;
-      var jx = n.x + FT.jointX(n), jy = n.y + FT.jointY(n);
-      var busY = jy + FT.V_GAP / 2;
-      FT.edge(g, 'M' + jx + ',' + jy + ' V' + busY);
-      var xs = kids.map(function (c) { return c.x + FT.jointX(c); });
-      FT.edge(g, 'M' + Math.min.apply(null, xs) + ',' + busY +
-                 ' H' + Math.max.apply(null, xs));
+      var x1 = n.x + FT.jointX(n), y1 = n.y + FT.jointY(n);
       kids.forEach(function (c) {
-        FT.edge(g, 'M' + (c.x + FT.jointX(c)) + ',' + busY +
-                   ' V' + c.y, c.id);
+        var x2 = c.x + FT.jointX(c), y2 = c.y;
+        var sway = (FT.hash01(c.id) - 0.5) * 30;
+        var ay = y1 + (y2 - y1) * 0.45, by = y2 - (y2 - y1) * 0.35;
+        var ax = x1 + sway, bx = x2 - sway;
+        FT.limb(g, c.id,
+          'M' + x1 + ',' + y1 + ' C' + ax + ',' + ay + ' ' + bx + ',' + by +
+          ' ' + x2 + ',' + y2,
+          FT.cubicAt(x1, y1, ax, ay, bx, by, x2, y2),
+          FT.limbWeight(c));
         walk(c);
       });
     })(root);

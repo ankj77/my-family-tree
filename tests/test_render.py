@@ -297,6 +297,20 @@ class TestFocusIsolatesTheLine(unittest.TestCase):
         self.assertIn("FT.revealDepth(deepest + 1);", html)
 
 
+class TestOrganicBranches(unittest.TestCase):
+    def test_the_flat_views_draw_curved_branches_with_leaves(self):
+        html = _payload_html()
+        self.assertIn("FT.limb = function", html)
+        self.assertIn(".edge.branch{stroke:var(--bark)", html)
+        for view in ("classic", "horizontal"):
+            self.assertIn("FT.limb(g, c.id,", html)
+        self.assertNotIn("var busY = jy + FT.V_GAP / 2;", html)
+
+    def test_the_toggle_reads_plus_or_minus(self):
+        html = _payload_html()
+        self.assertIn("FT.state.collapsed[n.id] ? '+'", html)
+
+
 class TestPlaceOnTheCard(unittest.TestCase):
     def test_meta_line_adds_the_place(self):
         html = _payload_html()

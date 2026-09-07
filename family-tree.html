@@ -44,8 +44,13 @@
   #stage.grabbing{cursor:grabbing;}
   svg{width:100%;height:100%;display:block;}
   .edge{fill:none;stroke:var(--connector);stroke-width:1.25px;}
+  .edge.branch{stroke:var(--bark);stroke-linecap:round;}
+  .edge.branch.hl{stroke:var(--hl);}
   .edge.hl{stroke:var(--hl);stroke-width:2.5px;}
-  .toggle{fill:var(--rail-m);cursor:pointer;pointer-events:none;}
+  .toggle{fill:var(--card);stroke:var(--bark);stroke-width:2px;cursor:pointer;
+    pointer-events:none;}
+  .toggle-sign{font-size:15px;font-weight:700;fill:var(--bark);font-family:var(--font);
+    cursor:pointer;pointer-events:none;}
   .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
   #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:var(--card);
     border-left:1px solid var(--edge);border-bottom:1px solid var(--edge);padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
@@ -113,6 +118,7 @@
   .poster-branch{fill:none;stroke:var(--bark);stroke-linecap:round;}
   .poster-branch.hl{stroke:var(--hl);}
   .poster-leaf{stroke:none;}
+  #stage[data-view="poster"] .toggle-sign,
   #stage[data-view="poster"] .toggle,
   #stage[data-view="poster"] .toggle-hit{display:none;}
   .parent-card .pc-name{font-family:var(--serif);font-size:14.5px;font-weight:600;
@@ -273,6 +279,54 @@
     }
     return ((h >>> 0) % 10000) / 10000;
   };
+  FT.quadAt = function (x1, y1, mx, my, x2, y2) {
+    return function (t) {
+      var u = 1 - t;
+      return { x: u * u * x1 + 2 * u * t * mx + t * t * x2,
+               y: u * u * y1 + 2 * u * t * my + t * t * y2 };
+    };
+  };
+
+  FT.cubicAt = function (x1, y1, ax, ay, bx, by, x2, y2) {
+    return function (t) {
+      var u = 1 - t;
+      return { x: u*u*u*x1 + 3*u*u*t*ax + 3*u*t*t*bx + t*t*t*x2,
+               y: u*u*u*y1 + 3*u*u*t*ay + 3*u*t*t*by + t*t*t*y2 };
+    };
+  };
+
+  FT.leaves = function (g, id, at, count, scale) {
+    var ramp = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];
+    for (var k = 0; k < count; k++) {
+      var h = FT.hash01(id + 'leaf' + k);
+      var t = 0.18 + (k / count) * 0.74 + h * 0.06;
+      var p = at(t);
+      var side = k % 2 ? 1 : -1;
+      var off = (11 + h * 13) * scale;
+      var lx = p.x + side * off;
+      var ly = p.y + (h - 0.5) * 16 * scale;
+      var e = FT.el('ellipse', {
+        'class': 'poster-leaf',
+        cx: lx, cy: ly,
+        rx: (12 + h * 6) * scale, ry: (6.5 + h * 3) * scale,
+        transform: 'rotate(' + (side * (25 + h * 50) - 20) + ',' + lx + ',' + ly + ')'
+      }, g);
+      e.style.fill = ramp[(k + Math.floor(h * 3)) % ramp.length];
+    }
+  };
+
+  FT.limb = function (g, id, d, at, thickness) {
+    var p = FT.edge(g, d, id);
+    p.setAttribute('class', 'edge branch');
+    p.style.strokeWidth = thickness + 'px';
+    FT.leaves(g, id, at, 2, 0.62);
+    return p;
+  };
+
+  FT.limbWeight = function (n) {
+    return Math.max(2.2, Math.sqrt(FT.leafCount(n)) * 1.7);
+  };
+
   FT.leafCount = function (n) {
     var kids = FT.visibleChildren(n);
     if (!kids.length) return 1;
@@ -619,9 +673,16 @@
     drawRow(g, n, 0, n);
     FT.partners(n).forEach(function (p, i) { drawRow(g, p, i + 1, n); });
     if ((n.children || []).length) {
-      var cx = FT.jointX(n), cy = FT.jointY(n) + 8;
+      var tview = FT.views[FT.state.viewId];
+      var knob = tview && tview.togglePos ? tview.togglePos(n)
+        : { x: FT.jointX(n), y: FT.jointY(n) + 8 };
+      var cx = knob.x, cy = knob.y;
       var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
-      el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 11 }, g);
+      el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 10 }, g);
+      var sign = el('text', {
+        'class': 'toggle-sign', x: cx, y: cy + 5, 'text-anchor': 'middle'
+      }, g);
+      sign.textContent = FT.state.collapsed[n.id] ? '+' : '\u2212';
       hit.addEventListener('click', function (ev) {
         ev.stopPropagation();
         FT.clearPicks();
@@ -1058,15 +1119,17 @@ FT.views.classic = {
     (function walk(n) {
       var kids = FT.visibleChildren(n);
       if (!kids.length) return;
-      var jx = n.x + FT.jointX(n), jy = n.y + FT.jointY(n);
-      var busY = jy + FT.V_GAP / 2;
-      FT.edge(g, 'M' + jx + ',' + jy + ' V' + busY);
-      var xs = kids.map(function (c) { return c.x + FT.jointX(c); });
-      FT.edge(g, 'M' + Math.min.apply(null, xs) + ',' + busY +
-                 ' H' + Math.max.apply(null, xs));
+      var x1 = n.x + FT.jointX(n), y1 = n.y + FT.jointY(n);
       kids.forEach(function (c) {
-        FT.edge(g, 'M' + (c.x + FT.jointX(c)) + ',' + busY +
-                   ' V' + c.y, c.id);
+        var x2 = c.x + FT.jointX(c), y2 = c.y;
+        var sway = (FT.hash01(c.id) - 0.5) * 30;
+        var ay = y1 + (y2 - y1) * 0.45, by = y2 - (y2 - y1) * 0.35;
+        var ax = x1 + sway, bx = x2 - sway;
+        FT.limb(g, c.id,
+          'M' + x1 + ',' + y1 + ' C' + ax + ',' + ay + ' ' + bx + ',' + by +
+          ' ' + x2 + ',' + y2,
+          FT.cubicAt(x1, y1, ax, ay, bx, by, x2, y2),
+          FT.limbWeight(c));
         walk(c);
       });
     })(root);
@@ -1077,6 +1140,7 @@ FT.views.horizontal = {
   id: 'horizontal',
   label: 'Left to right',
   nodeShape: 'box',
+  togglePos: function (n) { return { x: FT.nodeW(n) + 12, y: FT.jointY(n) - 2 }; },
   layout: function (root) {
     var cursor = 0;
     var COL = FT.CARD_W + 90;
@@ -1110,14 +1174,17 @@ FT.views.horizontal = {
     (function walk(n) {
       var kids = FT.visibleChildren(n);
       if (!kids.length) return;
-      var jx = n.x + FT.nodeW(n), jy = n.y + FT.jointY(n);
-      var busX = jx + 45;
-      FT.edge(g, 'M' + jx + ',' + jy + ' H' + busX);
-      var ys = kids.map(function (c) { return c.y + FT.jointY(c); });
-      FT.edge(g, 'M' + busX + ',' + Math.min.apply(null, ys) +
-                 ' V' + Math.max.apply(null, ys));
+      var x1 = n.x + FT.nodeW(n), y1 = n.y + FT.jointY(n);
       kids.forEach(function (c) {
-        FT.edge(g, 'M' + busX + ',' + (c.y + FT.jointY(c)) + ' H' + c.x, c.id);
+        var x2 = c.x, y2 = c.y + FT.jointY(c);
+        var sway = (FT.hash01(c.id) - 0.5) * 30;
+        var ax = x1 + (x2 - x1) * 0.45, bx = x2 - (x2 - x1) * 0.35;
+        var ay = y1 + sway, by = y2 - sway;
+        FT.limb(g, c.id,
+          'M' + x1 + ',' + y1 + ' C' + ax + ',' + ay + ' ' + bx + ',' + by +
+          ' ' + x2 + ',' + y2,
+          FT.cubicAt(x1, y1, ax, ay, bx, by, x2, y2),
+          FT.limbWeight(c));
         walk(c);
       });
     })(root);
@@ -1224,25 +1291,7 @@ FT.views.poster = {
     })(root, 0);
   },
   leaves: function (g, x1, y1, mx, my, x2, y2, id) {
-    var ramp = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];
-    for (var k = 0; k < 7; k++) {
-      var h = FT.hash01(id + 'leaf' + k);
-      var t = 0.18 + (k / 7) * 0.74 + h * 0.06;
-      var u = 1 - t;
-      var px = u * u * x1 + 2 * u * t * mx + t * t * x2;
-      var py = u * u * y1 + 2 * u * t * my + t * t * y2;
-      var side = k % 2 ? 1 : -1;
-      var off = 11 + h * 13;
-      var lx = px + side * off;
-      var ly = py + (h - 0.5) * 16;
-      var e = FT.el('ellipse', {
-        'class': 'poster-leaf',
-        cx: lx, cy: ly,
-        rx: 12 + h * 6, ry: 6.5 + h * 3,
-        transform: 'rotate(' + (side * (25 + h * 50) - 20) + ',' + lx + ',' + ly + ')'
-      }, g);
-      e.style.fill = ramp[(k + Math.floor(h * 3)) % ramp.length];
-    }
+    FT.leaves(g, id, FT.quadAt(x1, y1, mx, my, x2, y2), 7, 1);
   }
 };
 

@@ -2,6 +2,7 @@ FT.views.horizontal = {
   id: 'horizontal',
   label: 'Left to right',
   nodeShape: 'box',
+  togglePos: function (n) { return { x: FT.nodeW(n) + 12, y: FT.jointY(n) - 2 }; },
   layout: function (root) {
     var cursor = 0;
     var COL = FT.CARD_W + 90;
@@ -35,14 +36,17 @@ FT.views.horizontal = {
     (function walk(n) {
       var kids = FT.visibleChildren(n);
       if (!kids.length) return;
-      var jx = n.x + FT.nodeW(n), jy = n.y + FT.jointY(n);
-      var busX = jx + 45;
-      FT.edge(g, 'M' + jx + ',' + jy + ' H' + busX);
-      var ys = kids.map(function (c) { return c.y + FT.jointY(c); });
-      FT.edge(g, 'M' + busX + ',' + Math.min.apply(null, ys) +
-                 ' V' + Math.max.apply(null, ys));
+      var x1 = n.x + FT.nodeW(n), y1 = n.y + FT.jointY(n);
       kids.forEach(function (c) {
-        FT.edge(g, 'M' + busX + ',' + (c.y + FT.jointY(c)) + ' H' + c.x, c.id);
+        var x2 = c.x, y2 = c.y + FT.jointY(c);
+        var sway = (FT.hash01(c.id) - 0.5) * 30;
+        var ax = x1 + (x2 - x1) * 0.45, bx = x2 - (x2 - x1) * 0.35;
+        var ay = y1 + sway, by = y2 - sway;
+        FT.limb(g, c.id,
+          'M' + x1 + ',' + y1 + ' C' + ax + ',' + ay + ' ' + bx + ',' + by +
+          ' ' + x2 + ',' + y2,
+          FT.cubicAt(x1, y1, ax, ay, bx, by, x2, y2),
+          FT.limbWeight(c));
         walk(c);
       });
     })(root);

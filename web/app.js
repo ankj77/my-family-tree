@@ -90,6 +90,54 @@ var FT = { views: {} };
     }
     return ((h >>> 0) % 10000) / 10000;
   };
+  FT.quadAt = function (x1, y1, mx, my, x2, y2) {
+    return function (t) {
+      var u = 1 - t;
+      return { x: u * u * x1 + 2 * u * t * mx + t * t * x2,
+               y: u * u * y1 + 2 * u * t * my + t * t * y2 };
+    };
+  };
+
+  FT.cubicAt = function (x1, y1, ax, ay, bx, by, x2, y2) {
+    return function (t) {
+      var u = 1 - t;
+      return { x: u*u*u*x1 + 3*u*u*t*ax + 3*u*t*t*bx + t*t*t*x2,
+               y: u*u*u*y1 + 3*u*u*t*ay + 3*u*t*t*by + t*t*t*y2 };
+    };
+  };
+
+  FT.leaves = function (g, id, at, count, scale) {
+    var ramp = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];
+    for (var k = 0; k < count; k++) {
+      var h = FT.hash01(id + 'leaf' + k);
+      var t = 0.18 + (k / count) * 0.74 + h * 0.06;
+      var p = at(t);
+      var side = k % 2 ? 1 : -1;
+      var off = (11 + h * 13) * scale;
+      var lx = p.x + side * off;
+      var ly = p.y + (h - 0.5) * 16 * scale;
+      var e = FT.el('ellipse', {
+        'class': 'poster-leaf',
+        cx: lx, cy: ly,
+        rx: (12 + h * 6) * scale, ry: (6.5 + h * 3) * scale,
+        transform: 'rotate(' + (side * (25 + h * 50) - 20) + ',' + lx + ',' + ly + ')'
+      }, g);
+      e.style.fill = ramp[(k + Math.floor(h * 3)) % ramp.length];
+    }
+  };
+
+  FT.limb = function (g, id, d, at, thickness) {
+    var p = FT.edge(g, d, id);
+    p.setAttribute('class', 'edge branch');
+    p.style.strokeWidth = thickness + 'px';
+    FT.leaves(g, id, at, 2, 0.62);
+    return p;
+  };
+
+  FT.limbWeight = function (n) {
+    return Math.max(2.2, Math.sqrt(FT.leafCount(n)) * 1.7);
+  };
+
   FT.leafCount = function (n) {
     var kids = FT.visibleChildren(n);
     if (!kids.length) return 1;
@@ -436,9 +484,16 @@ var FT = { views: {} };
     drawRow(g, n, 0, n);
     FT.partners(n).forEach(function (p, i) { drawRow(g, p, i + 1, n); });
     if ((n.children || []).length) {
-      var cx = FT.jointX(n), cy = FT.jointY(n) + 8;
+      var tview = FT.views[FT.state.viewId];
+      var knob = tview && tview.togglePos ? tview.togglePos(n)
+        : { x: FT.jointX(n), y: FT.jointY(n) + 8 };
+      var cx = knob.x, cy = knob.y;
       var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
-      el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 11 }, g);
+      el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 10 }, g);
+      var sign = el('text', {
+        'class': 'toggle-sign', x: cx, y: cy + 5, 'text-anchor': 'middle'
+      }, g);
+      sign.textContent = FT.state.collapsed[n.id] ? '+' : '\u2212';
       hit.addEventListener('click', function (ev) {
         ev.stopPropagation();
         FT.clearPicks();
