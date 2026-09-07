@@ -2,6 +2,7 @@ FT.views.horizontal = {
   id: 'horizontal',
   label: 'Left to right',
   nodeShape: 'box',
+  cardStyle: 'parents',
   togglePos: function (n) { return { x: FT.nodeW(n) + 12, y: FT.jointY(n) - 2 }; },
   layout: function (root) {
     var cursor = 0;

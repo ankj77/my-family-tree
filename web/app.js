@@ -138,7 +138,9 @@ var FT = { views: {} };
   FT.POSTER_CARD_H = 104;
   FT.nodeH = function (n) {
     var view = FT.views[FT.state.viewId];
-    if (view && view.cardStyle === 'parents') return FT.POSTER_CARD_H;
+    if (view && view.cardStyle === 'parents') {
+      return FT.POSTER_CARD_H + (FT.metaLine(n).text ? 16 : 0);
+    }
     return FT.rows(n) * FT.ROW_H;
   };
   FT.jointX = function () { return FT.CARD_W / 2; };
@@ -456,7 +458,7 @@ var FT = { views: {} };
   };
 
   FT.drawParentCard = function (parent, n) {
-    var H = FT.POSTER_CARD_H;
+    var H = FT.nodeH(n);
     var g = el('g', {
       'class': 'card parent-card', 'data-id': n.id,
       transform: 'translate(' + n.x + ',' + n.y + ')'
@@ -469,10 +471,22 @@ var FT = { views: {} };
     }, g);
     title.textContent = FT.label(n)[0];
     fitText(title, FT.CARD_W - 24);
-    el('line', { 'class': 'pc-rule', x1: 18, y1: 38, x2: FT.CARD_W - 18, y2: 38 }, g);
+    var meta = FT.metaLine(n);
+    var drop = 0;
+    if (meta.text) {
+      var sub = el('text', {
+        'class': 'pc-sub', x: FT.CARD_W / 2, y: 42, 'text-anchor': 'middle'
+      }, g);
+      sub.textContent = meta.text;
+      fitText(sub, FT.CARD_W - 24);
+      drop = 16;
+    }
+    el('line', {
+      'class': 'pc-rule', x1: 18, y1: 38 + drop, x2: FT.CARD_W - 18, y2: 38 + drop
+    }, g);
     var pr = FT.parentsOf(n);
     [['Father', pr.father, 'male'], ['Mother', pr.mother, 'female']].forEach(function (row, i) {
-      var y = 58 + i * 30;
+      var y = 58 + drop + i * 30;
       personIcon(g, 32, y, row[2]);
       var lab = el('text', { 'class': 'pc-label', x: 52, y: y - 3 }, g);
       lab.textContent = row[0];
@@ -480,7 +494,11 @@ var FT = { views: {} };
       val.textContent = row[1] ? FT.label(row[1])[0] : '(Unknown)';
       fitText(val, FT.CARD_W - 52 - 14);
     });
-    if (n.depth && (n.children || []).length) FT.knob(g, n, FT.CARD_W / 2, -12);
+    if ((n.children || []).length) {
+      var view = FT.views[FT.state.viewId];
+      var at = view && view.togglePos ? view.togglePos(n) : { x: FT.CARD_W / 2, y: -12 };
+      FT.knob(g, n, at.x, at.y);
+    }
     g.addEventListener('click', function () { FT.select(n.id, n); });
     return g;
   };

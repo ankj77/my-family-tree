@@ -168,15 +168,20 @@ class TestPosterView(unittest.TestCase):
 
     def test_the_poster_cards_carry_a_plus_minus_knob(self):
         html = _payload_html()
-        self.assertIn("if (n.depth && (n.children || []).length) FT.knob(", html)
+        self.assertIn("var at = view && view.togglePos ? view.togglePos(n) : { x: FT.CARD_W / 2, y: -12 };", html)
         self.assertNotIn('#stage[data-view="poster"] .toggle', html)
 
 
 class TestPosterParentCards(unittest.TestCase):
-    def test_poster_declares_the_parents_card_style(self):
+    def test_every_view_declares_the_parents_card_style(self):
         html = _payload_html()
-        self.assertIn("cardStyle: 'parents'", html)
+        self.assertEqual(3, html.count("cardStyle: 'parents'"))
         self.assertIn("FT.drawParentCard", html)
+
+    def test_the_card_carries_dates_and_place_when_recorded(self):
+        html = _payload_html()
+        self.assertIn("var meta = FT.metaLine(n);", html)
+        self.assertIn("FT.POSTER_CARD_H + (FT.metaLine(n).text ? 16 : 0)", html)
 
     def test_parent_resolution_helper_exists(self):
         html = _payload_html()

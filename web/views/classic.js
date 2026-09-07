@@ -2,6 +2,8 @@ FT.views.classic = {
   id: 'classic',
   label: 'Classic (top-down)',
   nodeShape: 'box',
+  cardStyle: 'parents',
+  togglePos: function (n) { return { x: FT.jointX(n), y: FT.jointY(n) + 8 }; },
   layout: function (root) {
     var slot = FT.CARD_W + FT.H_GAP;
     var rowHeight = [];
