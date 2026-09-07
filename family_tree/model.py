@@ -121,6 +121,7 @@ def load_people(path: str) -> List[Person]:
         life = entry.get("life")
         if life is not None and life not in ALLOWED_LIFE:
             raise LoadError("Person '%s' has invalid life '%s'" % (pid, life))
+        born = entry.get("born")
         died = entry.get("died")
         address = _parse_address(str(pid), entry.get("address"))
         mother_id = entry.get("mother_id")
@@ -136,7 +137,7 @@ def load_people(path: str) -> List[Person]:
                 relation_id=entry.get("relation_id"),
                 mother_id=None if mother_id is None else str(mother_id),
                 order=order,
-                born=entry.get("born"),
+                born=None if born is None else str(born),
                 life=life,
                 died=None if died is None else str(died),
                 note=entry.get("note"),

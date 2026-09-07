@@ -201,7 +201,7 @@
     if (FT.state.lang !== 'en' && p.name_hi) parts.push(p.name_hi);
     var span = FT.lifespan(p);
     if (span) parts.push(span);
-    return { text: parts.join(' · '), dot: p.life === 'living' && !p.died };
+    return { text: parts.join(' · '), dot: !FT.isDeceased(p) && p.life === 'living' };
   };
 
   FT.isDeceased = function (p) {

@@ -185,7 +185,7 @@ class TestCoupleCard(unittest.TestCase):
     def test_a_died_value_wins_over_a_living_flag(self):
         html = _payload_html()
         self.assertIn("FT.isDeceased(p) ? ' deceased' : ''", html)
-        self.assertIn("dot: p.life === 'living' && !p.died", html)
+        self.assertIn("dot: !FT.isDeceased(p) && p.life === 'living'", html)
         self.assertIn("if (p.born && p.died) return p.born + '\u2013' + p.died;", html)
 
 
@@ -212,7 +212,7 @@ class TestLifePayload(unittest.TestCase):
         self.assertIn('"died": "1962"', html)
 
 
-class TestLifeInPayload(unittest.TestCase):
+class TestSheetRendersLifeStatus(unittest.TestCase):
     def _html(self):
         people = [
             Person(id="root", name="Root", gender="male", born="1884",
@@ -222,12 +222,6 @@ class TestLifeInPayload(unittest.TestCase):
         ]
         root, unlinked, summary = build_tree(people)
         return render_html(root, unlinked, summary)
-
-    def test_payload_carries_life_and_died(self):
-        html = self._html()
-        self.assertIn('"life"', html)
-        self.assertIn('"died"', html)
-        self.assertIn("1961", html)
 
     def test_sheet_renders_life_status(self):
         html = self._html()

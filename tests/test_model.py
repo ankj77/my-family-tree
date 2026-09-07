@@ -249,6 +249,10 @@ class TestLifeAndDied(unittest.TestCase):
         people = load_people(_write("- id: x\n  name: X\n  died: 1961\n"))
         self.assertEqual(people[0].died, "1961")
 
+    def test_numeric_born_is_stringified(self):
+        people = load_people(_write("- id: x\n  name: X\n  born: 1961\n"))
+        self.assertEqual(people[0].born, "1961")
+
     def test_died_accepts_free_text(self):
         people = load_people(_write("- id: x\n  name: X\n  died: c. 1961 (Samvat 2018)\n"))
         self.assertEqual(people[0].died, "c. 1961 (Samvat 2018)")

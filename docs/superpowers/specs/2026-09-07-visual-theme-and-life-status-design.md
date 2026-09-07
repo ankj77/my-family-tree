@@ -141,9 +141,9 @@ Named tokens, defined once in `web/app.css` as custom properties:
 | `--canvas` | `#FAF8F5` | warm off-white surface behind the tree |
 | `--card` | `#FFFFFF` | card fill |
 | `--edge` | `#E8E2DA` | card hairline border |
-| `--rail-m` | `#2F4A7C` | deep indigo, male |
-| `--rail-f` | `#A8446B` | warm rose, female |
-| `--rail-unknown` | `#C9BDB0` | muted, placeholder spouse |
+| `--rail-m` | `#2F4A7C` | deep indigo; the card's gender rail for a male person; also the collapse-toggle fill and the sheet's relative-link colour (both regardless of gender) |
+| `--rail-f` | `#A8446B` | warm rose; the card's gender rail for a female person; also the organic view's spouse-leaf stroke, regardless of that spouse's gender — the organic view deliberately does not encode gender |
+| `--rail-unknown` | `#A2917D` | the card's gender rail when gender is unknown or the spouse is a placeholder; darkened from an earlier `#C9BDB0`, which measured 1.84:1 contrast against the card and was effectively invisible |
 | `--ink` | `#1F2933` | primary text |
 | `--ink-muted` | `#7A6E63` | meta text, deceased names |
 | `--living` | `#3F8F5E` | status dot |
@@ -151,6 +151,11 @@ Named tokens, defined once in `web/app.css` as custom properties:
 | `--bark` | `#7A5C3E` | organic branches |
 | `--bark-trunk` | `#5E4530` | organic trunk |
 | `--leaf-1/2/3` | `#7FA96A` / `#9CBE7E` / `#C2D6A0` | canopy depth |
+| `--leaf-spouse` | `#E7C4D3` | organic view's spouse-leaf fill |
+| `--hl` | `#D3722F` | highlight stroke for a selected/highlighted edge, branch, leaf outline, or card border |
+| `--warn` | `#C0392B` | name colour for a row flagged uncertain |
+| `--font` | `system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Devanagari", "Nirmala UI", sans-serif` | the one font stack, with explicit Devanagari coverage |
+| `--shadow-card` | `0 1px 2px rgba(60,45,30,.06), 0 3px 8px rgba(60,45,30,.05)` | the two stacked, warm-tinted shadows used for card and sheet depth |
 
 The neutrals carry a warm bias rather than being pure grey, so they read as
 chosen rather than inherited. Card depth comes from two stacked shadows
