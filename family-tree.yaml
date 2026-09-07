@@ -179,6 +179,7 @@
   relation_id: ramjilal
 - id: niyadar
   name: Niyadar
+  name_hi: नियादर
   gender: male
   relation: mother
   relation_id: richa
