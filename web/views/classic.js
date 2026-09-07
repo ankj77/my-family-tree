@@ -28,8 +28,16 @@ FT.views.classic = {
       var mid = (first.x + FT.jointX(first) + last.x + FT.jointX(last)) / 2;
       n.x = mid - FT.jointX(n);
     })(root, 0);
+    var cx = root.x + FT.jointX(root);
+    this.extentPad = {
+      minX: cx - 280, maxX: cx + 280,
+      minY: root.y - FT.ROOT_SCALE * (FT.ROOT_ART_LEN + 320), maxY: root.y
+    };
   },
   drawEdges: function (g, root) {
+    var s = FT.ROOT_SCALE;
+    FT.rootArt(g, 'translate(' + (root.x + FT.jointX(root)) + ',' +
+      (root.y - s * FT.ROOT_ART_LEN) + ') scale(' + s + ',' + (-s) + ')');
     (function walk(n) {
       var kids = FT.visibleChildren(n);
       if (!kids.length) return;

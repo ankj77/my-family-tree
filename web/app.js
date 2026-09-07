@@ -135,10 +135,7 @@ var FT = { views: {} };
     return 1 + partners;
   };
   FT.nodeW = function () { return FT.CARD_W; };
-  FT.POSTER_CARD_H = 104;
   FT.nodeH = function (n) {
-    var view = FT.views[FT.state.viewId];
-    if (view && view.cardStyle === 'parents') return FT.POSTER_CARD_H;
     return FT.rows(n) * FT.ROW_H;
   };
   FT.jointX = function () { return FT.CARD_W / 2; };
@@ -429,19 +426,6 @@ var FT = { views: {} };
     return { father: p, mother: spouse };
   };
 
-  function personIcon(g, cx, cy, gender) {
-    var tint = gender === 'female' ? 'var(--rail-f)' : 'var(--rail-m)';
-    var bg = el('circle', { 'class': 'pc-icon-bg', cx: cx, cy: cy, r: 9 }, g);
-    bg.style.fill = tint;
-    var head = el('circle', { 'class': 'pc-icon-fg', cx: cx, cy: cy - 2.4, r: 2.9 }, g);
-    head.style.fill = tint;
-    var body = el('path', {
-      'class': 'pc-icon-fg',
-      d: 'M' + (cx - 4.8) + ',' + (cy + 6.4) + ' a4.8,4.4 0 0 1 9.6,0 Z'
-    }, g);
-    body.style.fill = tint;
-  }
-
   FT.knob = function (g, n, cx, cy) {
     var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
     el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 10 }, g);
@@ -455,39 +439,40 @@ var FT = { views: {} };
     });
   };
 
-  FT.drawParentCard = function (parent, n) {
-    var H = FT.POSTER_CARD_H;
-    var g = el('g', {
-      'class': 'card parent-card', 'data-id': n.id,
-      transform: 'translate(' + n.x + ',' + n.y + ')'
-    }, parent);
-    el('rect', { 'class': 'card-shadow', x: 0, y: 3, width: FT.CARD_W, height: H, rx: 10 }, g);
-    el('rect', { 'class': 'card-bg', width: FT.CARD_W, height: H, rx: 10 }, g);
-    el('rect', { 'class': 'card-hit', width: FT.CARD_W, height: H }, g);
-    var title = el('text', {
-      'class': 'pc-name', x: FT.CARD_W / 2, y: 26, 'text-anchor': 'middle'
-    }, g);
-    title.textContent = FT.label(n)[0];
-    fitText(title, FT.CARD_W - 24);
-    el('line', { 'class': 'pc-rule', x1: 18, y1: 38, x2: FT.CARD_W - 18, y2: 38 }, g);
-    var pr = FT.parentsOf(n);
-    [['Father', pr.father, 'male'], ['Mother', pr.mother, 'female']].forEach(function (row, i) {
-      var y = 58 + i * 30;
-      personIcon(g, 32, y, row[2]);
-      var lab = el('text', { 'class': 'pc-label', x: 52, y: y - 3 }, g);
-      lab.textContent = row[0];
-      var val = el('text', { 'class': 'pc-value', x: 52, y: y + 11 }, g);
-      val.textContent = row[1] ? FT.label(row[1])[0] : '(Unknown)';
-      fitText(val, FT.CARD_W - 52 - 14);
+  FT.ROOT_ART_LEN = 350;
+  FT.ROOT_SCALE = 0.5;
+
+  FT.rootArt = function (parent, transform, groundSpin) {
+    var g = el('g', { 'class': 'root-art', transform: transform }, parent);
+    var ground = { 'class': 'poster-ground', cx: 0, cy: 24, rx: 430, ry: 52 };
+    if (groundSpin) ground.transform = groundSpin;
+    el('ellipse', ground, g);
+    [-1, 1].forEach(function (dir) {
+      for (var i = 1; i <= 4; i++) {
+        var h = FT.hash01('root' + dir + i);
+        var reach = dir * (70 + i * 62 + h * 40);
+        var drop = 120 + i * 34 + h * 40;
+        var r = el('path', {
+          'class': 'poster-root',
+          d: 'M0,-10 C' + (reach * 0.35) + ',14 ' +
+             (reach * 0.95) + ',' + (drop * 0.35) + ' ' + reach + ',' + drop
+        }, g);
+        r.style.strokeWidth = Math.max(2.5, 12 - i * 2.1) + 'px';
+      }
     });
-    if (n.depth && (n.children || []).length) FT.knob(g, n, FT.CARD_W / 2, -12);
-    g.addEventListener('click', function () { FT.select(n.id, n); });
+    var bw = 44, tw = 13, top = -FT.ROOT_ART_LEN;
+    el('path', {
+      'class': 'poster-trunk',
+      d: 'M' + (-bw) + ',30 C' + (-bw * 0.55) + ',-90 ' +
+         (-tw * 2.6) + ',' + (top + 170) + ' ' + (-tw) + ',' + top +
+         ' L' + tw + ',' + top +
+         ' C' + (tw * 2.6) + ',' + (top + 170) + ' ' +
+         (bw * 0.55) + ',-90 ' + bw + ',30 Z'
+    }, g);
     return g;
   };
 
   FT.drawNode = function (parent, n) {
-    var view = FT.views[FT.state.viewId];
-    if (view && view.cardStyle === 'parents') return FT.drawParentCard(parent, n);
     var g = el('g', {
       'class': 'card', 'data-id': n.id,
       transform: 'translate(' + n.x + ',' + n.y + ')'

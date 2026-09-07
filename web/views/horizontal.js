@@ -31,8 +31,17 @@ FT.views.horizontal = {
       }
       cursor = Math.max(cursor + dy, n.y + FT.nodeH(n) + 34);
     })(root, 0);
+    var cy = root.y + FT.jointY(root);
+    this.extentPad = {
+      minX: root.x - FT.ROOT_SCALE * (FT.ROOT_ART_LEN + 460), maxX: root.x,
+      minY: cy - FT.ROOT_SCALE * 280, maxY: cy + FT.ROOT_SCALE * 280
+    };
   },
   drawEdges: function (g, root) {
+    var s = FT.ROOT_SCALE;
+    FT.rootArt(g, 'translate(' + (root.x - s * FT.ROOT_ART_LEN) + ',' +
+      (root.y + FT.jointY(root)) + ') rotate(90) scale(' + s + ')',
+      'rotate(-90,0,24)');
     (function walk(n) {
       var kids = FT.visibleChildren(n);
       if (!kids.length) return;

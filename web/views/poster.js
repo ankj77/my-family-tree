@@ -2,7 +2,7 @@ FT.views.poster = {
   id: 'poster',
   label: 'Tree (organic)',
   nodeShape: 'box',
-  cardStyle: 'parents',
+  togglePos: function (n) { return { x: FT.jointX(n), y: -14 }; },
   maxDepth: 2,
   extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },
   rowTop: function (depth) {
@@ -36,41 +36,10 @@ FT.views.poster = {
   drawEdges: function (g, root) {
     var cx = this.cx;
     var GROUND = 70;
-    var TRUNK_TOP = -280;
+    var TRUNK_TOP = GROUND - FT.ROOT_ART_LEN;
     var view = this;
 
-    FT.el('ellipse', {
-      'class': 'poster-ground', cx: cx, cy: GROUND + 24, rx: 430, ry: 52
-    }, g);
-
-    [-1, 1].forEach(function (dir) {
-      for (var i = 1; i <= 4; i++) {
-        var h = FT.hash01('root' + dir + i);
-        var reach = dir * (70 + i * 62 + h * 40);
-        var drop = 120 + i * 34 + h * 40;
-        var r = FT.el('path', {
-          'class': 'poster-root',
-          d: 'M' + cx + ',' + (GROUND - 10) +
-             ' C' + (cx + reach * 0.35) + ',' + (GROUND + 14) +
-             ' ' + (cx + reach * 0.95) + ',' + (GROUND + drop * 0.35) +
-             ' ' + (cx + reach) + ',' + (GROUND + drop)
-        }, g);
-        r.style.strokeWidth = Math.max(2.5, 12 - i * 2.1) + 'px';
-      }
-    });
-
-    var bw = 44, tw = 13;
-    FT.el('path', {
-      'class': 'poster-trunk',
-      d: 'M' + (cx - bw) + ',' + (GROUND + 30) +
-         ' C' + (cx - bw * 0.55) + ',' + (GROUND - 90) +
-         ' ' + (cx - tw * 2.6) + ',' + (TRUNK_TOP + 170) +
-         ' ' + (cx - tw) + ',' + TRUNK_TOP +
-         ' L' + (cx + tw) + ',' + TRUNK_TOP +
-         ' C' + (cx + tw * 2.6) + ',' + (TRUNK_TOP + 170) +
-         ' ' + (cx + bw * 0.55) + ',' + (GROUND - 90) +
-         ' ' + (cx + bw) + ',' + (GROUND + 30) + ' Z'
-    }, g);
+    FT.rootArt(g, 'translate(' + cx + ',' + GROUND + ')');
 
     function branch(x1, y1, x2, y2, weight, id) {
       var bow = (x2 - x1) * 0.42 + (FT.hash01(id) - 0.5) * 70;
