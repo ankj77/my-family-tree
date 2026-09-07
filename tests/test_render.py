@@ -297,6 +297,13 @@ class TestFocusIsolatesTheLine(unittest.TestCase):
         self.assertIn("FT.revealDepth(deepest + 1);", html)
 
 
+class TestPlaceOnTheCard(unittest.TestCase):
+    def test_meta_line_adds_the_place(self):
+        html = _payload_html()
+        self.assertIn("var place = FT.place(p);", html)
+        self.assertIn("a.locality || a.city || a.state || a.country", html)
+
+
 class TestCommonFather(unittest.TestCase):
     def test_common_ancestor_helper_exists(self):
         self.assertIn("FT.commonAncestor = function (ids)", _payload_html())

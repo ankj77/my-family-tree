@@ -117,10 +117,17 @@ var FT = { views: {} };
     return kids.filter(function (c) { return only[c.id]; });
   };
 
+  FT.place = function (p) {
+    var a = p.address || {};
+    return a.locality || a.city || a.state || a.country || '';
+  };
+
   FT.metaLine = function (p) {
     var parts = [];
     var span = FT.lifespan(p);
     if (span) parts.push(span);
+    var place = FT.place(p);
+    if (place) parts.push(place);
     return { text: parts.join(' · '), dot: !FT.isDeceased(p) && p.life === 'living' };
   };
 
