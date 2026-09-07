@@ -212,5 +212,28 @@ class TestLifePayload(unittest.TestCase):
         self.assertIn('"died": "1962"', html)
 
 
+class TestLifeInPayload(unittest.TestCase):
+    def _html(self):
+        people = [
+            Person(id="root", name="Root", gender="male", born="1884",
+                   life="deceased", died="1961"),
+            Person(id="kid", name="Kid", gender="male", relation="father",
+                   relation_id="root", born="1992", life="living"),
+        ]
+        root, unlinked, summary = build_tree(people)
+        return render_html(root, unlinked, summary)
+
+    def test_payload_carries_life_and_died(self):
+        html = self._html()
+        self.assertIn('"life"', html)
+        self.assertIn('"died"', html)
+        self.assertIn("1961", html)
+
+    def test_sheet_renders_life_status(self):
+        html = self._html()
+        self.assertIn("Died", html)
+        self.assertIn("Status", html)
+
+
 if __name__ == "__main__":
     unittest.main()

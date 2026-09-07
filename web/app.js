@@ -128,6 +128,11 @@ var FT = { views: {} };
     if (p.name_hi) h += '<p class="sheet-hi">' + esc(p.name_hi) + '</p>';
     var rows = '';
     if (p.born) rows += '<dt>Born</dt><dd>' + esc(p.born) + '</dd>';
+    if (p.died) rows += '<dt>Died</dt><dd>' + esc(p.died) + '</dd>';
+    if (p.life || p.died) {
+      rows += '<dt>Status</dt><dd>' +
+        (p.died || p.life === 'deceased' ? 'Deceased' : 'Living') + '</dd>';
+    }
     ADDRESS_ROWS.forEach(function (r) {
       var v = (p.address || {})[r[0]];
       if (v) rows += '<dt>' + r[1] + '</dt><dd>' + esc(v) + '</dd>';
@@ -171,6 +176,8 @@ var FT = { views: {} };
     FT.state.highlighted = node.id;
     highlight(node.id);
     sheetBody.innerHTML = sheetHtml(person, node);
+    sheet.style.borderLeftColor = person.gender === 'female' ? 'var(--rail-f)' :
+      person.gender === 'male' ? 'var(--rail-m)' : 'var(--rail-unknown)';
     sheet.classList.remove('hidden');
   };
 
@@ -262,13 +269,18 @@ var FT = { views: {} };
     return g;
   }
 
+  var LEAF_RAMP = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];
+
   FT.drawLeaf = function (parent, n) {
+    var deceased = n.died || n.life === 'deceased';
     var g = el('g', {
-      'class': 'leafnode' + (FT.hasPartner(n) ? ' paired' : ''),
+      'class': 'leafnode' + (FT.hasPartner(n) ? ' paired' : '') +
+        (deceased ? ' deceased' : ''),
       'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
     }, parent);
     var r = 7 + Math.min(6, Math.sqrt(FT.leafCount(n)));
-    el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf' }, g);
+    var fill = LEAF_RAMP[(n.depth || 0) % LEAF_RAMP.length];
+    el('ellipse', { rx: r, ry: r * 0.72, 'class': 'leaf', fill: fill }, g);
     if (FT.hasPartner(n)) {
       el('ellipse', { cx: r * 1.5, rx: r * 0.8, ry: r * 0.6, 'class': 'leaf spouseleaf' }, g);
     }
