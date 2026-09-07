@@ -681,23 +681,24 @@ var FT = { views: {} };
     if (!suggest.classList.contains('hidden')) placeSuggest();
   });
 
-  var langBtns=document.querySelectorAll('#toolbar [data-lang]');
-  for(var i=0;i<langBtns.length;i++){
-    langBtns[i].addEventListener('click', (function(b){ return function(){
-      FT.state.lang = b.getAttribute('data-lang');
-      markLang();
-      FT.render();
-    }; })(langBtns[i]));
-  }
+  var LANG_CYCLE = ['en', 'hi', 'both'];
+  var LANG_LABEL = { en: 'EN', hi: 'हिं', both: 'EN+हिं' };
+  var langBtn = document.getElementById('lang');
 
   function markLang() {
-    for (var i = 0; i < langBtns.length; i++) {
-      var on = langBtns[i].getAttribute('data-lang') === FT.state.lang;
-      langBtns[i].classList.toggle('on', on);
-      langBtns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
-    }
+    langBtn.textContent = LANG_LABEL[FT.state.lang];
   }
+
+  FT.cycleLang = function () {
+    var i = LANG_CYCLE.indexOf(FT.state.lang);
+    FT.state.lang = LANG_CYCLE[(i + 1) % LANG_CYCLE.length];
+    markLang();
+    FT.render();
+  };
+
+  langBtn.addEventListener('click', FT.cycleLang);
   markLang();
+
   document.getElementById('reset').addEventListener('click', FT.fit);
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
   document.getElementById('deeper').addEventListener('click', function () { FT.deepen(1); });

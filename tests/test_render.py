@@ -260,11 +260,20 @@ class TestLanguageToggle(unittest.TestCase):
         self.assertIn("if (FT.state.lang === 'both' && p.name_hi) parts.push(p.name_hi);", html)
         self.assertNotIn("if (FT.state.lang !== 'en' && p.name_hi)", html)
 
-    def test_the_active_language_is_marked(self):
+    def test_one_button_replaces_the_three(self):
         html = _payload_html()
-        self.assertIn("function markLang", html)
-        self.assertIn("aria-pressed", html)
-        self.assertIn("[data-lang].on", html)
+        self.assertIn('id="lang"', html)
+        self.assertIn("FT.cycleLang", html)
+        self.assertNotIn('data-lang="both"', html)
+        self.assertNotIn('data-lang="en"', html)
+
+    def test_the_button_cycles_en_then_hindi_then_both(self):
+        html = _payload_html()
+        self.assertIn("LANG_CYCLE = ['en', 'hi', 'both']", html)
+
+    def test_the_button_label_names_the_current_mode(self):
+        html = _payload_html()
+        self.assertIn("LANG_LABEL", html)
 
 
 class TestThemeTokens(unittest.TestCase):
