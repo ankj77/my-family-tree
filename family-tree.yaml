@@ -657,3 +657,21 @@
   gender: male
   relation: father
   relation_id: ankur
+- id: raaya
+  name: Raaya
+  name_hi: राया
+  gender: female
+  relation: father
+  relation_id: ankur
+- id: ridhi
+  name: Ridhi
+  name_hi: रिद्धि
+  gender: female
+  relation: wife
+  relation_id: ankur
+- id: bimla
+  name: Bimla
+  name_hi: बिमला
+  gender: female
+  relation: wife
+  relation_id: vijay
