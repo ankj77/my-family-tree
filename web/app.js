@@ -268,7 +268,10 @@ var FT = { views: {} };
       if (v) rows += '<dt>' + r[1] + '</dt><dd>' + esc(v) + '</dd>';
     });
     var origin = FT.originText(p);
-    if (origin) rows += '<dt>Origin</dt><dd>' + esc(origin) + '</dd>';
+    if (origin) {
+      rows += '<dt>Origin</dt><dd>' + esc(origin) +
+        (p.origin_inherited ? ' <em>(family line)</em>' : '') + '</dd>';
+    }
     if (p.note) rows += '<dt>Note</dt><dd>' + esc(p.note) + '</dd>';
     if (rows) h += '<dl>' + rows + '</dl>';
 

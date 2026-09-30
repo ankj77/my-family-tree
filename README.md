@@ -44,6 +44,12 @@ person — a `relation` type plus the `relation_id` it points to:
 - `origin` is the ancestral village. The detail sheet shows it and lists everyone else
   from the **same village** (matched on village name; states must agree when both are
   given). Search also matches village names.
+- `origin` is inherited: a child linked by `relation: father` takes their father's origin,
+  and a child linked by `relation: mother` takes the origin of her recorded husband. So
+  writing `origin` once on `sevakram` covers his whole male line. Wives and husbands who
+  married in never inherit — give them their own (their maika / home village). Anyone
+  with their own `origin` keeps it, and it passes to their children. Inherited origins
+  are marked "(family line)" in the detail sheet.
 
 - `relation: father` or `mother` → `relation_id` is this person's **parent** (they hang
   under that parent in the tree). Link a child to whichever parent is *in* the tree

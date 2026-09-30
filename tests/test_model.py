@@ -3,7 +3,7 @@ import shutil
 import tempfile
 import unittest
 
-from family_tree.model import Person, load_people, resolve_photos, LoadError
+from family_tree.model import Person, load_people, resolve_photos, inherit_origins, LoadError
 
 
 def _write(text):
@@ -138,6 +138,32 @@ class TestOrigin(unittest.TestCase):
     def test_unknown_origin_key_raises(self):
         with self.assertRaises(LoadError):
             load_people(_write("- id: x\n  name: X\n  origin:\n    gaon: Kheri\n"))
+
+
+class TestInheritOrigins(unittest.TestCase):
+    def test_father_line_inherits_wives_and_daughters_children_do_not(self):
+        kheri = {"village": "Kheri", "state": "Haryana"}
+        people = [
+            Person(id="root", origin=dict(kheri)),
+            Person(id="son", relation="father", relation_id="root"),
+            Person(id="grandson", relation="father", relation_id="son"),
+            Person(id="wife", relation="wife", relation_id="son"),
+            Person(id="daughter", relation="father", relation_id="root"),
+            Person(id="d_husband", relation="husband", relation_id="daughter",
+                   origin={"village": "Bhiwani"}),
+            Person(id="d_kid", relation="mother", relation_id="daughter"),
+            Person(id="d_kid_nodad", relation="mother", relation_id="son"),
+            Person(id="own", relation="father", relation_id="root", origin={"village": "Delhi"}),
+        ]
+        inherit_origins(people)
+        o = {p.id: p for p in people}
+        self.assertEqual(o["grandson"].origin, kheri)
+        self.assertTrue(o["grandson"].origin_inherited)
+        self.assertFalse(o["root"].origin_inherited)
+        self.assertEqual(o["wife"].origin, {})
+        self.assertEqual(o["d_kid"].origin, {"village": "Bhiwani"})
+        self.assertEqual(o["d_kid_nodad"].origin, {})
+        self.assertEqual(o["own"].origin, {"village": "Delhi"})
 
 
 class TestMotherIdIsGone(unittest.TestCase):

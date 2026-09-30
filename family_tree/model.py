@@ -87,6 +87,7 @@ class Person:
     status: Optional[str] = None
     address: Address = field(default_factory=Address)
     origin: dict = field(default_factory=dict)
+    origin_inherited: bool = False
     photo: Optional[str] = None
 
     def display_name(self) -> str:
@@ -150,6 +151,36 @@ def load_people(path: str) -> List[Person]:
             )
         )
     return people
+
+
+def inherit_origins(people: List[Person]) -> None:
+    by_id = {p.id: p for p in people}
+    husband_of = {p.relation_id: p for p in people if p.relation == "husband"}
+
+    def lineage_source(p: Person) -> Optional[Person]:
+        parent = by_id.get(p.relation_id)
+        if parent is None:
+            return None
+        if p.relation == "father":
+            return parent
+        if p.relation == "mother":
+            return husband_of.get(parent.id)
+        return None
+
+    done = set()
+
+    def resolve(p: Person) -> dict:
+        if p.id in done:
+            return p.origin
+        done.add(p.id)
+        source = lineage_source(p)
+        if not p.origin and source is not None:
+            p.origin = dict(resolve(source))
+            p.origin_inherited = bool(p.origin)
+        return p.origin
+
+    for p in people:
+        resolve(p)
 
 
 PHOTO_EXTS = (".jpg", ".jpeg", ".png", ".webp")
