@@ -99,6 +99,7 @@
   gender: male
   relation: father
   relation_id: ramnarayan
+  life: deceased
 - id: naveen
   name: Naveen
   name_hi: नवीन
@@ -676,6 +677,7 @@
   gender: male
   relation: father
   relation_id: pooranchand
+  life: deceased
 - id: vikas
   name: Vikas
   name_hi: विकास
