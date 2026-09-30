@@ -6,6 +6,8 @@
   --rail-m:#4A6FA5;
   --rail-f:#C4708A;
   --rail-unknown:#A89880;
+  --card-m:#EEF3FA;
+  --card-f:#FBEFF3;
   --ink:#3A3A2E;
   --ink-muted:#6F6A57;
   --name-ink:#234A21;
@@ -114,12 +116,22 @@
   .poster-leaf{stroke:none;}
   .parent-card .pc-name{font-family:var(--serif);font-size:14.5px;font-weight:600;
     fill:var(--name-ink);pointer-events:none;}
+  .parent-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
+  .parent-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
+  .pc-motif{pointer-events:none;}
+  .pc-motif .petal{fill:var(--rail-f);opacity:.9;}
+  .pc-motif .petal.outer{opacity:.55;}
+  .pc-motif.female .motif-line{stroke:var(--leaf-1);}
+  .pc-motif .leaf{fill:var(--leaf-1);}
+  .pc-motif .vein{stroke:var(--card-m);stroke-width:.8px;}
+  .motif-line{fill:none;stroke:var(--bark);stroke-width:1.4px;stroke-linecap:round;}
   .pc-sub{font-size:11.5px;fill:var(--ink-muted);pointer-events:none;}
   .pc-rule{stroke:var(--rule);stroke-width:1px;}
   .pc-label{font-size:9.5px;fill:var(--ink-muted);letter-spacing:.05em;pointer-events:none;}
   .pc-value{font-size:12.5px;fill:var(--ink);pointer-events:none;}
   .pc-icon-bg{opacity:.28;pointer-events:none;}
   .pc-icon-fg{opacity:.95;pointer-events:none;}
+  .pc-icon-cut{fill:var(--card);pointer-events:none;}
   #picks{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
     padding-top:2px;}
   #picks:empty{display:none;}

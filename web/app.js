@@ -464,17 +464,57 @@ var FT = { views: {} };
     return { father: p, mother: spouse };
   };
 
-  function personIcon(g, cx, cy, gender) {
+  var SILHOUETTE = {
+    male: [
+      ['circle', { cx: 0, cy: -3, r: 3.7 }],
+      ['ellipse', { 'class': 'pc-icon-cut', cx: 0, cy: -2.1, rx: 2.8, ry: 2.9 }],
+      ['path', { d: 'M-6.8,8.4 C-6.8,3.8 -3.8,1.8 0,1.8 C3.8,1.8 6.8,3.8 6.8,8.4 Z' }],
+      ['path', { 'class': 'pc-icon-cut', d: 'M-1.7,1.9 L0,4.6 L1.7,1.9 Z' }]
+    ],
+    female: [
+      ['circle', { cx: 0, cy: -7.8, r: 1.9 }],
+      ['path', { d: 'M-3.9,-3 C-3.9,-7.8 3.9,-7.8 3.9,-3 L4.5,2.6 L-4.5,2.6 Z' }],
+      ['ellipse', { 'class': 'pc-icon-cut', cx: 0, cy: -2.2, rx: 2.5, ry: 2.9 }],
+      ['path', { d: 'M-6.2,8.4 C-6.2,4.8 -3.4,2.8 0,2.8 C3.4,2.8 6.2,4.8 6.2,8.4 Z' }]
+    ]
+  };
+
+  function personIcon(g, cx, cy, gender, scale) {
     var tint = gender === 'female' ? 'var(--rail-f)' : 'var(--rail-m)';
-    var bg = el('circle', { 'class': 'pc-icon-bg', cx: cx, cy: cy, r: 9 }, g);
-    bg.style.fill = tint;
-    var head = el('circle', { 'class': 'pc-icon-fg', cx: cx, cy: cy - 2.4, r: 2.9 }, g);
-    head.style.fill = tint;
-    var body = el('path', {
-      'class': 'pc-icon-fg',
-      d: 'M' + (cx - 4.8) + ',' + (cy + 6.4) + ' a4.8,4.4 0 0 1 9.6,0 Z'
+    var icon = el('g', {
+      transform: 'translate(' + cx + ',' + cy + ') scale(' + (scale || 1) + ')'
     }, g);
-    body.style.fill = tint;
+    var bg = el('circle', { 'class': 'pc-icon-bg', r: 9 }, icon);
+    bg.style.fill = tint;
+    SILHOUETTE[gender === 'female' ? 'female' : 'male'].forEach(function (part) {
+      var attrs = { 'class': part[1]['class'] || 'pc-icon-fg' };
+      Object.keys(part[1]).forEach(function (k) { if (k !== 'class') attrs[k] = part[1][k]; });
+      var shape = el(part[0], attrs, icon);
+      if (attrs['class'] === 'pc-icon-fg') shape.style.fill = tint;
+    });
+  }
+
+  var PETAL = 'M0,6 C-4.2,1 -3.8,-6 0,-10 C3.8,-6 4.2,1 0,6 Z';
+  var LEAF = 'M0,8 C-6.5,3 -6,-5 0,-10 C6,-5 6.5,3 0,8 Z';
+
+  function genderMotif(g, cx, cy, gender) {
+    var m = el('g', {
+      'class': 'pc-motif ' + gender, transform: 'translate(' + cx + ',' + cy + ')'
+    }, g);
+    if (gender === 'female') {
+      [-64, -32, 0, 32, 64].forEach(function (a) {
+        el('path', { 'class': Math.abs(a) > 40 ? 'petal outer' : 'petal', d: PETAL,
+          transform: 'rotate(' + a + ' 0 6)' }, m);
+      });
+      el('path', { 'class': 'motif-line', d: 'M-10,8 Q0,12 10,8' }, m);
+      return;
+    }
+    el('path', { 'class': 'motif-line', d: 'M-2,11 Q0,2 0,-4' }, m);
+    [[-38, -4, 2], [34, 5, -1]].forEach(function (l) {
+      var t = 'translate(' + l[1] + ',' + l[2] + ') rotate(' + l[0] + ') scale(0.85)';
+      el('path', { 'class': 'leaf', d: LEAF, transform: t }, m);
+      el('path', { 'class': 'vein', d: 'M0,7 L0,-8', transform: t }, m);
+    });
   }
 
   FT.knob = function (g, n, cx, cy) {
@@ -493,7 +533,7 @@ var FT = { views: {} };
   FT.drawParentCard = function (parent, n) {
     var H = FT.nodeH(n);
     var g = el('g', {
-      'class': 'card parent-card', 'data-id': n.id,
+      'class': 'card parent-card' + (n.gender ? ' ' + n.gender : ''), 'data-id': n.id,
       transform: 'translate(' + n.x + ',' + n.y + ')'
     }, parent);
     el('rect', { 'class': 'card-shadow', x: 0, y: 3, width: FT.CARD_W, height: H, rx: 10 }, g);
@@ -503,7 +543,11 @@ var FT = { views: {} };
       'class': 'pc-name', x: FT.CARD_W / 2, y: 26, 'text-anchor': 'middle'
     }, g);
     title.textContent = FT.label(n)[0];
-    fitText(title, FT.CARD_W - 24);
+    fitText(title, FT.CARD_W - 84);
+    if (n.gender) {
+      personIcon(g, 22, 21, n.gender, 1.3);
+      genderMotif(g, FT.CARD_W - 22, 21, n.gender);
+    }
     var meta = FT.metaLine(n);
     var drop = 0;
     if (meta.text) {
