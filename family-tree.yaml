@@ -236,6 +236,31 @@
   relation_id: niyadar
   order: 2
   life: deceased
+- id: labhchand
+  name: Labh Chand (Labha)
+  name_hi: लाभ चंद (लाभा)
+  gender: male
+  relation: father
+  relation_id: dharma
+  order: 1
+  life: deceased
+  note: also called Labha
+- id: satnarayan
+  name: Sat Narayan
+  name_hi: सत नारायण
+  gender: male
+  relation: father
+  relation_id: dharma
+  order: 2
+  life: deceased
+- id: srikrishan
+  name: Sri Krishan
+  name_hi: श्री किशन
+  gender: male
+  relation: father
+  relation_id: dharma
+  order: 3
+  life: deceased
 - id: lehrimal
   name: Lehri Mal
   name_hi: लहरी मल
