@@ -126,10 +126,20 @@
   .pc-motif .vein{stroke:var(--card-m);stroke-width:.8px;}
   .garland{pointer-events:none;}
   .garland .leaf{fill:var(--leaf-1);}
-  .garland-string{fill:none;stroke:var(--leaf-1);stroke-width:1.2px;}
-  .marigold{fill:#F28C1B;stroke:#D2650A;stroke-width:2.2px;stroke-dasharray:2 1.4;}
-  .marigold-core{fill:#FFB020;stroke:#F59E0B;stroke-width:1.2px;stroke-dasharray:1.2 1;}
-  .jasmine{fill:#FFFDF2;stroke:#D8CFB0;stroke-width:1px;}
+  .garland-rope{fill:none;stroke:#D9731A;stroke-width:9px;stroke-linecap:round;}
+  .curl{stroke:#B35A0E;stroke-width:.7px;}
+  .rose{fill:#B3121B;stroke:#7A0A10;stroke-width:.7px;}
+  .rose-core{fill:#D62A33;}
+  .spouse-pill{cursor:pointer;}
+  .spouse-pill rect{fill:var(--card);stroke:var(--rule);stroke-width:1px;}
+  .spouse-pill.open rect{fill:var(--rule);}
+  .spouse-pill text{font-size:10.5px;font-weight:600;fill:var(--ink-muted);pointer-events:none;}
+  .spouse-link{stroke:var(--bark);stroke-width:1.4px;stroke-dasharray:3 3;}
+  .spouse-card{cursor:pointer;}
+  .village-hit .card-bg{stroke:#D9731A;stroke-width:2.5px;}
+  .sg-village .sg-name::before{content:'\2302  ';color:#D9731A;}
+  .spouse-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
+  .spouse-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
   .motif-line{fill:none;stroke:var(--bark);stroke-width:1.4px;stroke-linecap:round;}
   .pc-sub{font-size:11.5px;fill:var(--ink-muted);pointer-events:none;}
   .pc-rule{stroke:var(--rule);stroke-width:1px;}
@@ -147,6 +157,7 @@
     color:var(--name-ink);}
   .pick button{min-width:34px;min-height:34px;border:0;border-radius:50%;
     background:none;font-size:18px;line-height:1;color:var(--ink-muted);cursor:pointer;}
+  .pick-village{border-color:#D9731A;}
   .pick button:hover{background:var(--card);color:var(--warn);}
   .pick-clear{min-height:38px;padding:0 14px;border:1px solid var(--edge);
     border-radius:999px;background:var(--card);font-family:var(--font);

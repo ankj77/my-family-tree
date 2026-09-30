@@ -132,10 +132,20 @@
   .pc-motif .vein{stroke:var(--card-m);stroke-width:.8px;}
   .garland{pointer-events:none;}
   .garland .leaf{fill:var(--leaf-1);}
-  .garland-string{fill:none;stroke:var(--leaf-1);stroke-width:1.2px;}
-  .marigold{fill:#F28C1B;stroke:#D2650A;stroke-width:2.2px;stroke-dasharray:2 1.4;}
-  .marigold-core{fill:#FFB020;stroke:#F59E0B;stroke-width:1.2px;stroke-dasharray:1.2 1;}
-  .jasmine{fill:#FFFDF2;stroke:#D8CFB0;stroke-width:1px;}
+  .garland-rope{fill:none;stroke:#D9731A;stroke-width:9px;stroke-linecap:round;}
+  .curl{stroke:#B35A0E;stroke-width:.7px;}
+  .rose{fill:#B3121B;stroke:#7A0A10;stroke-width:.7px;}
+  .rose-core{fill:#D62A33;}
+  .spouse-pill{cursor:pointer;}
+  .spouse-pill rect{fill:var(--card);stroke:var(--rule);stroke-width:1px;}
+  .spouse-pill.open rect{fill:var(--rule);}
+  .spouse-pill text{font-size:10.5px;font-weight:600;fill:var(--ink-muted);pointer-events:none;}
+  .spouse-link{stroke:var(--bark);stroke-width:1.4px;stroke-dasharray:3 3;}
+  .spouse-card{cursor:pointer;}
+  .village-hit .card-bg{stroke:#D9731A;stroke-width:2.5px;}
+  .sg-village .sg-name::before{content:'\2302  ';color:#D9731A;}
+  .spouse-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
+  .spouse-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
   .motif-line{fill:none;stroke:var(--bark);stroke-width:1.4px;stroke-linecap:round;}
   .pc-sub{font-size:11.5px;fill:var(--ink-muted);pointer-events:none;}
   .pc-rule{stroke:var(--rule);stroke-width:1px;}
@@ -153,6 +163,7 @@
     color:var(--name-ink);}
   .pick button{min-width:34px;min-height:34px;border:0;border-radius:50%;
     background:none;font-size:18px;line-height:1;color:var(--ink-muted);cursor:pointer;}
+  .pick-village{border-color:#D9731A;}
   .pick button:hover{background:var(--card);color:var(--warn);}
   .pick-clear{min-height:38px;padding:0 14px;border:1px solid var(--edge);
     border-radius:999px;background:var(--card);font-family:var(--font);
@@ -226,7 +237,7 @@
   FT.CARD_W = 250; FT.ROW_H = 52; FT.RAIL_W = 5; FT.AVATAR = 32;
   FT.H_GAP = 40; FT.V_GAP = 100;
 
-  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, grown: {}, only: null, picks: [], selected: null, highlighted: null };
+  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, grown: {}, spouseOpen: {}, only: null, picks: [], selected: null, highlighted: null };
   FT.OPEN_DEPTH = 2;
   FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
@@ -336,11 +347,11 @@
     return 1 + partners;
   };
   FT.nodeW = function () { return FT.CARD_W; };
-  FT.POSTER_CARD_H = 104;
   FT.nodeH = function (n) {
     var view = FT.views[FT.state.viewId];
     if (view && view.cardStyle === 'parents') {
-      return FT.POSTER_CARD_H + (FT.metaLine(n).text ? 16 : 0);
+      return FT.cardH(n, 2) +
+        (FT.spouseShown(n) ? FT.SPOUSE_GAP + FT.cardH(n.spouses[0], 1) : 0);
     }
     return FT.rows(n) * FT.ROW_H;
   };
@@ -553,11 +564,13 @@
 
   FT.clearPicks = function () {
     FT.state.picks = [];
+    FT.state.village = null;
     FT.state.only = null;
     if (FT.renderPicks) FT.renderPicks();
   };
 
   FT.showPicks = function () {
+    FT.state.village = null;
     var ids = FT.state.picks.filter(function (id) { return FT.byId[id]; });
     FT.state.picks = ids;
     FT.renderPicks();
@@ -720,29 +733,45 @@
     });
   }
 
-  function garland(g, H, knob) {
-    var W = FT.CARD_W, x0 = 6, x1 = W - 6, y0 = H - 6, cy = H + 46;
+  var ROPE = ['#F29A2E', '#E3801C', '#F7B04A'];
+
+  function rose(m, x, y, r) {
+    [[-r * 0.7, 0], [r * 0.7, 0], [0, -r * 0.6]].forEach(function (d) {
+      el('circle', { 'class': 'rose', cx: x + d[0], cy: y + d[1], r: r }, m);
+    });
+    el('circle', { 'class': 'rose-core', cx: x, cy: y - r * 0.2, r: r * 0.45 }, m);
+  }
+
+  function garland(g, top, H, knob) {
+    var W = FT.CARD_W, x0 = 6, x1 = W - 6, y0 = top + H - 6, cy = top + H + 40;
     var m = el('g', { 'class': 'garland' }, g);
     el('path', {
-      'class': 'garland-string', d: 'M' + x0 + ',' + y0 + ' Q' + W / 2 + ',' + cy + ' ' + x1 + ',' + y0
+      'class': 'garland-rope', d: 'M' + x0 + ',' + y0 + ' Q' + W / 2 + ',' + cy + ' ' + x1 + ',' + y0
     }, m);
-    [[x0, -120], [x1, 120]].forEach(function (end) {
-      el('path', { 'class': 'leaf', d: LEAF,
-        transform: 'translate(' + end[0] + ',' + (y0 - 3) + ') rotate(' + end[1] + ') scale(0.7)' }, m);
-    });
-    var COUNT = 30;
-    for (var i = 1; i < COUNT; i++) {
-      var t = i / COUNT, u = 1 - t;
+    var CURLS = 46;
+    for (var i = 0; i <= CURLS; i++) {
+      var t = i / CURLS, u = 1 - t;
       var x = u * u * x0 + 2 * u * t * (W / 2) + t * t * x1;
       var y = u * u * y0 + 2 * u * t * cy + t * t * y0;
-      if (knob && Math.hypot(x - knob.x, y - knob.y) < 19) continue;
-      if (i % 3 === 0) {
-        el('circle', { 'class': 'jasmine', cx: x, cy: y, r: 3.8 }, m);
-      } else {
-        el('circle', { 'class': 'marigold', cx: x, cy: y, r: 6 }, m);
-        el('circle', { 'class': 'marigold-core', cx: x, cy: y, r: 3 }, m);
-      }
+      var angle = Math.atan2(2 * u * (cy - y0) + 2 * t * (y0 - cy), 2 * u * (W / 2 - x0) + 2 * t * (x1 - W / 2));
+      var tilt = angle * 180 / Math.PI + (i % 2 ? 35 : -35);
+      var curl = el('ellipse', { 'class': 'curl', cx: 0, cy: 0, rx: 4.2, ry: 3,
+        transform: 'translate(' + x + ',' + (y + (i % 2 ? -2 : 2)) + ') rotate(' + tilt + ')' }, m);
+      curl.style.fill = ROPE[i % 3];
     }
+    [0.2, 0.8].forEach(function (t) {
+      var u = 1 - t;
+      rose(m, u * u * x0 + 2 * u * t * (W / 2) + t * t * x1, u * u * y0 + 2 * u * t * cy + t * t * y0, 3.8);
+    });
+    var low = (y0 + cy) / 2;
+    [6, 11].forEach(function (d, i) {
+      var k = el('ellipse', { 'class': 'curl', cx: W / 2, cy: low + d, rx: 4.6, ry: 3.4 }, m);
+      k.style.fill = ROPE[i];
+    });
+    el('path', { 'class': 'leaf', d: LEAF, transform: 'translate(' + (W / 2 - 5) + ',' + (low + 17) + ') rotate(-60) scale(0.45)' }, m);
+    el('path', { 'class': 'leaf', d: LEAF, transform: 'translate(' + (W / 2 + 5) + ',' + (low + 17) + ') rotate(60) scale(0.45)' }, m);
+    rose(m, W / 2, low + 18, 3.4);
+    if (knob && Math.abs(knob.x - W / 2) < 30 && knob.y > top + H - 10) knob.y = top + H + 50;
   }
 
   FT.knob = function (g, n, cx, cy) {
@@ -758,25 +787,34 @@
     });
   };
 
-  FT.drawParentCard = function (parent, n) {
-    var H = FT.nodeH(n);
-    var g = el('g', {
-      'class': 'card parent-card' + (n.gender ? ' ' + n.gender : ''), 'data-id': n.id,
-      transform: 'translate(' + n.x + ',' + n.y + ')'
-    }, parent);
+  FT.SPOUSE_GAP = 48;
+
+  FT.spouseShown = function (n) {
+    return !!(FT.state.spouseOpen[n.id] && (n.spouses || []).length);
+  };
+
+  FT.cardH = function (p, rows) {
+    return 44 + rows * 30 + (FT.metaLine(p).text ? 16 : 0);
+  };
+
+  function spouseWord(s) {
+    return s.gender === 'female' ? 'Wife' : s.gender === 'male' ? 'Husband' : 'Spouse';
+  }
+
+  function cardFace(g, p, H, rows, valueRoom) {
     el('rect', { 'class': 'card-shadow', x: 0, y: 3, width: FT.CARD_W, height: H, rx: 10 }, g);
     el('rect', { 'class': 'card-bg', width: FT.CARD_W, height: H, rx: 10 }, g);
     el('rect', { 'class': 'card-hit', width: FT.CARD_W, height: H }, g);
     var title = el('text', {
       'class': 'pc-name', x: FT.CARD_W / 2, y: 26, 'text-anchor': 'middle'
     }, g);
-    title.textContent = FT.label(n)[0];
+    title.textContent = FT.label(p)[0];
     fitText(title, FT.CARD_W - 84);
-    if (n.gender) {
-      personIcon(g, 22, 21, n.gender, 1.3);
-      genderMotif(g, FT.CARD_W - 22, 21, n.gender);
+    if (p.gender) {
+      personIcon(g, 22, 21, p.gender, 1.3);
+      genderMotif(g, FT.CARD_W - 22, 21, p.gender);
     }
-    var meta = FT.metaLine(n);
+    var meta = FT.metaLine(p);
     var drop = 0;
     if (meta.text) {
       var sub = el('text', {
@@ -789,22 +827,64 @@
     el('line', {
       'class': 'pc-rule', x1: 18, y1: 38 + drop, x2: FT.CARD_W - 18, y2: 38 + drop
     }, g);
-    var pr = FT.parentsOf(n);
-    [['Father', pr.father, 'male'], ['Mother', pr.mother, 'female']].forEach(function (row, i) {
+    rows.forEach(function (row, i) {
       var y = 58 + drop + i * 30;
       personIcon(g, 32, y, row[2]);
       var lab = el('text', { 'class': 'pc-label', x: 52, y: y - 3 }, g);
       lab.textContent = row[0];
       var val = el('text', { 'class': 'pc-value', x: 52, y: y + 11 }, g);
       val.textContent = row[1] ? FT.label(row[1])[0] : '(Unknown)';
-      fitText(val, FT.CARD_W - 52 - 14);
+      fitText(val, valueRoom(i));
     });
+  }
+
+  function spousePill(g, n, H) {
+    var s = n.spouses[0];
+    var open = FT.spouseShown(n);
+    var pill = el('g', { 'class': 'spouse-pill' + (open ? ' open' : ''),
+      transform: 'translate(' + (FT.CARD_W - 78) + ',' + (H - 26) + ')' }, g);
+    el('rect', { width: 68, height: 18, rx: 9 }, pill);
+    var t = el('text', { x: 34, y: 12.5, 'text-anchor': 'middle' }, pill);
+    t.textContent = (open ? '\u2212 ' : '+ ') + spouseWord(s);
+    pill.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      FT.state.spouseOpen[n.id] = !open;
+      FT.render();
+    });
+  }
+
+  FT.drawParentCard = function (parent, n) {
+    var g = el('g', {
+      'class': 'card parent-card' + (n.gender ? ' ' + n.gender : ''), 'data-id': n.id,
+      transform: 'translate(' + n.x + ',' + n.y + ')'
+    }, parent);
+    var H = FT.cardH(n, 2);
+    var hasSpouse = (n.spouses || []).length > 0;
+    var main = el('g', {}, g);
+    var pr = FT.parentsOf(n);
+    cardFace(main, n, H, [['Father', pr.father, 'male'], ['Mother', pr.mother, 'female']],
+      function (i) { return FT.CARD_W - 52 - (hasSpouse && i === 1 ? 88 : 14); });
+    main.addEventListener('click', function () { FT.select(n.id, n); });
+    if (hasSpouse) spousePill(main, n, H);
+
+    var sp = FT.spouseShown(n) ? n.spouses[0] : null;
+    var spTop = H + FT.SPOUSE_GAP, spH = 0;
+    if (sp) {
+      spH = FT.cardH(sp, 1);
+      el('line', { 'class': 'spouse-link', x1: FT.CARD_W / 2, y1: H, x2: FT.CARD_W / 2, y2: spTop }, g);
+      var sg = el('g', { 'class': 'spouse-card ' + (sp.gender || ''),
+        transform: 'translate(0,' + spTop + ')' }, g);
+      cardFace(sg, sp, spH, [[spouseWord(sp) + ' of', n, n.gender]],
+        function () { return FT.CARD_W - 66; });
+      sg.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(sp.id, n); });
+    }
+
     var hasKids = (n.children || []).length > 0;
     var view = FT.views[FT.state.viewId];
     var at = view && view.togglePos ? view.togglePos(n) : { x: FT.CARD_W / 2, y: -12 };
-    if (FT.isDeceased(n)) garland(g, H, hasKids ? at : null);
+    if (FT.isDeceased(n)) garland(g, 0, H, sp ? null : at);
+    if (sp && FT.isDeceased(sp)) garland(g, spTop, spH, at);
     if (hasKids) FT.knob(g, n, at.x, at.y);
-    g.addEventListener('click', function () { FT.select(n.id, n); });
     return g;
   };
 
@@ -887,6 +967,7 @@
       clearHl();
       FT.state.picks.forEach(hlPath);
     } else if (FT.state.highlighted) highlight(FT.state.highlighted);
+    markVillage();
     apply();
   };
 
@@ -1039,12 +1120,76 @@
     return i === needle.length;
   }
 
+  FT.villageGroups = function () {
+    var groups = {};
+    function add(p, owner) {
+      var o = p.origin || {};
+      var key = norm(o.village);
+      if (!key) return;
+      var grp = groups[key] || (groups[key] = { key: key, village: o.village, state: '', members: [] });
+      if (!grp.state && o.state) grp.state = o.state;
+      grp.members.push({ person: p, owner: owner });
+    }
+    FT.nodes.forEach(function (n) {
+      add(n, n);
+      (n.spouses || []).forEach(function (s) { add(s, n); });
+    });
+    return groups;
+  };
+
+  FT.villageMatches = function (q) {
+    var needle = norm(q);
+    if (!needle) return [];
+    var groups = FT.villageGroups();
+    return Object.keys(groups).map(function (k) { return groups[k]; })
+      .filter(function (g) { return g.key.indexOf(needle) >= 0; })
+      .sort(function (a, b) {
+        return (b.key.indexOf(needle) === 0) - (a.key.indexOf(needle) === 0) ||
+          a.village.localeCompare(b.village);
+      });
+  };
+
+  FT.villageLabel = function (g) {
+    return g.village + (g.state ? ', ' + g.state : '');
+  };
+
+  FT.showVillage = function (key) {
+    var grp = FT.villageGroups()[key];
+    FT.state.picks = [];
+    FT.state.village = grp ? key : null;
+    FT.renderPicks();
+    if (!grp) { FT.state.only = null; FT.render(); FT.fit(); return; }
+    var keep = {}, deepest = 0;
+    grp.members.forEach(function (m) {
+      Object.keys(FT.lineage(m.owner.id)).forEach(function (k) { keep[k] = true; });
+      deepest = Math.max(deepest, FT.depthOf(m.owner.id));
+      if (m.person !== m.owner) FT.state.spouseOpen[m.owner.id] = true;
+    });
+    FT.state.only = keep;
+    FT.state.collapsed = {};
+    FT.revealDepth(deepest + 1);
+    FT.closeSheet();
+    FT.render();
+    FT.fit();
+  };
+
+  function markVillage() {
+    var grp = FT.state.village && FT.villageGroups()[FT.state.village];
+    if (!grp) return;
+    grp.members.forEach(function (m) {
+      var card = vp.querySelector('[data-id="' + CSS.escape(m.owner.id) + '"]');
+      if (!card) return;
+      var face = m.person === m.owner ? card.firstChild : card.querySelector('.spouse-card');
+      if (face) face.classList.add('village-hit');
+    });
+  }
+
   FT.searchMatches = function (q, limit) {
     var needle = q.trim().toLowerCase();
     if (!needle) return { list: [], total: 0 };
     var hits = [];
     FT.nodes.forEach(function (n) {
-      var fields = [n.name || '', n.name_hi || '', (n.origin || {}).village || ''];
+      var fields = [n.name || '', n.name_hi || ''];
       var best = null;
       fields.forEach(function (f) {
         var hay = f.toLowerCase();
@@ -1083,8 +1228,15 @@
 
   function renderSuggest() {
     var res = FT.searchMatches(searchBox.value);
-    if (!res.list.length) { hideSuggest(); return; }
-    var html = res.list.map(function (m, i) {
+    var villages = FT.villageMatches(searchBox.value);
+    if (!res.list.length && !villages.length) { hideSuggest(); return; }
+    var html = villages.map(function (g) {
+      var n = g.members.length;
+      return '<button class="sg-row sg-village" data-village="' + esc(g.key) + '">' +
+        '<span class="sg-name">' + esc(FT.villageLabel(g)) + '</span>' +
+        '<span class="sg-hint">Origin village · ' + n + (n === 1 ? ' person' : ' people') +
+        '</span></button>';
+    }).join('') + res.list.map(function (m, i) {
       var parent = FT.parentOf[m.node.id];
       var hint = parent ? 'child of ' + esc(FT.label(parent)[0]) : 'root ancestor';
       return '<button class="sg-row" data-goto="' + esc(m.node.id) + '" data-i="' + i + '">' +
@@ -1113,6 +1265,13 @@
 
   FT.renderPicks = function () {
     var ids = FT.state.picks;
+    var grp = FT.state.village && FT.villageGroups()[FT.state.village];
+    if (grp) {
+      picksBar.innerHTML = '<span class="pick pick-village">' + esc(FT.villageLabel(grp)) +
+        ' · ' + grp.members.length + (grp.members.length === 1 ? ' person' : ' people') +
+        '<button class="pick-clear-x" aria-label="Remove">×</button></span>';
+      return;
+    }
     var html = ids.map(function (id) {
       return '<span class="pick">' + esc(FT.label(FT.byId[id])[0]) +
         '<button data-drop="' + esc(id) + '" aria-label="Remove">×</button></span>';
@@ -1136,12 +1295,26 @@
       FT.showPicks();
       return;
     }
+    if (e.target.closest('.pick-clear-x')) {
+      FT.showVillage(null);
+      return;
+    }
     if (e.target.closest('.pick-clear')) {
       pickNote = '';
       FT.state.picks = [];
       FT.showPicks();
     }
   });
+
+  function choose(row) {
+    var v = row.getAttribute('data-village');
+    if (!v) { go(row.getAttribute('data-goto')); return; }
+    hideSuggest();
+    searchBox.value = '';
+    searchBox.blur();
+    pickNote = '';
+    FT.showVillage(v);
+  }
 
   function go(id) {
     hideSuggest();
@@ -1175,15 +1348,14 @@
     if (e.key === 'Escape') { hideSuggest(); return; }
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (picked >= 0 && rows[picked]) { go(rows[picked].getAttribute('data-goto')); return; }
-      var res = FT.searchMatches(searchBox.value, 1);
-      if (res.list.length) go(res.list[0].node.id);
+      if (picked >= 0 && rows[picked]) { choose(rows[picked]); return; }
+      if (rows.length) choose(rows[0]);
     }
   });
 
   suggest.addEventListener('click', function (e) {
     var row = e.target.closest('.sg-row');
-    if (row) go(row.getAttribute('data-goto'));
+    if (row) choose(row);
   });
 
   document.addEventListener('click', function (e) {

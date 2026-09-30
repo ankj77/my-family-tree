@@ -50,6 +50,13 @@ person — a `relation` type plus the `relation_id` it points to:
   married in never inherit — give them their own (their maika / home village). Anyone
   with their own `origin` keeps it, and it passes to their children. Inherited origins
   are marked "(family line)" in the detail sheet.
+- Village search: type a village in the search box and pick the "Origin village" row. The
+  tree narrows to everyone from that village (married-in spouses' cards open automatically)
+  and outlines them in saffron. The × on the village chip resets the tree.
+- Spouse cards: a card whose person has a recorded spouse shows a "+ Wife" / "+ Husband"
+  button; tapping it opens the spouse's card beneath, and the children then branch from the
+  couple.
+- Deceased people get a saffron garland with red roses on their card.
 
 - `relation: father` or `mother` → `relation_id` is this person's **parent** (they hang
   under that parent in the tree). Link a child to whichever parent is *in* the tree
@@ -171,8 +178,7 @@ EN / हिं / EN+हिं buttons to switch languages. The toolbar wraps to 
   of names, touching 9 of the 105 people, all in crowded parts of the crown.
   Zooming in further does not pull them apart, because the labels scale with the
   tree instead of staying a fixed size.
-- Search matches names and origin villages. Address search and address filters are a
-  separate follow-up.
+- Search matches names and origin villages. Address search is a separate follow-up.
 
 ## Tests
 
