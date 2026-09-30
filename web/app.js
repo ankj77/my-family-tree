@@ -352,6 +352,8 @@ var FT = { views: {} };
     return best;
   };
 
+  FT.FOCUS_SCALE = 0.85;
+
   FT.focus = function (id) {
     if (FT.state.picks.indexOf(id) < 0) FT.state.picks = [id];
     FT.showPicks();
@@ -383,6 +385,7 @@ var FT = { views: {} };
     if (ids.length > 1) { FT.fit(); FT.closeSheet(); return; }
     var n = FT.byId[ids[0]];
     var r = stage.getBoundingClientRect();
+    scale = Math.max(scale, FT.FOCUS_SCALE);
     tx = r.width / 2 - (n.x + FT.jointX(n)) * scale;
     ty = r.height / 2 - n.y * scale;
     apply();
