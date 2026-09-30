@@ -893,3 +893,13 @@
     village: Ridhana
     state: Haryana
   life: living
+- id: vijay_ramkumar_wife
+  name: Vijay's wife
+  gender: female
+  relation: wife
+  relation_id: vijay_ramkumar
+  status: uncertain
+  origin:
+    village: Halalpur
+    district: Narela
+    state: Delhi
