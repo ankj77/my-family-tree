@@ -946,3 +946,33 @@
   relation: father
   relation_id: bhairam
   life: living
+- id: srikrishan_wife
+  name: Prem
+  name_hi: प्रेम
+  gender: female
+  relation: wife
+  relation_id: srikrishan
+- id: pankaj_srikrishan
+  name: Pankaj
+  name_hi: पंकज
+  gender: male
+  relation: father
+  relation_id: srikrishan
+  order: 1
+- id: pankaj_srikrishan_wife
+  name: Pankaj's wife
+  gender: female
+  relation: wife
+  relation_id: pankaj_srikrishan
+  status: uncertain
+  origin:
+    village: Kakroi
+    district: Sonipat
+    state: Haryana
+- id: ramesh_srikrishan
+  name: Ramesh
+  name_hi: रमेश
+  gender: male
+  relation: father
+  relation_id: srikrishan
+  order: 2
