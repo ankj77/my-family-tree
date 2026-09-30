@@ -617,6 +617,7 @@
   address:
     locality: Pitampura
     city: Delhi
+  life: living
 - id: pawan
   name: Pawan
   name_hi: पवन
@@ -697,12 +698,14 @@
   gender: male
   relation: father
   relation_id: ankur
+  life: living
 - id: raaya
   name: Raaya
   name_hi: राया
   gender: female
   relation: father
   relation_id: ankur
+  life: living
 - id: ridhi
   name: Ridhi
   name_hi: रिद्धि
@@ -716,6 +719,7 @@
   address:
     locality: Pitampura
     city: Delhi
+  life: living
 - id: bimla
   name: Bimla
   name_hi: बिमला
@@ -739,6 +743,7 @@
   address:
     locality: Pitampura
     city: Delhi
+  life: living
 - id: gautam
   name: Gautam
   name_hi: गौतम
@@ -751,6 +756,7 @@
   address:
     locality: Pitampura
     city: Delhi
+  life: living
 - id: jyoti
   name: Jyoti
   name_hi: ज्योति
@@ -761,6 +767,7 @@
   address:
     locality: Rohini
     city: Delhi
+  life: living
 - id: vikas_jyoti
   name: Vikas
   name_hi: विकास
@@ -773,6 +780,7 @@
   address:
     locality: Rohini
     city: Delhi
+  life: living
 - id: parsani
   name: Parsani Devi
   name_hi: परसानी देवी
