@@ -47,7 +47,7 @@ person — a `relation` type plus the `relation_id` it points to:
   given). Search also matches village names.
 - `origin` is inherited: a child linked by `relation: father` takes their father's origin,
   and a child linked by `relation: mother` takes the origin of her recorded husband. So
-  writing `origin` once on `sevakram` covers his whole male line. Wives and husbands who
+  writing `origin` once on a branch's top ancestor covers his whole male line. Wives and husbands who
   married in never inherit — give them their own (their maika / home village). Anyone
   with their own `origin` keeps it, and it passes to their children. Inherited origins
   are marked "(family line)" in the detail sheet.
@@ -65,7 +65,7 @@ person — a `relation` type plus the `relation_id` it points to:
 - `relation: husband` or `wife` → `relation_id` is this person's **spouse** (they married
   in and render beside their spouse).
 - `relation` and `relation_id` must both be present or both absent. The single root
-  ancestor `sevakram` has neither.
+  ancestor `ramkrishan` has neither.
 - `status: uncertain` = the name can't be read yet. `status: needs-parent` = the name is
   known but the parent is not (they also have no relation); the viewer parks them in an
   "Unlinked" panel.

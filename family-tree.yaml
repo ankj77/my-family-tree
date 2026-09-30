@@ -1,14 +1,29 @@
 # Family tree data — the single source of truth. See README.md for fields.
 # Each person has ONE relation: relation (father|mother|husband|wife) + relation_id.
-# The single root (sevakram) has no relation. gender: male|female. order: sibling order (lower=left).
+# The single root (ramkrishan) has no relation. gender: male|female. order: sibling order (lower=left).
 # Flags: status: uncertain | needs-parent.  note: "GUESS: ..." marks links to verify.
 
+- id: ramkrishan
+  name: Ram Krishan
+  name_hi: राम कृष्ण
+  gender: male
+  born: "1549"
+  life: deceased
+  note: root ancestor — all descend from him
+- id: harshay
+  name: Harshay
+  name_hi: हर्षय
+  gender: male
+  relation: father
+  relation_id: ramkrishan
+  life: deceased
 - id: sevakram
   name: Sevak Ram
   name_hi: सेवकराम
   gender: male
+  relation: father
+  relation_id: harshay
   born: 1884 (Samvat 1941)
-  note: root ancestor — all descend from him
   life: deceased
 - id: udmi
   name: Udmi
