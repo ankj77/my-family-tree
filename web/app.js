@@ -355,13 +355,13 @@ var FT = { views: {} };
 
   FT.clearPicks = function () {
     FT.state.picks = [];
-    FT.state.village = null;
+    FT.state.place = null;
     FT.state.only = null;
     if (FT.renderPicks) FT.renderPicks();
   };
 
   FT.showPicks = function () {
-    FT.state.village = null;
+    FT.state.place = null;
     var ids = FT.state.picks.filter(function (id) { return FT.byId[id]; });
     FT.state.picks = ids;
     FT.renderPicks();
@@ -642,7 +642,7 @@ var FT = { views: {} };
       sg.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(sp.id, n); });
     }
 
-    var hasKids = (n.children || []).length > 0 && !FT.state.village;
+    var hasKids = (n.children || []).length > 0 && !FT.state.place;
     var view = FT.views[FT.state.viewId];
     var at = view && view.togglePos ? view.togglePos(n) : { x: FT.jointX(n), y: -12 };
     if (FT.isDeceased(n)) garland(g, 0, H, at);
@@ -720,11 +720,11 @@ var FT = { views: {} };
   FT.render = function () {
     while (vp.firstChild) vp.removeChild(vp.firstChild);
     var view = FT.views[FT.state.viewId] || FT.views.classic;
-    var owners = villageLayout();
+    var owners = placeLayout();
     if (owners) {
       var grid = el('g', {}, vp);
       owners.forEach(function (n) { FT.drawNode(grid, n); });
-      markVillage();
+      markPlace();
       apply();
       return;
     }
@@ -741,7 +741,7 @@ var FT = { views: {} };
       clearHl();
       FT.state.picks.forEach(hlPath);
     } else if (FT.state.highlighted) highlight(FT.state.highlighted);
-    markVillage();
+    markPlace();
     apply();
   };
 
@@ -843,7 +843,7 @@ var FT = { views: {} };
   FT.fit = function () {
     var view = FT.views[FT.state.viewId];
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    var owners = villageLayout();
+    var owners = placeLayout();
     if (owners) {
       owners.forEach(function (n) {
         minX = Math.min(minX, n.x - 20); maxX = Math.max(maxX, n.x + FT.nodeW(n) + 20);
@@ -901,43 +901,50 @@ var FT = { views: {} };
     return i === needle.length;
   }
 
-  FT.villageGroups = function () {
+  var PLACE_HINT = { origin: 'Origin village', area: 'Present area', city: 'Present city · all areas' };
+
+  FT.placeGroups = function () {
     var groups = {};
-    function add(p, owner) {
-      var o = p.origin || {};
-      var key = norm(o.village);
-      if (!key) return;
-      var grp = groups[key] || (groups[key] = { key: key, village: o.village, state: '', members: [] });
-      if (!grp.state && o.state) grp.state = o.state;
-      grp.members.push({ person: p, owner: owner });
+    function add(kind, name, suffix, person, owner) {
+      if (!norm(name)) return;
+      var key = kind + ':' + norm(name);
+      var grp = groups[key] || (groups[key] = { key: key, kind: kind, name: name, suffix: '', members: [] });
+      if (!grp.suffix && suffix) grp.suffix = suffix;
+      grp.members.push({ person: person, owner: owner });
+    }
+    function addPerson(p, owner) {
+      var o = p.origin || {}, a = p.address || {};
+      add('origin', o.village, o.state, p, owner);
+      add('area', a.locality, a.city || a.state, p, owner);
+      add('city', a.city, a.state, p, owner);
     }
     FT.nodes.forEach(function (n) {
-      add(n, n);
-      (n.spouses || []).forEach(function (s) { add(s, n); });
+      addPerson(n, n);
+      (n.spouses || []).forEach(function (s) { addPerson(s, n); });
     });
     return groups;
   };
 
-  FT.villageMatches = function (q) {
+  FT.placeMatches = function (q) {
     var needle = norm(q);
     if (!needle) return [];
-    var groups = FT.villageGroups();
+    var groups = FT.placeGroups();
     return Object.keys(groups).map(function (k) { return groups[k]; })
-      .filter(function (g) { return g.key.indexOf(needle) >= 0; })
+      .filter(function (g) { return norm(g.name).indexOf(needle) >= 0; })
       .sort(function (a, b) {
-        return (b.key.indexOf(needle) === 0) - (a.key.indexOf(needle) === 0) ||
-          a.village.localeCompare(b.village);
+        return (norm(b.name).indexOf(needle) === 0) - (norm(a.name).indexOf(needle) === 0) ||
+          a.name.localeCompare(b.name) || a.kind.localeCompare(b.kind);
       });
   };
 
-  FT.villageLabel = function (g) {
-    return g.village + (g.state ? ', ' + g.state : '');
+  FT.placeLabel = function (g) {
+    return g.name + (g.suffix && norm(g.suffix) !== norm(g.name) ? ', ' + g.suffix : '');
   };
 
-  FT.showVillage = function (key) {
-    var grp = FT.villageGroups()[key];
+  FT.showPlace = function (key) {
+    var grp = FT.placeGroups()[key];
     FT.state.picks = [];
-    FT.state.village = grp ? key : null;
+    FT.state.place = grp ? key : null;
     FT.renderPicks();
     FT.state.only = null;
     FT.closeSheet();
@@ -945,8 +952,8 @@ var FT = { views: {} };
     FT.fit();
   };
 
-  function villageLayout() {
-    var grp = FT.state.village && FT.villageGroups()[FT.state.village];
+  function placeLayout() {
+    var grp = FT.state.place && FT.placeGroups()[FT.state.place];
     if (!grp) return null;
     var seen = {}, owners = [];
     grp.members.forEach(function (m) {
@@ -972,14 +979,14 @@ var FT = { views: {} };
     return owners;
   }
 
-  function markVillage() {
-    var grp = FT.state.village && FT.villageGroups()[FT.state.village];
+  function markPlace() {
+    var grp = FT.state.place && FT.placeGroups()[FT.state.place];
     if (!grp) return;
     grp.members.forEach(function (m) {
       var card = vp.querySelector('[data-id="' + CSS.escape(m.owner.id) + '"]');
       if (!card) return;
       var face = m.person === m.owner ? card.firstChild : card.querySelector('.spouse-card');
-      if (face) face.classList.add('village-hit');
+      if (face) face.classList.add('place-hit');
     });
   }
 
@@ -1027,13 +1034,13 @@ var FT = { views: {} };
 
   function renderSuggest() {
     var res = FT.searchMatches(searchBox.value);
-    var villages = FT.villageMatches(searchBox.value);
-    if (!res.list.length && !villages.length) { hideSuggest(); return; }
-    var html = villages.map(function (g) {
+    var places = FT.placeMatches(searchBox.value);
+    if (!res.list.length && !places.length) { hideSuggest(); return; }
+    var html = places.map(function (g) {
       var n = g.members.length;
-      return '<button class="sg-row sg-village" data-village="' + esc(g.key) + '">' +
-        '<span class="sg-name">' + esc(FT.villageLabel(g)) + '</span>' +
-        '<span class="sg-hint">Origin village · ' + n + (n === 1 ? ' person' : ' people') +
+      return '<button class="sg-row sg-place ' + g.kind + '" data-place="' + esc(g.key) + '">' +
+        '<span class="sg-name">' + esc(FT.placeLabel(g)) + '</span>' +
+        '<span class="sg-hint">' + PLACE_HINT[g.kind] + ' · ' + n + (n === 1 ? ' person' : ' people') +
         '</span></button>';
     }).join('') + res.list.map(function (m, i) {
       var parent = FT.parentOf[m.node.id];
@@ -1064,9 +1071,9 @@ var FT = { views: {} };
 
   FT.renderPicks = function () {
     var ids = FT.state.picks;
-    var grp = FT.state.village && FT.villageGroups()[FT.state.village];
+    var grp = FT.state.place && FT.placeGroups()[FT.state.place];
     if (grp) {
-      picksBar.innerHTML = '<span class="pick pick-village">' + esc(FT.villageLabel(grp)) +
+      picksBar.innerHTML = '<span class="pick pick-place">' + esc(FT.placeLabel(grp)) +
         ' · ' + grp.members.length + (grp.members.length === 1 ? ' person' : ' people') +
         '<button class="pick-clear-x" aria-label="Remove">×</button></span>';
       return;
@@ -1095,7 +1102,7 @@ var FT = { views: {} };
       return;
     }
     if (e.target.closest('.pick-clear-x')) {
-      FT.showVillage(null);
+      FT.showPlace(null);
       return;
     }
     if (e.target.closest('.pick-clear')) {
@@ -1106,13 +1113,13 @@ var FT = { views: {} };
   });
 
   function choose(row) {
-    var v = row.getAttribute('data-village');
+    var v = row.getAttribute('data-place');
     if (!v) { go(row.getAttribute('data-goto')); return; }
     hideSuggest();
     searchBox.value = '';
     searchBox.blur();
     pickNote = '';
-    FT.showVillage(v);
+    FT.showPlace(v);
   }
 
   function go(id) {
