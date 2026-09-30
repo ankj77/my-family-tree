@@ -861,3 +861,13 @@
   relation: wife
   relation_id: kanwarsen
   life: deceased
+- id: satnarayan_wife
+  name: Jain Mati
+  name_hi: जैन मती
+  gender: female
+  relation: wife
+  relation_id: satnarayan
+  note: daughter of Chatar Sen
+  origin:
+    village: Ridhana
+    state: Haryana
