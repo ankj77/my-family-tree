@@ -9,9 +9,6 @@
   gender: male
   born: 1884 (Samvat 1941)
   note: root ancestor — all descend from him
-  origin:
-    village: Bakheta
-    state: Haryana
 - id: udmi
   name: Udmi
   name_hi: उदमी
@@ -404,6 +401,9 @@
   relation_id: netram
   order: 1
   note: son of Netram; 4 sons (Kanwarsen, Jugmandar das, Surajbhan, Ramratan)
+  origin:
+    village: Bakheta
+    state: Haryana
 - id: kanwarsen
   name: Kanwarsen
   name_hi: कंवरसेन
