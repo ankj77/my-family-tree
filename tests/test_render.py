@@ -180,8 +180,8 @@ class TestPosterParentCards(unittest.TestCase):
 
     def test_the_card_carries_dates_and_place_when_recorded(self):
         html = _payload_html()
-        self.assertIn("var meta = FT.metaLine(n);", html)
-        self.assertIn("FT.POSTER_CARD_H + (FT.metaLine(n).text ? 16 : 0)", html)
+        self.assertIn("var meta = FT.metaLine(p);", html)
+        self.assertIn("return 44 + rows * 30 + (FT.metaLine(p).text ? 16 : 0);", html)
 
     def test_parent_resolution_helper_exists(self):
         html = _payload_html()
@@ -193,9 +193,9 @@ class TestPosterParentCards(unittest.TestCase):
         self.assertIn("'Mother'", html)
         self.assertIn("(Unknown)", html)
 
-    def test_parent_card_height_is_its_own_constant(self):
+    def test_parent_card_height_grows_when_the_spouse_card_is_open(self):
         html = _payload_html()
-        self.assertIn("FT.POSTER_CARD_H", html)
+        self.assertIn("FT.SPOUSE_GAP + FT.cardH(n.spouses[0], 1)", html)
 
     def test_the_root_art_is_shared_by_all_three_views(self):
         html = _payload_html()
