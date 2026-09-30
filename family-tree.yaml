@@ -9,6 +9,7 @@
   gender: male
   born: 1884 (Samvat 1941)
   note: root ancestor — all descend from him
+  life: deceased
 - id: udmi
   name: Udmi
   name_hi: उदमी
@@ -30,6 +31,7 @@
   relation_id: sevakram
   order: 1
   note: son of Sevak Ram
+  life: deceased
 - id: gaurishankar
   name: Dada Gaurishankar
   name_hi: दादा गौरीशंकर
@@ -219,6 +221,7 @@
   relation_id: lakshman
   order: 1
   note: '''Till 1925''; handwritten word nearby (नवरात्नी?) may be a wife — verify'
+  life: deceased
 - id: pooranchand
   name: Pooranchand
   name_hi: पूरनचंद
@@ -234,6 +237,7 @@
   relation_id: bhagmal
   order: 1
   note: son of Dada Bhagmal ('Till 1945')
+  life: deceased
 - id: khushiram
   name: Khushiram
   name_hi: खुशीराम
@@ -404,6 +408,7 @@
   origin:
     village: Bakheta
     state: Haryana
+  life: deceased
 - id: kanwarsen
   name: Kanwarsen
   name_hi: कंवरसेन
@@ -411,12 +416,14 @@
   relation: father
   relation_id: chandgiram
   order: 1
+  life: deceased
 - id: jugmandardas
   name: Jugmandar das
   name_hi: जुगमंदर दास
   gender: male
   relation: father
   relation_id: chandgiram
+  life: deceased
 - id: naresh
   name: Naresh
   name_hi: नरेश
@@ -460,12 +467,14 @@
   gender: male
   relation: father
   relation_id: chandgiram
+  life: deceased
 - id: ramratan
   name: Ramratan
   name_hi: रामरतन
   gender: male
   relation: father
   relation_id: chandgiram
+  life: deceased
 - id: rajesh
   name: Rajesh
   name_hi: राजेश
