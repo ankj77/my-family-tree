@@ -243,6 +243,12 @@
   relation: father
   relation_id: bhairam
   order: 2
+- id: vijay_ramkumar
+  name: Vijay
+  name_hi: विजय
+  gender: male
+  relation: father
+  relation_id: ramkumar
 - id: dharma
   name: Dharma
   name_hi: धर्मा
