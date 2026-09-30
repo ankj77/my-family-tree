@@ -742,3 +742,9 @@
   address:
     locality: Rohini
     city: Delhi
+- id: parsani
+  name: Parsani Devi
+  name_hi: परसानी देवी
+  gender: female
+  relation: wife
+  relation_id: kanwarsen
