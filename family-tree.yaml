@@ -17,20 +17,12 @@
   relation: father
   relation_id: ramkrishan
   life: deceased
-- id: unknown_ancestors
-  name: Unknown generations
-  name_hi: अज्ञात पीढ़ियाँ
-  gender: male
-  relation: father
-  relation_id: harshay
-  status: gap
-  note: marker for the generations between Harshay (son of Ram Krishan, b. 1549) and Sevak Ram (b. 1884) that are not yet recorded
 - id: sevakram
   name: Sevak Ram
   name_hi: सेवकराम
   gender: male
   relation: father
-  relation_id: unknown_ancestors
+  relation_id: harshay
   born: 1884 (Samvat 1941)
   life: deceased
 - id: udmi

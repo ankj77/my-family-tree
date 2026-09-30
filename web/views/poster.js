@@ -3,7 +3,7 @@ FT.views.poster = {
   label: 'Tree (organic)',
   nodeShape: 'box',
   cardStyle: 'parents',
-  maxDepth: 5,
+  maxDepth: 4,
   extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },
   rowTop: function (depth) {
     return depth === 0 ? 210 : -470 - (depth - 1) * 360;

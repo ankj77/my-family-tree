@@ -94,7 +94,7 @@ class TestViewPicker(unittest.TestCase):
 class TestReadableDefaultDepth(unittest.TestCase):
     def test_init_collapses_below_the_third_generation(self):
         html = _payload_html()
-        self.assertIn("FT.OPEN_DEPTH = 5", html)
+        self.assertIn("FT.OPEN_DEPTH = 4", html)
         self.assertIn("FT.collapseBelowOpenDepth", html)
 
     def test_expand_all_control_and_handler_exist(self):
@@ -153,7 +153,7 @@ class TestPosterView(unittest.TestCase):
 
     def test_poster_caps_depth_and_the_core_honours_it(self):
         html = _payload_html()
-        self.assertIn("maxDepth: 5", html)
+        self.assertIn("maxDepth: 4", html)
         self.assertIn("FT.maxDepth", html)
 
     def test_poster_draws_its_own_trunk_roots_and_ground(self):

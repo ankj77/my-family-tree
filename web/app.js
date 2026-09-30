@@ -26,7 +26,7 @@ var FT = { views: {} };
   FT.H_GAP = 40; FT.V_GAP = 100;
 
   FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, grown: {}, only: null, picks: [], selected: null, highlighted: null };
-  FT.OPEN_DEPTH = 5;
+  FT.OPEN_DEPTH = 4;
   FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
 
