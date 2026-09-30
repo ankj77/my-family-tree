@@ -236,6 +236,7 @@
   relation_id: bhairam
   order: 1
   note: also called Omi
+  life: living
 - id: ramkumar
   name: Ram Kumar
   name_hi: राम कुमार
@@ -243,12 +244,14 @@
   relation: father
   relation_id: bhairam
   order: 2
+  life: living
 - id: vijay_ramkumar
   name: Vijay
   name_hi: विजय
   gender: male
   relation: father
   relation_id: ramkumar
+  life: living
 - id: dharma
   name: Dharma
   name_hi: धर्मा
@@ -909,12 +912,14 @@
   gender: female
   relation: father
   relation_id: bhairam
+  life: living
 - id: kamla
   name: Kamla
   name_hi: कमला
   gender: female
   relation: father
   relation_id: bhairam
+  life: living
 - id: kamla_husband
   name: Jai Bhagwan
   name_hi: जय भगवान
@@ -925,15 +930,18 @@
     village: Rajakhedi
     district: Panipat
     state: Haryana
+  life: living
 - id: bimla_bhairam
   name: Bimla
   name_hi: बिमला
   gender: female
   relation: father
   relation_id: bhairam
+  life: living
 - id: santosh_bhairam
   name: Santosh
   name_hi: संतोष
   gender: female
   relation: father
   relation_id: bhairam
+  life: living
