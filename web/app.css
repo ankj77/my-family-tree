@@ -124,6 +124,12 @@
   .pc-motif.female .motif-line{stroke:var(--leaf-1);}
   .pc-motif .leaf{fill:var(--leaf-1);}
   .pc-motif .vein{stroke:var(--card-m);stroke-width:.8px;}
+  .garland{pointer-events:none;}
+  .garland .leaf{fill:var(--leaf-1);}
+  .garland-string{fill:none;stroke:var(--leaf-1);stroke-width:1.2px;}
+  .marigold{fill:#F28C1B;stroke:#D2650A;stroke-width:2.2px;stroke-dasharray:2 1.4;}
+  .marigold-core{fill:#FFB020;stroke:#F59E0B;stroke-width:1.2px;stroke-dasharray:1.2 1;}
+  .jasmine{fill:#FFFDF2;stroke:#D8CFB0;stroke-width:1px;}
   .motif-line{fill:none;stroke:var(--bark);stroke-width:1.4px;stroke-linecap:round;}
   .pc-sub{font-size:11.5px;fill:var(--ink-muted);pointer-events:none;}
   .pc-rule{stroke:var(--rule);stroke-width:1px;}

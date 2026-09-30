@@ -517,6 +517,31 @@ var FT = { views: {} };
     });
   }
 
+  function garland(g, H, knob) {
+    var W = FT.CARD_W, x0 = 6, x1 = W - 6, y0 = H - 6, cy = H + 46;
+    var m = el('g', { 'class': 'garland' }, g);
+    el('path', {
+      'class': 'garland-string', d: 'M' + x0 + ',' + y0 + ' Q' + W / 2 + ',' + cy + ' ' + x1 + ',' + y0
+    }, m);
+    [[x0, -120], [x1, 120]].forEach(function (end) {
+      el('path', { 'class': 'leaf', d: LEAF,
+        transform: 'translate(' + end[0] + ',' + (y0 - 3) + ') rotate(' + end[1] + ') scale(0.7)' }, m);
+    });
+    var COUNT = 30;
+    for (var i = 1; i < COUNT; i++) {
+      var t = i / COUNT, u = 1 - t;
+      var x = u * u * x0 + 2 * u * t * (W / 2) + t * t * x1;
+      var y = u * u * y0 + 2 * u * t * cy + t * t * y0;
+      if (knob && Math.hypot(x - knob.x, y - knob.y) < 19) continue;
+      if (i % 3 === 0) {
+        el('circle', { 'class': 'jasmine', cx: x, cy: y, r: 3.8 }, m);
+      } else {
+        el('circle', { 'class': 'marigold', cx: x, cy: y, r: 6 }, m);
+        el('circle', { 'class': 'marigold-core', cx: x, cy: y, r: 3 }, m);
+      }
+    }
+  }
+
   FT.knob = function (g, n, cx, cy) {
     var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
     el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 10 }, g);
@@ -571,11 +596,11 @@ var FT = { views: {} };
       val.textContent = row[1] ? FT.label(row[1])[0] : '(Unknown)';
       fitText(val, FT.CARD_W - 52 - 14);
     });
-    if ((n.children || []).length) {
-      var view = FT.views[FT.state.viewId];
-      var at = view && view.togglePos ? view.togglePos(n) : { x: FT.CARD_W / 2, y: -12 };
-      FT.knob(g, n, at.x, at.y);
-    }
+    var hasKids = (n.children || []).length > 0;
+    var view = FT.views[FT.state.viewId];
+    var at = view && view.togglePos ? view.togglePos(n) : { x: FT.CARD_W / 2, y: -12 };
+    if (FT.isDeceased(n)) garland(g, H, hasKids ? at : null);
+    if (hasKids) FT.knob(g, n, at.x, at.y);
     g.addEventListener('click', function () { FT.select(n.id, n); });
     return g;
   };

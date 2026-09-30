@@ -17,7 +17,7 @@ FT.views.horizontal = {
       var kids = FT.visibleChildren(n);
       if (!kids.length) {
         n.y = cursor;
-        cursor += FT.nodeH(n) + 34;
+        cursor += FT.nodeH(n) + 48;
         return;
       }
       var subtreeTop = cursor;
@@ -30,7 +30,7 @@ FT.views.horizontal = {
         kids.forEach(function (c) { shiftDown(c, dy); });
         n.y = subtreeTop;
       }
-      cursor = Math.max(cursor + dy, n.y + FT.nodeH(n) + 34);
+      cursor = Math.max(cursor + dy, n.y + FT.nodeH(n) + 48);
     })(root, 0);
     var cy = root.y + FT.jointY(root);
     this.extentPad = {
