@@ -228,6 +228,21 @@
   order: 1
   life: deceased
   note: also called Bhaiyaram
+- id: omprakash_omi
+  name: Om Prakash (Omi)
+  name_hi: ओम प्रकाश (ओमी)
+  gender: male
+  relation: father
+  relation_id: bhairam
+  order: 1
+  note: also called Omi
+- id: ramkumar
+  name: Ram Kumar
+  name_hi: राम कुमार
+  gender: male
+  relation: father
+  relation_id: bhairam
+  order: 2
 - id: dharma
   name: Dharma
   name_hi: धर्मा
