@@ -259,6 +259,7 @@
   relation: father
   relation_id: mahavir
   order: 1
+  life: living
 - id: chunu
   name: Chunu
   name_hi: चुनू
@@ -266,6 +267,7 @@
   relation: father
   relation_id: mahavir
   order: 2
+  life: living
 - id: satnarayan
   name: Sat Narayan
   name_hi: सत नारायण
