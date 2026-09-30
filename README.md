@@ -34,7 +34,16 @@ person — a `relation` type plus the `relation_id` it points to:
     city: Rohtak
     state: Haryana
     country: India
+  origin:                  # optional: ancestral place (gaon), all keys optional
+    village: Kheri
+    district: Rohtak
+    state: Haryana
 ```
+
+- `address` is where the person lives now; its `locality` (area) shows on the card.
+- `origin` is the ancestral village. The detail sheet shows it and lists everyone else
+  from the **same village** (matched on village name; states must agree when both are
+  given). Search also matches village names.
 
 - `relation: father` or `mother` → `relation_id` is this person's **parent** (they hang
   under that parent in the tree). Link a child to whichever parent is *in* the tree
@@ -156,8 +165,8 @@ EN / हिं / EN+हिं buttons to switch languages. The toolbar wraps to 
   of names, touching 9 of the 105 people, all in crowded parts of the crown.
   Zooming in further does not pull them apart, because the labels scale with the
   tree instead of staying a fixed size.
-- Search matches names only. Address search, address filters and the
-  common-ancestor finder are a separate follow-up.
+- Search matches names and origin villages. Address search and address filters are a
+  separate follow-up.
 
 ## Tests
 

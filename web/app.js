@@ -210,6 +210,30 @@ var FT = { views: {} };
     ['state', 'State'], ['country', 'Country']
   ];
 
+  function norm(s) { return (s || '').trim().toLowerCase(); }
+
+  FT.originText = function (p) {
+    var o = p.origin || {};
+    return [o.village, o.district, o.state].filter(Boolean).join(', ');
+  };
+
+  FT.sameVillage = function (a, b) {
+    var x = a.origin || {}, y = b.origin || {};
+    if (!norm(x.village) || norm(x.village) !== norm(y.village)) return false;
+    return !x.state || !y.state || norm(x.state) === norm(y.state);
+  };
+
+  function villageRefs(p) {
+    var refs = [];
+    FT.nodes.forEach(function (n) {
+      if (n.id !== p.id && FT.sameVillage(p, n)) refs.push(personRef(n.id));
+      (n.spouses || []).forEach(function (s) {
+        if (s.id !== p.id && FT.sameVillage(p, s)) refs.push(spouseRef(s, n));
+      });
+    });
+    return refs;
+  }
+
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -243,6 +267,8 @@ var FT = { views: {} };
       var v = (p.address || {})[r[0]];
       if (v) rows += '<dt>' + r[1] + '</dt><dd>' + esc(v) + '</dd>';
     });
+    var origin = FT.originText(p);
+    if (origin) rows += '<dt>Origin</dt><dd>' + esc(origin) + '</dd>';
     if (p.note) rows += '<dt>Note</dt><dd>' + esc(p.note) + '</dd>';
     if (rows) h += '<dl>' + rows + '</dl>';
 
@@ -259,6 +285,10 @@ var FT = { views: {} };
     if (kids.length) {
       rel += '<div><span>Children</span> ' +
         kids.map(function (c) { return personRef(c.id); }).join(', ') + '</div>';
+    }
+    var village = villageRefs(p);
+    if (village.length) {
+      rel += '<div><span>Same village</span> ' + village.join(', ') + '</div>';
     }
     if (rel) h += '<div class="sheet-rel">' + rel + '</div>';
     return h;
@@ -739,7 +769,7 @@ var FT = { views: {} };
     if (!needle) return { list: [], total: 0 };
     var hits = [];
     FT.nodes.forEach(function (n) {
-      var fields = [n.name || '', n.name_hi || ''];
+      var fields = [n.name || '', n.name_hi || '', (n.origin || {}).village || ''];
       var best = null;
       fields.forEach(function (f) {
         var hay = f.toLowerCase();

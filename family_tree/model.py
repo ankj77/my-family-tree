@@ -6,7 +6,7 @@ import yaml
 
 ALLOWED_KEYS = {
     "id", "name", "name_hi", "gender", "relation", "relation_id",
-    "order", "born", "note", "status", "address",
+    "order", "born", "note", "status", "address", "origin",
     "life", "died",
 }
 ALLOWED_STATUS = {"uncertain", "needs-parent"}
@@ -53,15 +53,22 @@ class Address:
         }
 
 
-def _parse_address(pid: str, raw) -> Address:
+ORIGIN_KEYS = ("village", "district", "state")
+
+
+def _parse_place(pid: str, raw, key: str, allowed) -> dict:
     if raw is None:
-        return Address()
+        return {}
     if not isinstance(raw, dict):
-        raise LoadError("Person '%s' has a non-mapping 'address'" % pid)
-    unknown = set(raw) - ADDRESS_KEYS
+        raise LoadError("Person '%s' has a non-mapping '%s'" % (pid, key))
+    unknown = set(raw) - set(allowed)
     if unknown:
-        raise LoadError("Person '%s' has unknown address keys: %s" % (pid, sorted(unknown)))
-    return Address(**{k: (None if v is None else str(v)) for k, v in raw.items()})
+        raise LoadError("Person '%s' has unknown %s keys: %s" % (pid, key, sorted(unknown)))
+    return {k: str(v) for k, v in raw.items() if v is not None}
+
+
+def _parse_address(pid: str, raw) -> Address:
+    return Address(**_parse_place(pid, raw, "address", ADDRESS_KEYS))
 
 
 @dataclass
@@ -79,6 +86,7 @@ class Person:
     note: Optional[str] = None
     status: Optional[str] = None
     address: Address = field(default_factory=Address)
+    origin: dict = field(default_factory=dict)
     photo: Optional[str] = None
 
     def display_name(self) -> str:
@@ -138,6 +146,7 @@ def load_people(path: str) -> List[Person]:
                 note=entry.get("note"),
                 status=status,
                 address=address,
+                origin=_parse_place(str(pid), entry.get("origin"), "origin", ORIGIN_KEYS),
             )
         )
     return people

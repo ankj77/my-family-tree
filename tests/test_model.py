@@ -125,6 +125,21 @@ class TestAddress(unittest.TestCase):
         self.assertEqual(people[0].address.line, "214")
 
 
+class TestOrigin(unittest.TestCase):
+    def test_parses_origin(self):
+        people = load_people(_write(
+            "- id: x\n  name: X\n  origin:\n    village: Kheri\n    district: Rohtak\n    state: Haryana\n"
+        ))
+        self.assertEqual(people[0].origin, {"village": "Kheri", "district": "Rohtak", "state": "Haryana"})
+
+    def test_missing_origin_is_empty(self):
+        self.assertEqual(load_people(_write("- id: x\n  name: X\n"))[0].origin, {})
+
+    def test_unknown_origin_key_raises(self):
+        with self.assertRaises(LoadError):
+            load_people(_write("- id: x\n  name: X\n  origin:\n    gaon: Kheri\n"))
+
+
 class TestMotherIdIsGone(unittest.TestCase):
     def test_mother_id_is_now_an_unknown_key(self):
         with self.assertRaises(LoadError):
