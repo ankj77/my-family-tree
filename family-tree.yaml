@@ -575,6 +575,9 @@
   gender: male
   relation: father
   relation_id: kanwarsen
+  address:
+    locality: Pitampura
+    city: Delhi
 - id: ankur
   name: Ankur
   name_hi: अंकुर
@@ -582,6 +585,9 @@
   relation: father
   relation_id: vijay
   order: 3
+  address:
+    locality: Pitampura
+    city: Delhi
 - id: pawan
   name: Pawan
   name_hi: पवन
@@ -677,6 +683,9 @@
     village: Bal Pabana
     district: Karnal
     state: Haryana
+  address:
+    locality: Pitampura
+    city: Delhi
 - id: bimla
   name: Bimla
   name_hi: बिमला
@@ -686,6 +695,9 @@
   origin:
     village: Obra
     state: Uttar Pradesh
+  address:
+    locality: Pitampura
+    city: Delhi
 - id: sonia
   name: Sonia
   name_hi: सोनिया
