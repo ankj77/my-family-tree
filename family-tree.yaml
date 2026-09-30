@@ -925,3 +925,9 @@
     village: Rajakhedi
     district: Panipat
     state: Haryana
+- id: bimla_bhairam
+  name: Bimla
+  name_hi: बिमला
+  gender: female
+  relation: father
+  relation_id: bhairam
