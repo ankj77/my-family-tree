@@ -34,6 +34,7 @@ person — a `relation` type plus the `relation_id` it points to:
     city: Rohtak
     state: Haryana
     country: India
+  father: Chatar Sen       # optional, only for people who married in (husband/wife)
   origin:                  # optional: ancestral place (gaon), all keys optional
     village: Kheri
     district: Rohtak

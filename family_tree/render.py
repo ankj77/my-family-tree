@@ -35,6 +35,7 @@ def _person_json(p: Person) -> dict:
         "note": p.note,
         "status": p.status,
         "photo": p.photo,
+        "father": p.father,
         "address": p.address.as_dict(),
         "origin": p.origin,
         "origin_inherited": p.origin_inherited,

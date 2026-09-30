@@ -140,6 +140,20 @@ class TestOrigin(unittest.TestCase):
             load_people(_write("- id: x\n  name: X\n  origin:\n    gaon: Kheri\n"))
 
 
+class TestSpouseFather(unittest.TestCase):
+    def test_married_in_person_can_name_their_father(self):
+        people = load_people(_write(
+            "- id: h\n  name: H\n- id: w\n  name: W\n  relation: wife\n  relation_id: h\n  father: Chatar Sen\n"
+        ))
+        self.assertEqual(people[1].father, "Chatar Sen")
+
+    def test_blood_relative_cannot_use_father(self):
+        with self.assertRaises(LoadError):
+            load_people(_write(
+                "- id: p\n  name: P\n- id: c\n  name: C\n  relation: father\n  relation_id: p\n  father: X\n"
+            ))
+
+
 class TestInheritOrigins(unittest.TestCase):
     def test_father_line_inherits_wives_and_daughters_children_do_not(self):
         kheri = {"village": "Kheri", "state": "Haryana"}

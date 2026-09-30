@@ -867,7 +867,7 @@
   gender: female
   relation: wife
   relation_id: satnarayan
-  note: daughter of Chatar Sen
+  father: Chatar Sen
   origin:
     village: Ridhana
     state: Haryana

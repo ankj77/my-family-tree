@@ -262,6 +262,7 @@ var FT = { views: {} };
     if (p.name) h += '<h3>' + esc(p.name) + '</h3>';
     if (p.name_hi) h += '<p class="sheet-hi">' + esc(p.name_hi) + '</p>';
     var rows = '';
+    if (p.father) rows += '<dt>Father</dt><dd>' + esc(p.father) + '</dd>';
     if (p.born) rows += '<dt>Born</dt><dd>' + esc(p.born) + '</dd>';
     if (p.died) rows += '<dt>Died</dt><dd>' + esc(p.died) + '</dd>';
     if (p.life || p.died) {
@@ -281,9 +282,11 @@ var FT = { views: {} };
     if (rows) h += '<dl>' + rows + '</dl>';
 
     var rel = '';
-    var parent = FT.parentOf[owner.id];
+    var parent = p === owner ? FT.parentOf[owner.id] : null;
     if (parent) rel += '<div><span>Parent</span> ' + personRef(parent.id) + '</div>';
-    if (owner.spouses && owner.spouses.length) {
+    if (p !== owner) {
+      rel += '<div><span>Spouse</span> ' + personRef(owner.id) + '</div>';
+    } else if (owner.spouses && owner.spouses.length) {
       rel += '<div><span>Spouse</span> ' +
         owner.spouses.map(function (s) { return spouseRef(s, owner); }).join(', ') + '</div>';
     } else if (owner.placeholder) {
@@ -637,7 +640,8 @@ var FT = { views: {} };
       el('line', { 'class': 'spouse-link', x1: FT.CARD_W, y1: H / 2, x2: spX, y2: H / 2 }, g);
       var sg = el('g', { 'class': 'spouse-card ' + (sp.gender || ''),
         transform: 'translate(' + spX + ',0)' }, g);
-      cardFace(sg, sp, H, [[spouseWord(sp) + ' of', n, n.gender]],
+      cardFace(sg, sp, H, [['Father', sp.father ? { name: sp.father } : null, 'male'],
+        [spouseWord(sp) + ' of', n, n.gender]],
         function () { return FT.CARD_W - 66; });
       sg.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(sp.id, n); });
     }
