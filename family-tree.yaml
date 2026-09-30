@@ -245,6 +245,27 @@
   order: 1
   life: deceased
   note: also called Labha
+- id: mahavir
+  name: Mahavir
+  name_hi: महावीर
+  gender: male
+  relation: father
+  relation_id: labhchand
+  life: living
+- id: ritvik
+  name: Ritvik
+  name_hi: ऋत्विक
+  gender: male
+  relation: father
+  relation_id: mahavir
+  order: 1
+- id: chunu
+  name: Chunu
+  name_hi: चुनू
+  gender: female
+  relation: father
+  relation_id: mahavir
+  order: 2
 - id: satnarayan
   name: Sat Narayan
   name_hi: सत नारायण
