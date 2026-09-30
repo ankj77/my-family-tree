@@ -965,14 +965,8 @@
   relation: wife
   relation_id: pankaj_srikrishan
   status: uncertain
+  father: Ramesh
   origin:
     village: Kakroi
     district: Sonipat
     state: Haryana
-- id: ramesh_srikrishan
-  name: Ramesh
-  name_hi: रमेश
-  gender: male
-  relation: father
-  relation_id: srikrishan
-  order: 2
