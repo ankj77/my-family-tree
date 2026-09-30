@@ -669,9 +669,46 @@
   gender: female
   relation: wife
   relation_id: ankur
+  origin:
+    village: Bal Pabana
+    district: Karnal
+    state: Haryana
 - id: bimla
   name: Bimla
   name_hi: बिमला
   gender: female
   relation: wife
   relation_id: vijay
+  origin:
+    village: Obra
+    state: Uttar Pradesh
+- id: sonia
+  name: Sonia
+  name_hi: सोनिया
+  gender: female
+  relation: father
+  relation_id: vijay
+- id: gautam
+  name: Gautam
+  name_hi: गौतम
+  gender: male
+  relation: husband
+  relation_id: sonia
+  origin:
+    village: Pathri
+    state: Haryana
+- id: jyoti
+  name: Jyoti
+  name_hi: ज्योति
+  gender: female
+  relation: father
+  relation_id: vijay
+- id: vikas_jyoti
+  name: Vikas
+  name_hi: विकास
+  gender: male
+  relation: husband
+  relation_id: jyoti
+  origin:
+    village: Sisai
+    state: Haryana
