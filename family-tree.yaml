@@ -606,6 +606,7 @@
   address:
     locality: Pitampura
     city: Delhi
+  life: living
 - id: ankur
   name: Ankur
   name_hi: अंकुर
@@ -727,6 +728,7 @@
   address:
     locality: Pitampura
     city: Delhi
+  life: living
 - id: sonia
   name: Sonia
   name_hi: सोनिया
