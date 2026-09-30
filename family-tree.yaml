@@ -581,6 +581,7 @@
   gender: male
   relation: father
   relation_id: vijay
+  order: 3
 - id: pawan
   name: Pawan
   name_hi: पवन
@@ -691,6 +692,7 @@
   gender: female
   relation: father
   relation_id: vijay
+  order: 1
 - id: gautam
   name: Gautam
   name_hi: गौतम
@@ -706,6 +708,7 @@
   gender: female
   relation: father
   relation_id: vijay
+  order: 2
 - id: vikas_jyoti
   name: Vikas
   name_hi: विकास
