@@ -298,6 +298,7 @@
   gender: male
   relation: father
   relation_id: labhchand
+  order: 1
   life: living
 - id: ritvik
   name: Ritvik
@@ -1015,3 +1016,35 @@
     district: Tijara
     state: Rajasthan
   life: living
+- id: satta
+  name: Satta
+  name_hi: सत्ता
+  gender: female
+  relation: father
+  relation_id: labhchand
+  order: 2
+- id: satta_husband
+  name: Satta's husband
+  gender: male
+  relation: husband
+  relation_id: satta
+  status: uncertain
+  origin:
+    village: Kakroi
+    district: Sonipat
+    state: Haryana
+- id: peeno
+  name: Peeno
+  name_hi: पीनो
+  gender: female
+  relation: father
+  relation_id: labhchand
+  order: 3
+- id: peeno_husband
+  name: Sudhir
+  name_hi: सुधीर
+  gender: male
+  relation: husband
+  relation_id: peeno
+  origin:
+    state: Uttar Pradesh
