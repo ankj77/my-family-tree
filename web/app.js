@@ -25,7 +25,7 @@ var FT = { views: {} };
   FT.CARD_W = 250; FT.ROW_H = 52; FT.RAIL_W = 5; FT.AVATAR = 32;
   FT.H_GAP = 40; FT.V_GAP = 100;
 
-  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, grown: {}, spouseOpen: {}, only: null, picks: [], selected: null, highlighted: null };
+  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, grown: {}, only: null, picks: [], selected: null, highlighted: null };
   FT.OPEN_DEPTH = 2;
   FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
@@ -134,17 +134,20 @@ var FT = { views: {} };
     var partners = FT.partners(n).length;
     return 1 + partners;
   };
-  FT.nodeW = function () { return FT.CARD_W; };
+  FT.COUPLE_GAP = 44;
+  FT.spouseOf = function (n) { return (n.spouses || [])[0] || null; };
+  FT.nodeW = function (n) {
+    return FT.spouseOf(n) ? 2 * FT.CARD_W + FT.COUPLE_GAP : FT.CARD_W;
+  };
   FT.nodeH = function (n) {
     var view = FT.views[FT.state.viewId];
-    if (view && view.cardStyle === 'parents') {
-      return FT.cardH(n, 2) +
-        (FT.spouseShown(n) ? FT.SPOUSE_GAP + FT.cardH(n.spouses[0], 1) : 0);
-    }
+    if (view && view.cardStyle === 'parents') return FT.cardH(n, 2);
     return FT.rows(n) * FT.ROW_H;
   };
-  FT.jointX = function () { return FT.CARD_W / 2; };
-  FT.jointY = function (n) { return FT.nodeH(n); };
+  FT.jointX = function (n) {
+    return FT.spouseOf(n) ? FT.CARD_W + FT.COUPLE_GAP / 2 : FT.CARD_W / 2;
+  };
+  FT.jointY = function (n) { return FT.spouseOf(n) ? FT.nodeH(n) / 2 : FT.nodeH(n); };
 
   FT.kidsAt = function (n, depth) {
     if (depth >= FT.maxDepth() && !FT.state.grown[n.id]) return [];
@@ -531,27 +534,23 @@ var FT = { views: {} };
   }
 
   function garland(g, top, H, knob) {
-    var W = FT.CARD_W, x0 = 6, x1 = W - 6, y0 = top + H - 6, cy = top + H + 40;
+    var W = FT.CARD_W, y0 = top + 4, side = top + H - 14, dip = top + H + 20;
     var m = el('g', { 'class': 'garland' }, g);
-    el('path', {
-      'class': 'garland-rope', d: 'M' + x0 + ',' + y0 + ' Q' + W / 2 + ',' + cy + ' ' + x1 + ',' + y0
-    }, m);
-    var CURLS = 46;
+    var rope = el('path', { 'class': 'garland-rope',
+      d: 'M0,' + y0 + ' L-1,' + side + ' C-1,' + dip + ' ' + (W + 1) + ',' + dip + ' ' +
+         (W + 1) + ',' + side + ' L' + W + ',' + y0 }, m);
+    var len = rope.getTotalLength();
+    function at(f) { var p = rope.getPointAtLength(f * len); return [p.x, p.y]; }
+    var CURLS = 90;
     for (var i = 0; i <= CURLS; i++) {
-      var t = i / CURLS, u = 1 - t;
-      var x = u * u * x0 + 2 * u * t * (W / 2) + t * t * x1;
-      var y = u * u * y0 + 2 * u * t * cy + t * t * y0;
-      var angle = Math.atan2(2 * u * (cy - y0) + 2 * t * (y0 - cy), 2 * u * (W / 2 - x0) + 2 * t * (x1 - W / 2));
-      var tilt = angle * 180 / Math.PI + (i % 2 ? 35 : -35);
+      var p = at(i / CURLS), q = at(Math.min(1, i / CURLS + 0.005));
+      var tilt = Math.atan2(q[1] - p[1], q[0] - p[0]) * 180 / Math.PI + (i % 2 ? 35 : -35);
       var curl = el('ellipse', { 'class': 'curl', cx: 0, cy: 0, rx: 4.2, ry: 3,
-        transform: 'translate(' + x + ',' + (y + (i % 2 ? -2 : 2)) + ') rotate(' + tilt + ')' }, m);
+        transform: 'translate(' + p[0] + ',' + p[1] + ') rotate(' + tilt + ') translate(0,' + (i % 2 ? -2 : 2) + ')' }, m);
       curl.style.fill = ROPE[i % 3];
     }
-    [0.2, 0.8].forEach(function (t) {
-      var u = 1 - t;
-      rose(m, u * u * x0 + 2 * u * t * (W / 2) + t * t * x1, u * u * y0 + 2 * u * t * cy + t * t * y0, 3.8);
-    });
-    var low = (y0 + cy) / 2;
+    [0.22, 0.78].forEach(function (f) { var p = at(f); rose(m, p[0], p[1], 3.8); });
+    var low = at(0.5)[1];
     [6, 11].forEach(function (d, i) {
       var k = el('ellipse', { 'class': 'curl', cx: W / 2, cy: low + d, rx: 4.6, ry: 3.4 }, m);
       k.style.fill = ROPE[i];
@@ -573,12 +572,6 @@ var FT = { views: {} };
       ev.stopPropagation();
       FT.toggleKids(n, n.depth || 0);
     });
-  };
-
-  FT.SPOUSE_GAP = 48;
-
-  FT.spouseShown = function (n) {
-    return !!(FT.state.spouseOpen[n.id] && (n.spouses || []).length);
   };
 
   FT.cardH = function (p, rows) {
@@ -626,52 +619,37 @@ var FT = { views: {} };
     });
   }
 
-  function spousePill(g, n, H) {
-    var s = n.spouses[0];
-    var open = FT.spouseShown(n);
-    var pill = el('g', { 'class': 'spouse-pill' + (open ? ' open' : ''),
-      transform: 'translate(' + (FT.CARD_W - 78) + ',' + (H - 26) + ')' }, g);
-    el('rect', { width: 68, height: 18, rx: 9 }, pill);
-    var t = el('text', { x: 34, y: 12.5, 'text-anchor': 'middle' }, pill);
-    t.textContent = (open ? '\u2212 ' : '+ ') + spouseWord(s);
-    pill.addEventListener('click', function (ev) {
-      ev.stopPropagation();
-      FT.state.spouseOpen[n.id] = !open;
-      FT.render();
-    });
-  }
-
   FT.drawParentCard = function (parent, n) {
     var g = el('g', {
       'class': 'card parent-card' + (n.gender ? ' ' + n.gender : ''), 'data-id': n.id,
       transform: 'translate(' + n.x + ',' + n.y + ')'
     }, parent);
     var H = FT.cardH(n, 2);
-    var hasSpouse = (n.spouses || []).length > 0;
     var main = el('g', {}, g);
     var pr = FT.parentsOf(n);
     cardFace(main, n, H, [['Father', pr.father, 'male'], ['Mother', pr.mother, 'female']],
-      function (i) { return FT.CARD_W - 52 - (hasSpouse && i === 1 ? 88 : 14); });
+      function () { return FT.CARD_W - 66; });
     main.addEventListener('click', function () { FT.select(n.id, n); });
-    if (hasSpouse) spousePill(main, n, H);
 
-    var sp = FT.spouseShown(n) ? n.spouses[0] : null;
-    var spTop = H + FT.SPOUSE_GAP, spH = 0;
+    var sp = FT.spouseOf(n);
+    var spX = FT.CARD_W + FT.COUPLE_GAP;
     if (sp) {
-      spH = FT.cardH(sp, 1);
-      el('line', { 'class': 'spouse-link', x1: FT.CARD_W / 2, y1: H, x2: FT.CARD_W / 2, y2: spTop }, g);
+      el('line', { 'class': 'spouse-link', x1: FT.CARD_W, y1: H / 2, x2: spX, y2: H / 2 }, g);
       var sg = el('g', { 'class': 'spouse-card ' + (sp.gender || ''),
-        transform: 'translate(0,' + spTop + ')' }, g);
-      cardFace(sg, sp, spH, [[spouseWord(sp) + ' of', n, n.gender]],
+        transform: 'translate(' + spX + ',0)' }, g);
+      cardFace(sg, sp, H, [[spouseWord(sp) + ' of', n, n.gender]],
         function () { return FT.CARD_W - 66; });
       sg.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(sp.id, n); });
     }
 
     var hasKids = (n.children || []).length > 0;
     var view = FT.views[FT.state.viewId];
-    var at = view && view.togglePos ? view.togglePos(n) : { x: FT.CARD_W / 2, y: -12 };
-    if (FT.isDeceased(n)) garland(g, 0, H, sp ? null : at);
-    if (sp && FT.isDeceased(sp)) garland(g, spTop, spH, at);
+    var at = view && view.togglePos ? view.togglePos(n) : { x: FT.jointX(n), y: -12 };
+    if (FT.isDeceased(n)) garland(g, 0, H, at);
+    if (sp && FT.isDeceased(sp)) {
+      var sgl = el('g', { transform: 'translate(' + spX + ',0)' }, g);
+      garland(sgl, 0, H, null);
+    }
     if (hasKids) FT.knob(g, n, at.x, at.y);
     return g;
   };
@@ -951,7 +929,6 @@ var FT = { views: {} };
     grp.members.forEach(function (m) {
       Object.keys(FT.lineage(m.owner.id)).forEach(function (k) { keep[k] = true; });
       deepest = Math.max(deepest, FT.depthOf(m.owner.id));
-      if (m.person !== m.owner) FT.state.spouseOpen[m.owner.id] = true;
     });
     FT.state.only = keep;
     FT.state.collapsed = {};

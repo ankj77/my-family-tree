@@ -168,7 +168,7 @@ class TestPosterView(unittest.TestCase):
 
     def test_the_poster_cards_carry_a_plus_minus_knob(self):
         html = _payload_html()
-        self.assertIn("var at = view && view.togglePos ? view.togglePos(n) : { x: FT.CARD_W / 2, y: -12 };", html)
+        self.assertIn("var at = view && view.togglePos ? view.togglePos(n) : { x: FT.jointX(n), y: -12 };", html)
         self.assertNotIn('#stage[data-view="poster"] .toggle', html)
 
 
@@ -193,9 +193,10 @@ class TestPosterParentCards(unittest.TestCase):
         self.assertIn("'Mother'", html)
         self.assertIn("(Unknown)", html)
 
-    def test_parent_card_height_grows_when_the_spouse_card_is_open(self):
+    def test_a_couple_is_two_cards_wide_joined_by_a_link(self):
         html = _payload_html()
-        self.assertIn("FT.SPOUSE_GAP + FT.cardH(n.spouses[0], 1)", html)
+        self.assertIn("2 * FT.CARD_W + FT.COUPLE_GAP", html)
+        self.assertIn("'spouse-link'", html)
 
     def test_the_root_art_is_shared_by_all_three_views(self):
         html = _payload_html()

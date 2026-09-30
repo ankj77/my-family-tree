@@ -6,14 +6,20 @@ FT.views.horizontal = {
   togglePos: function (n) { return { x: FT.nodeW(n) + 12, y: FT.jointY(n) - 2 }; },
   layout: function (root) {
     var cursor = 0;
-    var COL = FT.CARD_W + 90;
+    var colW = [];
+    (function measure(n, depth) {
+      colW[depth] = Math.max(colW[depth] || 0, FT.nodeW(n));
+      FT.visibleChildren(n).forEach(function (c) { measure(c, depth + 1); });
+    })(root, 0);
+    var colX = [0];
+    for (var d = 0; d < colW.length; d++) colX[d + 1] = colX[d] + colW[d] + 90;
     function shiftDown(n, dy) {
       n.y += dy;
       FT.visibleChildren(n).forEach(function (c) { shiftDown(c, dy); });
     }
     (function place(n, depth) {
       n.depth = depth;
-      n.x = depth * COL;
+      n.x = colX[depth];
       var kids = FT.visibleChildren(n);
       if (!kids.length) {
         n.y = cursor;

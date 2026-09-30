@@ -130,11 +130,7 @@
   .curl{stroke:#B35A0E;stroke-width:.7px;}
   .rose{fill:#B3121B;stroke:#7A0A10;stroke-width:.7px;}
   .rose-core{fill:#D62A33;}
-  .spouse-pill{cursor:pointer;}
-  .spouse-pill rect{fill:var(--card);stroke:var(--rule);stroke-width:1px;}
-  .spouse-pill.open rect{fill:var(--rule);}
-  .spouse-pill text{font-size:10.5px;font-weight:600;fill:var(--ink-muted);pointer-events:none;}
-  .spouse-link{stroke:var(--bark);stroke-width:1.4px;stroke-dasharray:3 3;}
+  .spouse-link{stroke:var(--bark);stroke-width:2px;}
   .spouse-card{cursor:pointer;}
   .village-hit .card-bg{stroke:#D9731A;stroke-width:2.5px;}
   .sg-village .sg-name::before{content:'\2302  ';color:#D9731A;}
