@@ -160,8 +160,9 @@ var FT = { views: {} };
     } else {
       FT.state.collapsed[n.id] = false;
       FT.state.grown[n.id] = true;
+      var only = FT.state.only;
+      if (only) (n.children || []).forEach(function (c) { only[c.id] = true; });
     }
-    FT.clearPicks();
     FT.render();
   };
 
