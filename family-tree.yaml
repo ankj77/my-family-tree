@@ -219,6 +219,31 @@
   relation_id: richa
   note: child of Richa (was read as 'Nisar')
   life: deceased
+- id: bhairam
+  name: Bhairam (Bhaiyaram)
+  name_hi: भैराम (भैयाराम)
+  gender: male
+  relation: father
+  relation_id: niyadar
+  order: 1
+  life: deceased
+  note: also called Bhaiyaram
+- id: dharma
+  name: Dharma
+  name_hi: धर्मा
+  gender: male
+  relation: father
+  relation_id: niyadar
+  order: 2
+  life: deceased
+- id: lehrimal
+  name: Lehri Mal
+  name_hi: लहरी मल
+  gender: male
+  relation: father
+  relation_id: niyadar
+  order: 3
+  life: deceased
 - id: lekhram
   name: Lekhram
   name_hi: लेखराम
