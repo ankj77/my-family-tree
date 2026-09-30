@@ -17,12 +17,14 @@
   relation: father
   relation_id: sevakram
   note: daughter of Sevak Ram (Till annotation on chart)
+  life: deceased
 - id: kannu
   name: Kannu
   name_hi: कन्नू
   gender: female
   relation: father
   relation_id: sevakram
+  life: deceased
 - id: lakshman
   name: Dada Lakshman
   name_hi: दादा लक्ष्मण
@@ -39,12 +41,14 @@
   relation: father
   relation_id: lakshman
   note: no children
+  life: deceased
 - id: ramjilal
   name: Ramjilal
   name_hi: रामजीलाल
   gender: male
   relation: mother
   relation_id: udmi
+  life: deceased
 - id: richa
   name: Richa
   name_hi: ऋचा
@@ -52,18 +56,21 @@
   relation: mother
   relation_id: udmi
   note: daughter of Udmi (was read as 'Siddho' — reinterpreted per correction)
+  life: deceased
 - id: rajaram
   name: Rajaram
   name_hi: राजाराम
   gender: male
   relation: mother
   relation_id: kannu
+  life: deceased
 - id: panmeshwar
   name: Panmeshwar
   name_hi: पनमेश्वर
   gender: male
   relation: mother
   relation_id: kannu
+  life: deceased
 - id: moladhmal
   name: Moladh Mal
   name_hi: मोलाध मल
@@ -71,18 +78,21 @@
   relation: father
   relation_id: bhagmal
   note: son of Dada Bhagmal
+  life: deceased
 - id: ramnarayan
   name: Ram Narayan
   name_hi: राम नारायण
   gender: male
   relation: father
   relation_id: moladhmal
+  life: deceased
 - id: ramlal
   name: Ram Lal
   name_hi: राम लाल
   gender: male
   relation: father
   relation_id: moladhmal
+  life: deceased
 - id: jagdishchand
   name: Jagdish Chand
   name_hi: जगदीश चंद
@@ -199,6 +209,7 @@
   gender: male
   relation: father
   relation_id: ramjilal
+  life: deceased
 - id: niyadar
   name: Niyadar
   name_hi: नियादर
@@ -206,6 +217,7 @@
   relation: mother
   relation_id: richa
   note: child of Richa (was read as 'Nisar')
+  life: deceased
 - id: lekhram
   name: Lekhram
   name_hi: लेखराम
@@ -213,6 +225,7 @@
   relation: mother
   relation_id: richa
   note: child of Richa (was read as 'Lorvaram')
+  life: deceased
 - id: bhagmal
   name: Dada Bhagmal
   name_hi: दादा भागमल
@@ -229,6 +242,7 @@
   relation: father
   relation_id: netram
   note: son of Netram
+  life: deceased
 - id: netram
   name: Netram
   name_hi: नेतराम
@@ -245,6 +259,7 @@
   relation: father
   relation_id: bhagmal
   note: son of Dada Bhagmal; no biological son — adopted Mayachand (Netram's son)
+  life: deceased
 - id: jainarayan
   name: Jai Narayan
   name_hi: जय नारायण
@@ -252,6 +267,7 @@
   relation: father
   relation_id: moladhmal
   note: son of Moladh Mal
+  life: deceased
 - id: mayachand
   name: Mayachand
   name_hi: मायाचंद
@@ -259,6 +275,7 @@
   relation: father
   relation_id: netram
   note: biological son of Netram; adopted by Khushiram
+  life: deceased
 - id: ramesh
   name: Ramesh
   name_hi: रमेश
@@ -461,6 +478,7 @@
   relation: father
   relation_id: netram
   note: brother of Chandgiram (son of Netram); no son
+  life: deceased
 - id: surajbhan
   name: Surajbhan
   name_hi: सूरजभान
