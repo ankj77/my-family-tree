@@ -970,3 +970,10 @@
     village: Kakroi
     district: Sonipat
     state: Haryana
+- id: money_srikrishan
+  name: Money
+  name_hi: मनी
+  gender: male
+  relation: father
+  relation_id: srikrishan
+  order: 2
