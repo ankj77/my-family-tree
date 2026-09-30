@@ -952,6 +952,7 @@
   gender: female
   relation: wife
   relation_id: srikrishan
+  life: living
 - id: pankaj_srikrishan
   name: Pankaj
   name_hi: पंकज
@@ -959,6 +960,7 @@
   relation: father
   relation_id: srikrishan
   order: 1
+  life: living
 - id: pankaj_srikrishan_wife
   name: Pankaj's wife
   gender: female
@@ -970,6 +972,7 @@
     village: Kakroi
     district: Sonipat
     state: Haryana
+  life: living
 - id: money_srikrishan
   name: Money
   name_hi: मनी
@@ -977,3 +980,4 @@
   relation: father
   relation_id: srikrishan
   order: 2
+  life: living
