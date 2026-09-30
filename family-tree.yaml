@@ -903,3 +903,25 @@
     village: Halalpur
     district: Narela
     state: Haryana
+- id: angori
+  name: Angori
+  name_hi: अंगूरी
+  gender: female
+  relation: father
+  relation_id: bhairam
+- id: kamla
+  name: Kamla
+  name_hi: कमला
+  gender: female
+  relation: father
+  relation_id: bhairam
+- id: kamla_husband
+  name: Jai Bhagwan
+  name_hi: जय भगवान
+  gender: male
+  relation: husband
+  relation_id: kamla
+  origin:
+    village: Rajakhedi
+    district: Panipat
+    state: Haryana
