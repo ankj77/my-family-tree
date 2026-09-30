@@ -382,6 +382,8 @@
     if (span) parts.push(span);
     var place = FT.place(p);
     if (place) parts.push(place);
+    var village = (p.origin || {}).village;
+    if (village) parts.push('from ' + village);
     return { text: parts.join(' · '), dot: !FT.isDeceased(p) && p.life === 'living' };
   };
 
