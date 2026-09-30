@@ -850,7 +850,7 @@
       sg.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(sp.id, n); });
     }
 
-    var hasKids = (n.children || []).length > 0;
+    var hasKids = (n.children || []).length > 0 && !FT.state.village;
     var view = FT.views[FT.state.viewId];
     var at = view && view.togglePos ? view.togglePos(n) : { x: FT.jointX(n), y: -12 };
     if (FT.isDeceased(n)) garland(g, 0, H, at);
@@ -928,6 +928,14 @@
   FT.render = function () {
     while (vp.firstChild) vp.removeChild(vp.firstChild);
     var view = FT.views[FT.state.viewId] || FT.views.classic;
+    var owners = villageLayout();
+    if (owners) {
+      var grid = el('g', {}, vp);
+      owners.forEach(function (n) { FT.drawNode(grid, n); });
+      markVillage();
+      apply();
+      return;
+    }
     view.layout(tree);
     var edges = el('g', {}, vp);
     var nodes = el('g', {}, vp);
@@ -1043,7 +1051,14 @@
   FT.fit = function () {
     var view = FT.views[FT.state.viewId];
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    (function walk(n, depth) {
+    var owners = villageLayout();
+    if (owners) {
+      owners.forEach(function (n) {
+        minX = Math.min(minX, n.x - 20); maxX = Math.max(maxX, n.x + FT.nodeW(n) + 20);
+        minY = Math.min(minY, n.y - 20); maxY = Math.max(maxY, n.y + FT.nodeH(n) + 50);
+      });
+      view = {};
+    } else (function walk(n, depth) {
       var w = FT.nodeW(n);
       var h = FT.nodeH(n);
       minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
@@ -1132,19 +1147,38 @@
     FT.state.picks = [];
     FT.state.village = grp ? key : null;
     FT.renderPicks();
-    if (!grp) { FT.state.only = null; FT.render(); FT.fit(); return; }
-    var keep = {}, deepest = 0;
-    grp.members.forEach(function (m) {
-      Object.keys(FT.lineage(m.owner.id)).forEach(function (k) { keep[k] = true; });
-      deepest = Math.max(deepest, FT.depthOf(m.owner.id));
-    });
-    FT.state.only = keep;
-    FT.state.collapsed = {};
-    FT.revealDepth(deepest + 1);
+    FT.state.only = null;
     FT.closeSheet();
     FT.render();
     FT.fit();
   };
+
+  function villageLayout() {
+    var grp = FT.state.village && FT.villageGroups()[FT.state.village];
+    if (!grp) return null;
+    var seen = {}, owners = [];
+    grp.members.forEach(function (m) {
+      if (!seen[m.owner.id]) { seen[m.owner.id] = true; owners.push(m.owner); }
+    });
+    owners.sort(function (a, b) {
+      return FT.depthOf(a.id) - FT.depthOf(b.id) ||
+        FT.label(a)[0].localeCompare(FT.label(b)[0]);
+    });
+    var rowH = 0, area = 0;
+    owners.forEach(function (n) { rowH = Math.max(rowH, FT.nodeH(n) + 70); });
+    owners.forEach(function (n) { area += (FT.nodeW(n) + FT.H_GAP) * rowH; });
+    var r = stage.getBoundingClientRect();
+    var aspect = r.width > 0 && r.height > 0 ? r.width / r.height : 1.5;
+    var rowMax = Math.max(2 * FT.CARD_W + FT.COUPLE_GAP, Math.sqrt(area * aspect));
+    var x = 0, y = 0;
+    owners.forEach(function (n) {
+      if (x > 0 && x + FT.nodeW(n) > rowMax) { x = 0; y += rowH; }
+      n.x = x;
+      n.y = y;
+      x += FT.nodeW(n) + FT.H_GAP;
+    });
+    return owners;
+  }
 
   function markVillage() {
     var grp = FT.state.village && FT.villageGroups()[FT.state.village];

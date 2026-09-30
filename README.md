@@ -51,8 +51,9 @@ person — a `relation` type plus the `relation_id` it points to:
   with their own `origin` keeps it, and it passes to their children. Inherited origins
   are marked "(family line)" in the detail sheet.
 - Village search: type a village in the search box and pick the "Origin village" row. The
-  tree narrows to everyone from that village and outlines them in saffron. The × on the
-  village chip resets the tree.
+  tree is replaced by a grid of just those people, each with their spouse, oldest generation
+  first; whoever is actually from the village is outlined in saffron. The × on the village
+  chip brings the tree back.
 - A recorded spouse always shows as their own card beside their partner, joined by a
   horizontal link; the children branch down from that link.
 - Deceased people get a saffron garland with red roses, hung from the card's top corners.
