@@ -1023,6 +1023,7 @@
   relation: father
   relation_id: labhchand
   order: 2
+  life: living
 - id: satta_husband
   name: Satta's husband
   gender: male
@@ -1033,6 +1034,7 @@
     village: Kakroi
     district: Sonipat
     state: Haryana
+  life: living
 - id: peeno
   name: Peeno
   name_hi: पीनो
@@ -1040,6 +1042,7 @@
   relation: father
   relation_id: labhchand
   order: 3
+  life: living
 - id: peeno_husband
   name: Sudhir
   name_hi: सुधीर
@@ -1048,3 +1051,4 @@
   relation_id: peeno
   origin:
     state: Uttar Pradesh
+  life: living
