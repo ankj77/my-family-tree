@@ -1005,3 +1005,13 @@
   relation_id: srikrishan
   order: 2
   life: living
+- id: mahavir_wife
+  name: Lina
+  name_hi: लीना
+  gender: female
+  relation: wife
+  relation_id: mahavir
+  origin:
+    village: Kassan
+    district: Tijara
+    state: Rajasthan
