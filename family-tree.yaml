@@ -1052,3 +1052,14 @@
   origin:
     state: Uttar Pradesh
   life: living
+- id: chandgiram_wife
+  name: Patori
+  name_hi: पटोरी
+  gender: female
+  relation: wife
+  relation_id: chandgiram
+  life: deceased
+  origin:
+    village: Kakroi
+    district: Sonipat
+    state: Haryana
