@@ -705,6 +705,9 @@
   relation: father
   relation_id: vijay
   order: 1
+  address:
+    locality: Pitampura
+    city: Delhi
 - id: gautam
   name: Gautam
   name_hi: गौतम
@@ -714,6 +717,9 @@
   origin:
     village: Pathri
     state: Haryana
+  address:
+    locality: Pitampura
+    city: Delhi
 - id: jyoti
   name: Jyoti
   name_hi: ज्योति
@@ -721,6 +727,9 @@
   relation: father
   relation_id: vijay
   order: 2
+  address:
+    locality: Rohini
+    city: Delhi
 - id: vikas_jyoti
   name: Vikas
   name_hi: विकास
@@ -730,3 +739,6 @@
   origin:
     village: Sisai
     state: Haryana
+  address:
+    locality: Rohini
+    city: Delhi
