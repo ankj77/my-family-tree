@@ -9,7 +9,7 @@ ALLOWED_KEYS = {
     "order", "born", "note", "status", "address", "origin",
     "life", "died", "father",
 }
-ALLOWED_STATUS = {"uncertain", "needs-parent"}
+ALLOWED_STATUS = {"uncertain", "needs-parent", "gap"}
 ALLOWED_RELATION = {"father", "mother", "husband", "wife"}
 ALLOWED_GENDER = {"male", "female"}
 ALLOWED_LIFE = {"living", "deceased"}

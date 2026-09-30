@@ -31,8 +31,9 @@ def main() -> int:
 
     print("Wrote %s" % OUT)
     print(
-        "People: %d | Generations: %d | Uncertain: %d | Needs-parent: %d"
-        % (summary.total, summary.generations, summary.uncertain, summary.needs_parent)
+        "People: %d (male %d, female %d) | Generations: %d | Uncertain: %d | Needs-parent: %d"
+        % (summary.total, summary.male, summary.female, summary.generations,
+           summary.uncertain, summary.needs_parent)
     )
     for w in warnings:
         print("  - " + w)

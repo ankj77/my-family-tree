@@ -132,6 +132,7 @@
   .rose-core{fill:#D62A33;}
   .spouse-link{stroke:var(--bark);stroke-width:2px;}
   .spouse-card{cursor:pointer;}
+  .gap-bg{fill:transparent;stroke:var(--ink-muted);stroke-width:1.6px;stroke-dasharray:7 5;cursor:pointer;}
   .place-hit .card-bg{stroke:#D9731A;stroke-width:2.5px;}
   .sg-place .sg-name::before{content:'\2302  ';color:#D9731A;}
   .sg-place.area .sg-name::before,.sg-place.city .sg-name::before{content:'\25C9  ';color:var(--rail-m);}

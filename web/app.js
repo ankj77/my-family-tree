@@ -626,12 +626,28 @@ var FT = { views: {} };
     });
   }
 
+  function gapCard(g, n, H) {
+    el('rect', { 'class': 'gap-bg', width: FT.CARD_W, height: H, rx: 10 }, g);
+    var t = el('text', { 'class': 'pc-name', x: FT.CARD_W / 2, y: H / 2 - 4, 'text-anchor': 'middle' }, g);
+    t.textContent = FT.label(n)[0];
+    var sub = el('text', { 'class': 'pc-sub', x: FT.CARD_W / 2, y: H / 2 + 16, 'text-anchor': 'middle' }, g);
+    sub.textContent = 'names not yet recorded';
+    g.addEventListener('click', function () { FT.select(n.id, n); });
+  }
+
   FT.drawParentCard = function (parent, n) {
     var g = el('g', {
       'class': 'card parent-card' + (n.gender ? ' ' + n.gender : ''), 'data-id': n.id,
       transform: 'translate(' + n.x + ',' + n.y + ')'
     }, parent);
     var H = FT.cardH(n, 2);
+    if (n.status === 'gap') {
+      gapCard(g, n, H);
+      var gv = FT.views[FT.state.viewId];
+      var gat = gv && gv.togglePos ? gv.togglePos(n) : { x: FT.jointX(n), y: -12 };
+      if ((n.children || []).length && !FT.state.place) FT.knob(g, n, gat.x, gat.y);
+      return g;
+    }
     var main = el('g', {}, g);
     var pr = FT.parentsOf(n);
     cardFace(main, n, H, [['Father', pr.father, 'male'], ['Mother', pr.mother, 'female']],
@@ -1204,7 +1220,8 @@ var FT = { views: {} };
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
 
   document.getElementById('summary').textContent=
-    'People '+summary.total+' · Generations '+summary.generations+
+    'People '+summary.total+' · Male '+summary.male+' · Female '+summary.female+
+    ' · Generations '+summary.generations+
     ' · Uncertain '+summary.uncertain+' · Needs-parent '+summary.needs_parent;
 
   var up=document.getElementById('unlinked');

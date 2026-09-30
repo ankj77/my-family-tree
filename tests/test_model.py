@@ -140,6 +140,27 @@ class TestOrigin(unittest.TestCase):
             load_people(_write("- id: x\n  name: X\n  origin:\n    gaon: Kheri\n"))
 
 
+class TestGapMarker(unittest.TestCase):
+    def test_gap_is_a_valid_status_and_is_not_counted_as_a_person(self):
+        from family_tree.tree import build_tree
+        people = load_people(_write(
+            "- id: a\n  name: A\n- id: g\n  name: Gap\n  relation: father\n  relation_id: a\n  status: gap\n"
+            "- id: b\n  name: B\n  relation: father\n  relation_id: g\n"
+        ))
+        _, _, summary = build_tree(people)
+        self.assertEqual(summary.total, 2)
+        self.assertEqual(summary.uncertain, 0)
+
+    def test_summary_counts_men_and_women(self):
+        from family_tree.tree import build_tree
+        people = load_people(_write(
+            "- id: a\n  name: A\n  gender: male\n- id: w\n  name: W\n  gender: female\n  relation: wife\n  relation_id: a\n"
+            "- id: g\n  name: Gap\n  gender: male\n  relation: father\n  relation_id: a\n  status: gap\n"
+        ))
+        _, _, summary = build_tree(people)
+        self.assertEqual((summary.male, summary.female), (1, 1))
+
+
 class TestSpouseFather(unittest.TestCase):
     def test_married_in_person_can_name_their_father(self):
         people = load_people(_write(

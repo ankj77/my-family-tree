@@ -23,8 +23,7 @@
   gender: male
   relation: father
   relation_id: harshay
-  status: uncertain
-  life: deceased
+  status: gap
   note: marker for the generations between Harshay (son of Ram Krishan, b. 1549) and Sevak Ram (b. 1884) that are not yet recorded
 - id: sevakram
   name: Sevak Ram

@@ -27,7 +27,7 @@ person — a `relation` type plus the `relation_id` it points to:
   life: deceased           # optional: living | deceased (omitted = not known)
   died: "1961"             # optional, free text like born
   note: "free text"        # optional
-  status: uncertain        # optional: uncertain | needs-parent
+  status: uncertain        # optional: uncertain | needs-parent | gap
   address:                 # optional, all keys optional
     line: House 214
     locality: Sector 14
@@ -66,6 +66,8 @@ person — a `relation` type plus the `relation_id` it points to:
   in and render beside their spouse).
 - `relation` and `relation_id` must both be present or both absent. The single root
   ancestor `ramkrishan` has neither.
+- `status: gap` = a marker for generations whose names aren't known yet (drawn as a dashed box
+  and not counted as a person).
 - `status: uncertain` = the name can't be read yet. `status: needs-parent` = the name is
   known but the parent is not (they also have no relation); the viewer parks them in an
   "Unlinked" panel.

@@ -10,6 +10,8 @@ class Summary:
     generations: int
     uncertain: int
     needs_parent: int
+    male: int = 0
+    female: int = 0
 
 
 OPPOSITE_GENDER = {"male": "female", "female": "male"}
@@ -75,9 +77,11 @@ def build_tree(people: List[Person]) -> Tuple[dict, List[Person], Summary]:
     root = _node(root_person, children_by_parent, spouses_by_person)
     unlinked = [p for p in people if p.status == "needs-parent"]
     summary = Summary(
-        total=len(people),
+        total=sum(1 for p in people if p.status != "gap"),
         generations=_depth(root),
         uncertain=sum(1 for p in people if p.status == "uncertain"),
         needs_parent=len(unlinked),
+        male=sum(1 for p in people if p.gender == "male" and p.status != "gap"),
+        female=sum(1 for p in people if p.gender == "female" and p.status != "gap"),
     )
     return root, unlinked, summary

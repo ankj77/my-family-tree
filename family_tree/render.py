@@ -68,6 +68,8 @@ def render_html(root: dict, unlinked: List[Person], summary: Summary) -> str:
                 "generations": summary.generations,
                 "uncertain": summary.uncertain,
                 "needs_parent": summary.needs_parent,
+                "male": summary.male,
+                "female": summary.female,
             }),
         )
         .replace("/*__CSS__*/", _read("app.css"))
