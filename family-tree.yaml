@@ -243,7 +243,7 @@
   relation: father
   relation_id: dharma
   order: 1
-  life: deceased
+  life: living
   note: also called Labha
 - id: mahavir
   name: Mahavir
@@ -275,7 +275,7 @@
   relation: father
   relation_id: dharma
   order: 2
-  life: deceased
+  life: living
 - id: srikrishan
   name: Sri Krishan
   name_hi: श्री किशन
@@ -283,7 +283,7 @@
   relation: father
   relation_id: dharma
   order: 3
-  life: deceased
+  life: living
 - id: lehrimal
   name: Lehri Mal
   name_hi: लहरी मल
