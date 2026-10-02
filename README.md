@@ -10,6 +10,34 @@ python3 build.py
 open family-tree.html
 ```
 
+## Login
+
+The page asks for a code or the admin password before showing the tree.
+
+**First time (and whenever you want to change the admin password):**
+
+```bash
+python3 build.py --set-admin-password
+python3 build.py
+```
+
+This writes `auth.json` (a hash of the password, never the password itself) and
+rebuilds. `build.py` refuses to run without `auth.json`.
+
+**Giving someone access:** log in with the admin password, press **New code**, pick
+**1 hour** or **2 hours**, and send them the code. They must use it within 24 hours;
+their time starts when they log in. When it runs out they see "Your time is over"
+and need a new code.
+
+**Cancelling every code already sent:** delete the `signing_key` line from
+`auth.json`, then run `python3 build.py --set-admin-password` and `python3 build.py`.
+
+**What this does not do:** the repo is public, so the data can still be read on
+GitHub or in the page source. This keeps casual visitors out; it is not security.
+A forwarded code works once on each device it is entered on, within its 24 hours.
+
+Opening `family-tree.html` straight from disk works in Chrome. Safari has not been checked; if it says the browser can't check codes, run `python3 -m http.server` and open http://localhost:8000/family-tree.html instead.
+
 ## Adding a person
 
 Append one entry to `family-tree.yaml`. Each person has **one relation** to another
