@@ -40,7 +40,8 @@ class TestAssetInlining(unittest.TestCase):
         html = TestRender()._html()
         self.assertNotIn("<link", html)
         self.assertNotIn("<script src=", html)
-        self.assertIn("FT.init();", html)
+        self.assertIn("FT.auth.start(FT.init);", html)
+        self.assertIn('id="login"', html)
 
     def test_no_es_module_syntax(self):
         html = TestRender()._html()

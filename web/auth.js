@@ -105,4 +105,77 @@
     }
     return 'none';
   };
+
+  var TEXT = {
+    en: {
+      placeholder: 'Enter your code or password',
+      enter: 'Enter',
+      wrong: "That code isn't right. Check it and try again.",
+      expired: 'This code has expired. Ask {c} for a new one.',
+      over: 'Your time is over. Ask {c} for a new code.',
+      nocrypto: 'This browser cannot check codes here. Open the family tree website link instead.',
+      left: 'Time left: {m} min'
+    },
+    hi: {
+      placeholder: 'अपना कोड या पासवर्ड डालें',
+      enter: 'खोलें',
+      wrong: 'यह कोड सही नहीं है। जाँचकर फिर से डालें।',
+      expired: 'इस कोड का समय निकल गया है। {c} से नया कोड माँगें।',
+      over: 'आपका समय पूरा हो गया। {c} से नया कोड माँगें।',
+      nocrypto: 'यह ब्राउज़र यहाँ कोड नहीं जाँच सकता। परिवार वृक्ष की वेबसाइट का लिंक खोलें।',
+      left: 'बचा समय: {m} मिनट'
+    }
+  };
+  var text = TEXT.en;
+
+  function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function save(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+  function drop(key) { try { localStorage.removeItem(key); } catch (e) {} }
+  function loadJson(key) { try { return JSON.parse(load(key)); } catch (e) { return null; } }
+
+  function adminControls(config) {}
+  function watch(session) {}
+
+  auth.start = function (onUnlock) {
+    var config = JSON.parse(document.getElementById('auth-data').textContent);
+    var contact = (config && config.contact) || 'the admin';
+    text = TEXT[load('ft-lang') === 'hi' ? 'hi' : 'en'];
+    var box = document.getElementById('login');
+    var input = document.getElementById('login-input');
+    var msg = document.getElementById('login-msg');
+    input.placeholder = text.placeholder;
+    input.setAttribute('aria-label', text.placeholder);
+    document.getElementById('login-enter').textContent = text.enter;
+
+    function say(key) { msg.textContent = text[key].replace('{c}', contact); }
+
+    function unlock(session) {
+      box.classList.add('hidden');
+      onUnlock();
+      if (session.kind === 'admin') adminControls(config); else watch(session);
+    }
+
+    var saved = loadJson('ft-session');
+    var state = auth.sessionState(saved, Date.now());
+    if (state === 'admin' || state === 'active') { unlock(saved); return; }
+    if (state === 'over') { drop('ft-session'); say('over'); }
+    input.focus();
+
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      msg.textContent = '';
+      var used = loadJson('ft-used-codes') || [];
+      Promise.resolve()
+        .then(function () { return auth.decide(config, input.value, Date.now(), used); })
+        .then(function (r) {
+          if (r.error) { say(r.error === 'used' ? 'over' : r.error); return; }
+          var session = r.kind === 'admin' ? { kind: 'admin' } : { kind: 'code', expires: r.expires };
+          if (r.code) save('ft-used-codes', JSON.stringify(used.concat([r.code])));
+          save('ft-session', JSON.stringify(session));
+          input.value = '';
+          unlock(session);
+        })
+        .catch(function () { say('nocrypto'); });
+    });
+  };
 })(typeof FT !== 'undefined' ? (FT.auth = {}) : module.exports);
