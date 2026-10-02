@@ -56,7 +56,7 @@ def _embed(obj) -> str:
     return json.dumps(obj, ensure_ascii=False).replace("</", "<\\/")
 
 
-def render_html(root: dict, unlinked: List[Person], summary: Summary) -> str:
+def render_html(root: dict, unlinked: List[Person], summary: Summary, auth: dict = None) -> str:
     return (
         _read("index.html")
         .replace("/*__TREE__*/", _embed(_node_json(root)))
@@ -72,6 +72,7 @@ def render_html(root: dict, unlinked: List[Person], summary: Summary) -> str:
                 "female": summary.female,
             }),
         )
+        .replace("/*__AUTH__*/", _embed(auth))
         .replace("/*__CSS__*/", _read("app.css"))
         .replace("/*__APP_JS__*/", _script())
     )

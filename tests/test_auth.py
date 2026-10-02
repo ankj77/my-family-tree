@@ -1,5 +1,8 @@
 import json
 import os
+import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -65,6 +68,39 @@ class TestLoadAuth(unittest.TestCase):
         path = _temp_path()
         written = set_admin_password(path, "correct horse")
         self.assertEqual(load_auth(path), written)
+
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BUILD = os.path.join(ROOT, "build.py")
+
+
+def _run_build(folder):
+    return subprocess.run(
+        [sys.executable, BUILD], cwd=folder, capture_output=True, text=True
+    )
+
+
+class TestBuild(unittest.TestCase):
+    def test_stops_without_auth_json_and_says_how_to_fix_it(self):
+        folder = tempfile.mkdtemp()
+        shutil.copy(os.path.join(ROOT, "family-tree.yaml"), folder)
+        result = _run_build(folder)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("--set-admin-password", result.stderr)
+        self.assertFalse(os.path.exists(os.path.join(folder, "family-tree.html")))
+
+    def test_embeds_the_hash_but_never_the_password(self):
+        folder = tempfile.mkdtemp()
+        shutil.copy(os.path.join(ROOT, "family-tree.yaml"), folder)
+        auth = set_admin_password(os.path.join(folder, "auth.json"), "hunter2-secret")
+        result = _run_build(folder)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        with open(os.path.join(folder, "family-tree.html"), encoding="utf-8") as f:
+            html = f.read()
+        self.assertIn('id="auth-data"', html)
+        self.assertIn(auth["admin"]["hash"], html)
+        self.assertIn(auth["signing_key"], html)
+        self.assertNotIn("hunter2-secret", html)
 
 
 if __name__ == "__main__":
