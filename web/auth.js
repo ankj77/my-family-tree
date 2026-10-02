@@ -229,13 +229,18 @@
     if (state === 'over') { drop('ft-session'); say('over'); }
     input.focus();
 
+    var checking = false;
+
     document.getElementById('login-form').addEventListener('submit', function (e) {
       e.preventDefault();
+      if (checking) return;
+      checking = true;
       msg.textContent = '';
       var used = loadJson('ft-used-codes') || [];
       Promise.resolve()
         .then(function () { return auth.decide(config, input.value, Date.now(), used); })
         .then(function (r) {
+          checking = false;
           if (r.error) { say(r.error === 'used' ? 'over' : r.error); return; }
           var session = r.kind === 'admin' ? { kind: 'admin' } : { kind: 'code', expires: r.expires };
           if (r.code) save('ft-used-codes', JSON.stringify(used.concat([r.code])));
@@ -243,7 +248,7 @@
           input.value = '';
           unlock(session);
         })
-        .catch(function () { say('nocrypto'); });
+        .catch(function () { checking = false; say('nocrypto'); });
     });
   };
 })(typeof FT !== 'undefined' ? (FT.auth = {}) : module.exports);

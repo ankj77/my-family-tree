@@ -115,6 +115,13 @@ class TestAuthJs(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_auth_start_check_js_passes(self):
+        result = subprocess.run(
+            [NODE, os.path.join(ROOT, "tests", "auth_start_check.js")],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
