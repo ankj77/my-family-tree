@@ -103,5 +103,18 @@ class TestBuild(unittest.TestCase):
         self.assertNotIn("hunter2-secret", html)
 
 
+NODE = shutil.which("node")
+
+
+@unittest.skipUnless(NODE, "node is not installed")
+class TestAuthJs(unittest.TestCase):
+    def test_auth_check_js_passes(self):
+        result = subprocess.run(
+            [NODE, os.path.join(ROOT, "tests", "auth_check.js")],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
