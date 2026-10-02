@@ -464,3 +464,12 @@ class TestIsDeceasedIsCentralized(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestAdminControlsShip(unittest.TestCase):
+    def test_code_panel_and_time_left_are_in_the_page(self):
+        html = _payload_html()
+        self.assertIn("New code", html)
+        self.assertIn("Log out", html)
+        self.assertIn("Use within 24 hours.", html)
+        self.assertIn("time-left", html)

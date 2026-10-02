@@ -186,3 +186,11 @@
   #login-enter{margin-top:12px;width:100%;min-height:48px;font-size:16px;cursor:pointer;
     background:var(--hl);color:#fff;border:0;font-family:var(--font);}
   #login-msg{min-height:1.4em;margin:14px 0 0;font-size:14px;color:var(--warn);}
+  #sheet .code-hours{display:flex;gap:8px;justify-content:center;margin:12px 0;}
+  #sheet .code-hours button{min-height:44px;padding:6px 14px;font-size:15px;cursor:pointer;}
+  #sheet .code-value{font-family:ui-monospace,Menlo,monospace;font-size:30px;letter-spacing:.12em;
+    text-align:center;margin:12px 0;color:var(--ink);user-select:all;}
+  #code-copy{display:block;margin:0 auto;min-height:44px;padding:6px 18px;cursor:pointer;}
+  #code-copy[hidden]{display:none;}
+  #sheet .code-note{font-size:13px;color:var(--ink-muted);text-align:center;}
+  #time-left{font-size:13px;color:var(--ink-muted);}

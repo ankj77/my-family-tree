@@ -133,8 +133,76 @@
   function drop(key) { try { localStorage.removeItem(key); } catch (e) {} }
   function loadJson(key) { try { return JSON.parse(load(key)); } catch (e) { return null; } }
 
-  function adminControls(config) {}
-  function watch(session) {}
+  function button(label, onClick) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function selectText(node) {
+    var range = document.createRange();
+    range.selectNodeContents(node);
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  function showCodePanel(config) {
+    var sheet = document.getElementById('sheet');
+    var body = document.getElementById('sheet-body');
+    body.innerHTML =
+      '<h3>New code</h3>' +
+      '<div class="code-hours">' +
+      '<button type="button" data-hours="1">1 hour</button>' +
+      '<button type="button" data-hours="2">2 hours</button>' +
+      '</div>' +
+      '<p class="code-value" id="code-value"></p>' +
+      '<button type="button" id="code-copy" hidden>Copy</button>' +
+      '<p class="code-note" id="code-note"></p>';
+    sheet.style.borderLeftColor = 'var(--hl)';
+    sheet.classList.remove('hidden');
+    var value = document.getElementById('code-value');
+    var copy = document.getElementById('code-copy');
+    var note = document.getElementById('code-note');
+    Array.prototype.forEach.call(body.querySelectorAll('[data-hours]'), function (b) {
+      b.addEventListener('click', function () {
+        var hours = Number(b.getAttribute('data-hours'));
+        auth.makeCode(config.signing_key, Date.now(), hours).then(function (code) {
+          value.textContent = code;
+          copy.hidden = false;
+          copy.textContent = 'Copy';
+          note.textContent = 'Use within 24 hours. Lasts ' + (hours === 1 ? '1 hour' : '2 hours') +
+            ' from when they log in.';
+        });
+      });
+    });
+    copy.addEventListener('click', function () {
+      var write = navigator.clipboard ? navigator.clipboard.writeText(value.textContent) : Promise.reject();
+      write.then(function () { copy.textContent = 'Copied'; }, function () { selectText(value); });
+    });
+  }
+
+  function adminControls(config) {
+    var extras = document.getElementById('extras');
+    extras.appendChild(button('New code', function () { showCodePanel(config); }));
+    extras.appendChild(button('Log out', function () { drop('ft-session'); location.reload(); }));
+  }
+
+  function watch(session) {
+    var label = document.createElement('span');
+    label.id = 'time-left';
+    document.getElementById('toolbar').insertBefore(label, document.getElementById('summary'));
+    function tick() {
+      var left = session.expires - Date.now();
+      if (left <= 0) { location.reload(); return; }
+      label.textContent = text.left.replace('{m}', Math.ceil(left / 60000));
+    }
+    tick();
+    setInterval(tick, 30000);
+    document.addEventListener('visibilitychange', tick);
+  }
 
   auth.start = function (onUnlock) {
     var config = JSON.parse(document.getElementById('auth-data').textContent);
