@@ -200,6 +200,9 @@
   #code-copy[hidden]{display:none;}
   #sheet .code-note{font-size:13px;color:var(--ink-muted);text-align:center;}
   #time-left{font-size:13px;color:var(--ink-muted);}
+  #toolbar #new-code{background:var(--hl);color:#fff;border:0;border-radius:4px;font-weight:600;
+    padding:6px 14px;font-family:var(--font);}
+  #toolbar #new-code:hover{filter:brightness(1.08);}
 </style>
 </head>
 <body>
@@ -1900,7 +1903,9 @@ FT.views.poster = {
 
   function adminControls(config) {
     var extras = document.getElementById('extras');
-    extras.appendChild(button('New code', function () { showCodePanel(config); }));
+    var newCode = button('+ New code', function () { showCodePanel(config); });
+    newCode.id = 'new-code';
+    document.getElementById('toolbar').insertBefore(newCode, document.getElementById('more'));
     extras.appendChild(button('Log out', function () { drop('ft-session'); location.reload(); }));
   }
 

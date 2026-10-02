@@ -473,3 +473,5 @@ class TestAdminControlsShip(unittest.TestCase):
         self.assertIn("Log out", html)
         self.assertIn("Use within 24 hours.", html)
         self.assertIn("time-left", html)
+        self.assertIn("#new-code{", html)
+        self.assertIn("newCode.id = 'new-code'", html)

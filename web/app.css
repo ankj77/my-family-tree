@@ -194,3 +194,6 @@
   #code-copy[hidden]{display:none;}
   #sheet .code-note{font-size:13px;color:var(--ink-muted);text-align:center;}
   #time-left{font-size:13px;color:var(--ink-muted);}
+  #toolbar #new-code{background:var(--hl);color:#fff;border:0;border-radius:4px;font-weight:600;
+    padding:6px 14px;font-family:var(--font);}
+  #toolbar #new-code:hover{filter:brightness(1.08);}

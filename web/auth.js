@@ -186,7 +186,9 @@
 
   function adminControls(config) {
     var extras = document.getElementById('extras');
-    extras.appendChild(button('New code', function () { showCodePanel(config); }));
+    var newCode = button('+ New code', function () { showCodePanel(config); });
+    newCode.id = 'new-code';
+    document.getElementById('toolbar').insertBefore(newCode, document.getElementById('more'));
     extras.appendChild(button('Log out', function () { drop('ft-session'); location.reload(); }));
   }
 
