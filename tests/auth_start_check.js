@@ -13,8 +13,9 @@ function fakeElement() {
     },
     setAttribute: function () {},
     focus: function () {},
-    insertBefore: function () {},
-    appendChild: function () {},
+    children: [],
+    insertBefore: function (child) { this.children.push(child); },
+    appendChild: function (child) { this.children.push(child); },
     addEventListener: function (type, fn) { listeners[type] = fn; },
     fire: function (type) { listeners[type]({ preventDefault: function () {} }); }
   };
@@ -58,6 +59,28 @@ async function doubleSubmitUnlocksOnce() {
   assert.deepStrictEqual(JSON.parse(store['ft-used-codes']), [code.replace('-', '')]);
 }
 
+function buttonLabels() {
+  return ['toolbar', 'extras'].reduce(function (all, id) {
+    return all.concat((elements[id] ? elements[id].children : []).map(function (c) { return c.textContent; }));
+  }, []);
+}
+
+function relativesGetLogOut() {
+  elements = {};
+  store = { 'ft-session': JSON.stringify({ kind: 'code', expires: Date.now() + 3600000 }) };
+  auth.start(function () {});
+  assert.ok(buttonLabels().indexOf('Log out') >= 0, 'labels: ' + buttonLabels());
+}
+
+function adminGetsLogOutOnce() {
+  elements = {};
+  store = { 'ft-session': JSON.stringify({ kind: 'admin' }) };
+  auth.start(function () {});
+  assert.strictEqual(buttonLabels().filter(function (l) { return l === 'Log out'; }).length, 1);
+}
+
 doubleSubmitUnlocksOnce()
+  .then(relativesGetLogOut)
+  .then(adminGetsLogOutOnce)
   .then(function () { console.log('auth_start_check: all passed'); })
   .catch(function (e) { console.error(e); process.exit(1); });

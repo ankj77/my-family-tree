@@ -114,7 +114,8 @@
       expired: 'This code has expired. Ask {c} for a new one.',
       over: 'Your time is over. Ask {c} for a new code.',
       nocrypto: 'This browser cannot check codes here. Open the family tree website link instead.',
-      left: 'Time left: {m} min'
+      left: 'Time left: {m} min',
+      logout: 'Log out'
     },
     hi: {
       placeholder: 'अपना कोड या पासवर्ड डालें',
@@ -123,7 +124,8 @@
       expired: 'इस कोड का समय निकल गया है। {c} से नया कोड माँगें।',
       over: 'आपका समय पूरा हो गया। {c} से नया कोड माँगें।',
       nocrypto: 'यह ब्राउज़र यहाँ कोड नहीं जाँच सकता। परिवार वृक्ष की वेबसाइट का लिंक खोलें।',
-      left: 'बचा समय: {m} मिनट'
+      left: 'बचा समय: {m} मिनट',
+      logout: 'लॉग आउट'
     }
   };
   var text = TEXT.en;
@@ -185,11 +187,15 @@
   }
 
   function adminControls(config) {
-    var extras = document.getElementById('extras');
     var newCode = button('+ New code', function () { showCodePanel(config); });
     newCode.id = 'new-code';
     document.getElementById('toolbar').insertBefore(newCode, document.getElementById('more'));
-    extras.appendChild(button('Log out', function () { drop('ft-session'); location.reload(); }));
+  }
+
+  function logOutButton() {
+    var logOut = button(text.logout, function () { drop('ft-session'); location.reload(); });
+    logOut.id = 'log-out';
+    document.getElementById('toolbar').insertBefore(logOut, document.getElementById('more'));
   }
 
   function watch(session) {
@@ -223,6 +229,7 @@
       box.classList.add('hidden');
       onUnlock();
       if (session.kind === 'admin') adminControls(config); else watch(session);
+      logOutButton();
     }
 
     var saved = loadJson('ft-session');
