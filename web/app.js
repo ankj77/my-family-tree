@@ -226,23 +226,6 @@ var FT = { views: {} };
     return [o.village, o.district, o.state].filter(Boolean).join(', ');
   };
 
-  FT.sameVillage = function (a, b) {
-    var x = a.origin || {}, y = b.origin || {};
-    if (!norm(x.village) || norm(x.village) !== norm(y.village)) return false;
-    return !x.state || !y.state || norm(x.state) === norm(y.state);
-  };
-
-  function villageRefs(p) {
-    var refs = [];
-    FT.nodes.forEach(function (n) {
-      if (n.id !== p.id && FT.sameVillage(p, n)) refs.push(personRef(n.id));
-      (n.spouses || []).forEach(function (s) {
-        if (s.id !== p.id && FT.sameVillage(p, s)) refs.push(spouseRef(s, n));
-      });
-    });
-    return refs;
-  }
-
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -300,10 +283,6 @@ var FT = { views: {} };
     if (kids.length) {
       rel += '<div><span>Children</span> ' +
         kids.map(function (c) { return personRef(c.id); }).join(', ') + '</div>';
-    }
-    var village = villageRefs(p);
-    if (village.length) {
-      rel += '<div><span>Same village</span> ' + village.join(', ') + '</div>';
     }
     if (rel) h += '<div class="sheet-rel">' + rel + '</div>';
     return h;
