@@ -38,6 +38,7 @@ def _person_json(p: Person) -> dict:
         "status": p.status,
         "photo": p.photo,
         "father": p.father,
+        "mother": p.mother,
         "address": p.address.as_dict(),
         "origin": p.origin,
         "origin_inherited": p.origin_inherited,

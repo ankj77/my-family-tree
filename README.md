@@ -63,6 +63,7 @@ person — a `relation` type plus the `relation_id` it points to:
     state: Haryana
     country: India
   father: Chatar Sen       # optional, only for people who married in (husband/wife)
+  mother: Trishla          # optional, same rule as father
   origin:                  # optional: ancestral place (gaon), all keys optional
     village: Kheri
     district: Rohtak

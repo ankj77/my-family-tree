@@ -7,7 +7,7 @@ import yaml
 ALLOWED_KEYS = {
     "id", "name", "name_hi", "gender", "relation", "relation_id",
     "order", "born", "note", "status", "address", "origin",
-    "life", "died", "father",
+    "life", "died", "father", "mother",
 }
 ALLOWED_STATUS = {"uncertain", "needs-parent", "gap"}
 ALLOWED_RELATION = {"father", "mother", "husband", "wife"}
@@ -86,6 +86,7 @@ class Person:
     note: Optional[str] = None
     status: Optional[str] = None
     father: Optional[str] = None
+    mother: Optional[str] = None
     address: Address = field(default_factory=Address)
     origin: dict = field(default_factory=dict)
     origin_inherited: bool = False
@@ -131,11 +132,13 @@ def load_people(path: str) -> List[Person]:
         if life is not None and life not in ALLOWED_LIFE:
             raise LoadError("Person '%s' has invalid life '%s'" % (pid, life))
         father = entry.get("father")
-        if father is not None and relation not in SPOUSE_RELATIONS:
-            raise LoadError(
-                "Person '%s' has 'father', which is only for people who married in "
-                "(relation husband or wife); link blood relatives with relation instead" % pid
-            )
+        mother = entry.get("mother")
+        for key, value in (("father", father), ("mother", mother)):
+            if value is not None and relation not in SPOUSE_RELATIONS:
+                raise LoadError(
+                    "Person '%s' has '%s', which is only for people who married in "
+                    "(relation husband or wife); link blood relatives with relation instead" % (pid, key)
+                )
         born = entry.get("born")
         died = entry.get("died")
         address = _parse_address(str(pid), entry.get("address"))
@@ -154,6 +157,7 @@ def load_people(path: str) -> List[Person]:
                 note=entry.get("note"),
                 status=status,
                 father=None if father is None else str(father),
+                mother=None if mother is None else str(mother),
                 address=address,
                 origin=_parse_place(str(pid), entry.get("origin"), "origin", ORIGIN_KEYS),
             )

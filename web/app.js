@@ -250,6 +250,7 @@ var FT = { views: {} };
     if (p.name_hi) h += '<p class="sheet-hi">' + esc(p.name_hi) + '</p>';
     var rows = '';
     if (p.father) rows += '<dt>Father</dt><dd>' + esc(p.father) + '</dd>';
+    if (p.mother) rows += '<dt>Mother</dt><dd>' + esc(p.mother) + '</dd>';
     if (p.born) rows += '<dt>Born</dt><dd>' + esc(p.born) + '</dd>';
     if (p.died) rows += '<dt>Died</dt><dd>' + esc(p.died) + '</dd>';
     if (p.life || p.died) {

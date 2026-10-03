@@ -168,6 +168,12 @@ class TestSpouseFather(unittest.TestCase):
         ))
         self.assertEqual(people[1].father, "Chatar Sen")
 
+    def test_married_in_person_can_name_their_mother(self):
+        people = load_people(_write(
+            "- id: h\n  name: H\n- id: w\n  name: W\n  relation: wife\n  relation_id: h\n  mother: Trishla\n"
+        ))
+        self.assertEqual(people[1].mother, "Trishla")
+
     def test_blood_relative_cannot_use_father(self):
         with self.assertRaises(LoadError):
             load_people(_write(
