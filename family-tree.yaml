@@ -789,6 +789,16 @@
   relation: father
   relation_id: jugmandardas
   note: son of Jugmandar das
+- id: usha_praveen
+  name: Usha
+  name_hi: उषा
+  gender: female
+  relation: wife
+  relation_id: parveen
+  note: aka Baby
+  origin:
+    village: Rajakhedi
+    state: Haryana
 - id: pushkar
   name: Pushkar
   name_hi: पुष्कर
