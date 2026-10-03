@@ -31,10 +31,10 @@
 - id: udmi
   name: Udmi
   name_hi: उदमी
-  gender: female
+  gender: male
   relation: father
   relation_id: sevakram
-  note: daughter of Sevak Ram (Till annotation on chart)
+  note: son of Sevak Ram (Till annotation on chart)
   life: deceased
 - id: kannu
   name: Kannu
@@ -64,21 +64,15 @@
   name: Ramjilal
   name_hi: रामजीलाल
   gender: male
-  relation: mother
+  relation: father
   relation_id: udmi
-  origin:
-    village: Bakheta
-    state: Haryana
   life: deceased
 - id: richa
   name: Richa
   name_hi: ऋचा
   gender: female
-  relation: mother
+  relation: father
   relation_id: udmi
-  origin:
-    village: Bakheta
-    state: Haryana
   note: daughter of Udmi (was read as 'Siddho' — reinterpreted per correction)
   life: deceased
 - id: rajaram
