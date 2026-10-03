@@ -395,6 +395,12 @@
     locality: Shakti Nagar
     city: Delhi
   life: living
+- id: drkrishan
+  name: Dr. Krishan
+  name_hi: डॉ. कृष्ण
+  gender: male
+  relation: father
+  relation_id: pogarmal
 - id: jainarayan
   name: Jai Narayan
   name_hi: जय नारायण
