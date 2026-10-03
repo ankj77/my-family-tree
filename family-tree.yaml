@@ -673,6 +673,15 @@
   gender: male
   relation: father
   relation_id: jugmandardas
+- id: kusum
+  name: Kusum
+  name_hi: कुसुम
+  gender: female
+  relation: wife
+  relation_id: naresh
+  origin:
+    village: Singhana
+    state: Haryana
 - id: arun
   name: Arun
   name_hi: अरुण
