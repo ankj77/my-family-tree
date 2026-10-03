@@ -1167,3 +1167,19 @@
     village: Kakroi
     district: Sonipat
     state: Haryana
+- id: mukesh_satnarayan
+  name: Mukesh
+  name_hi: मुकेश
+  gender: male
+  relation: father
+  relation_id: satnarayan
+- id: mukesh_satnarayan_wife
+  name: Rakhi
+  name_hi: राखी
+  gender: female
+  relation: wife
+  relation_id: mukesh_satnarayan
+  origin:
+    village: Garhi Jhajra
+    district: Sonipat
+    state: Haryana
