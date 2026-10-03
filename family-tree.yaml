@@ -39,9 +39,10 @@
 - id: kannu
   name: Kannu
   name_hi: कन्नू
-  gender: female
+  gender: male
   relation: father
   relation_id: sevakram
+  note: son of Sevak Ram
   life: deceased
 - id: lakshman
   name: Dada Lakshman
@@ -79,21 +80,15 @@
   name: Rajaram
   name_hi: राजाराम
   gender: male
-  relation: mother
+  relation: father
   relation_id: kannu
-  origin:
-    village: Bakheta
-    state: Haryana
   life: deceased
 - id: panmeshwar
   name: Panmeshwar
   name_hi: पनमेश्वर
   gender: male
-  relation: mother
+  relation: father
   relation_id: kannu
-  origin:
-    village: Bakheta
-    state: Haryana
   life: deceased
 - id: moladhmal
   name: Moladh Mal
