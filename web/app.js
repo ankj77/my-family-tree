@@ -1012,9 +1012,9 @@ var FT = { views: {} };
     var needle = q.trim().toLowerCase();
     if (!needle) return { list: [], total: 0 };
     var hits = [];
-    function rankOf(p) {
+    function rankOf(fields) {
       var best = null;
-      [p.name || '', p.name_hi || ''].forEach(function (f) {
+      fields.forEach(function (f) {
         var hay = f.toLowerCase();
         if (!hay) return;
         var rank = null;
@@ -1027,13 +1027,17 @@ var FT = { views: {} };
     }
     FT.nodes.forEach(function (n) {
       [n].concat(n.spouses || []).forEach(function (p) {
-        var rank = rankOf(p);
-        if (rank !== null) hits.push({ node: n, person: p, rank: rank });
+        var rank = rankOf([p.name || '', p.name_hi || '']);
+        if (rank !== null) hits.push({ node: n, person: p, rank: rank, text: FT.label(p)[0] });
+        ['father', 'mother'].forEach(function (via) {
+          var named = rank === null && p[via] ? rankOf([p[via]]) : null;
+          if (named !== null) hits.push({ node: n, person: p, rank: named, text: p[via], via: via });
+        });
       });
     });
     hits.sort(function (a, b) {
       if (a.rank !== b.rank) return a.rank - b.rank;
-      return FT.label(a.person)[0].localeCompare(FT.label(b.person)[0]);
+      return a.text.localeCompare(b.text);
     });
     return { list: hits.slice(0, limit || 12), total: hits.length };
   };
@@ -1067,12 +1071,12 @@ var FT = { views: {} };
         '</span></button>';
     }).join('') + res.list.map(function (m, i) {
       var parent = FT.parentOf[m.node.id];
-      var hint = m.person !== m.node ?
+      var hint = m.via ? m.via + ' of ' + esc(FT.label(m.person)[0]) : m.person !== m.node ?
         spouseWord(m.person).toLowerCase() + ' of ' + esc(FT.label(m.node)[0]) :
         parent ? 'child of ' + esc(FT.label(parent)[0]) : 'root ancestor';
       return '<button class="sg-row" data-goto="' + esc(m.node.id) + '" data-person="' + esc(m.person.id) +
         '" data-i="' + i + '">' +
-        '<span class="sg-name">' + esc(FT.label(m.person)[0]) + '</span>' +
+        '<span class="sg-name">' + esc(m.text) + '</span>' +
         '<span class="sg-hint">' + hint + '</span></button>';
     }).join('');
     if (res.total > res.list.length) {

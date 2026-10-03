@@ -500,3 +500,8 @@ class TestSearchFindsMarriedInPeople(unittest.TestCase):
         self.assertIn("[n].concat(n.spouses || []).forEach", html)
         self.assertIn("data-person=", html)
         self.assertIn("if (personId && personId !== id) FT.select(personId, FT.byId[id]);", html)
+
+    def test_search_finds_parents_named_on_married_in_people(self):
+        html = _payload_html()
+        self.assertIn("['father', 'mother'].forEach", html)
+        self.assertIn("m.via + ' of '", html)
