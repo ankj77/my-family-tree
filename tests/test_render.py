@@ -258,7 +258,7 @@ class TestSearchSuggestions(unittest.TestCase):
 
     def test_it_searches_devanagari_as_well_as_latin(self):
         html = _payload_html()
-        self.assertIn("n.name_hi", html)
+        self.assertIn("p.name_hi", html)
 
     def test_suggestion_rows_escape_every_interpolated_value(self):
         html = _payload_html()
@@ -492,3 +492,11 @@ class TestHeaderAndControls(unittest.TestCase):
             self.assertIn('id="%s"' % element_id, html)
         self.assertIn("FT.filters.livingKeep", html)
         self.assertIn("Bloodline only", html)
+
+
+class TestSearchFindsMarriedInPeople(unittest.TestCase):
+    def test_search_looks_at_spouses_and_opens_their_sheet(self):
+        html = _payload_html()
+        self.assertIn("[n].concat(n.spouses || []).forEach", html)
+        self.assertIn("data-person=", html)
+        self.assertIn("if (personId && personId !== id) FT.select(personId, FT.byId[id]);", html)

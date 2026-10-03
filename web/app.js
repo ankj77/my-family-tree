@@ -1012,10 +1012,9 @@ var FT = { views: {} };
     var needle = q.trim().toLowerCase();
     if (!needle) return { list: [], total: 0 };
     var hits = [];
-    FT.nodes.forEach(function (n) {
-      var fields = [n.name || '', n.name_hi || ''];
+    function rankOf(p) {
       var best = null;
-      fields.forEach(function (f) {
+      [p.name || '', p.name_hi || ''].forEach(function (f) {
         var hay = f.toLowerCase();
         if (!hay) return;
         var rank = null;
@@ -1024,11 +1023,17 @@ var FT = { views: {} };
         else if (subsequence(hay, needle)) rank = RANK_SUBSEQUENCE;
         if (rank !== null && (best === null || rank < best)) best = rank;
       });
-      if (best !== null) hits.push({ node: n, rank: best });
+      return best;
+    }
+    FT.nodes.forEach(function (n) {
+      [n].concat(n.spouses || []).forEach(function (p) {
+        var rank = rankOf(p);
+        if (rank !== null) hits.push({ node: n, person: p, rank: rank });
+      });
     });
     hits.sort(function (a, b) {
       if (a.rank !== b.rank) return a.rank - b.rank;
-      return FT.label(a.node)[0].localeCompare(FT.label(b.node)[0]);
+      return FT.label(a.person)[0].localeCompare(FT.label(b.person)[0]);
     });
     return { list: hits.slice(0, limit || 12), total: hits.length };
   };
@@ -1062,9 +1067,12 @@ var FT = { views: {} };
         '</span></button>';
     }).join('') + res.list.map(function (m, i) {
       var parent = FT.parentOf[m.node.id];
-      var hint = parent ? 'child of ' + esc(FT.label(parent)[0]) : 'root ancestor';
-      return '<button class="sg-row" data-goto="' + esc(m.node.id) + '" data-i="' + i + '">' +
-        '<span class="sg-name">' + esc(FT.label(m.node)[0]) + '</span>' +
+      var hint = m.person !== m.node ?
+        spouseWord(m.person).toLowerCase() + ' of ' + esc(FT.label(m.node)[0]) :
+        parent ? 'child of ' + esc(FT.label(parent)[0]) : 'root ancestor';
+      return '<button class="sg-row" data-goto="' + esc(m.node.id) + '" data-person="' + esc(m.person.id) +
+        '" data-i="' + i + '">' +
+        '<span class="sg-name">' + esc(FT.label(m.person)[0]) + '</span>' +
         '<span class="sg-hint">' + hint + '</span></button>';
     }).join('');
     if (res.total > res.list.length) {
@@ -1132,7 +1140,7 @@ var FT = { views: {} };
 
   function choose(row) {
     var v = row.getAttribute('data-place');
-    if (!v) { go(row.getAttribute('data-goto')); return; }
+    if (!v) { go(row.getAttribute('data-goto'), row.getAttribute('data-person')); return; }
     hideSuggest();
     searchBox.value = '';
     searchBox.blur();
@@ -1140,7 +1148,7 @@ var FT = { views: {} };
     FT.showPlace(v);
   }
 
-  function go(id) {
+  function go(id, personId) {
     hideSuggest();
     searchBox.value = '';
     searchBox.blur();
@@ -1154,6 +1162,7 @@ var FT = { views: {} };
     }
     pickNote = '';
     FT.showPicks();
+    if (personId && personId !== id) FT.select(personId, FT.byId[id]);
   }
 
   searchBox.addEventListener('input', renderSuggest);
