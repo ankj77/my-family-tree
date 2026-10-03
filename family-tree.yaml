@@ -361,6 +361,19 @@
   relation_id: netram
   note: son of Netram
   life: deceased
+- id: attro
+  name: Attro
+  name_hi: अत्तरो
+  gender: female
+  relation: wife
+  relation_id: pooranchand
+  origin:
+    village: Bal Pabana
+    district: Karnal
+    state: Haryana
+  life: deceased
+  died: 30 Aug 1991
+  note: phool pravah (ashes immersion) by Ram Nivas and Jai Bhagwan
 - id: netram
   name: Netram
   name_hi: नेतराम
