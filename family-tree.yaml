@@ -383,6 +383,13 @@
   order: 1
   note: son of Dada Bhagmal ('Till 1945')
   life: deceased
+- id: rampyari
+  name: Ram Pyari
+  name_hi: राम प्यारी
+  gender: female
+  relation: father
+  relation_id: netram
+  life: deceased
 - id: khushiram
   name: Khushiram
   name_hi: खुशीराम
