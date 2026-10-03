@@ -1183,3 +1183,98 @@
     village: Garhi Jhajra
     district: Sonipat
     state: Haryana
+- id: babita_satnarayan
+  name: Babita
+  name_hi: बबीता
+  gender: female
+  relation: father
+  relation_id: satnarayan
+  order: 1
+- id: babita_satnarayan_husband
+  name: Pawan
+  name_hi: पवन
+  gender: male
+  relation: husband
+  relation_id: babita_satnarayan
+  origin:
+    village: Gandhra
+    state: Haryana
+- id: sunta_satnarayan
+  name: Sunta
+  gender: female
+  relation: father
+  relation_id: satnarayan
+  order: 2
+- id: sunta_satnarayan_husband
+  name: Mukesh
+  name_hi: मुकेश
+  gender: male
+  relation: husband
+  relation_id: sunta_satnarayan
+  origin:
+    village: Mehandipur
+    district: Sonipat
+    state: Haryana
+- id: beena_satnarayan
+  name: Beena
+  name_hi: बीना
+  gender: female
+  relation: father
+  relation_id: satnarayan
+  order: 3
+  address:
+    locality: Tri Nagar
+    city: Delhi
+- id: beena_satnarayan_husband
+  name: Sunil
+  name_hi: सुनील
+  gender: male
+  relation: husband
+  relation_id: beena_satnarayan
+  origin:
+    village: Kurana
+    district: Gohana
+    state: Haryana
+  address:
+    locality: Tri Nagar
+    city: Delhi
+- id: poonam_satnarayan
+  name: Poonam
+  name_hi: पूनम
+  gender: female
+  relation: father
+  relation_id: satnarayan
+  order: 4
+- id: poonam_satnarayan_husband
+  name: Vikas
+  name_hi: विकास
+  gender: male
+  relation: husband
+  relation_id: poonam_satnarayan
+  origin:
+    village: Mehandipur
+    district: Sonipat
+    state: Haryana
+- id: reena_satnarayan
+  name: Reena
+  name_hi: रीना
+  gender: female
+  relation: father
+  relation_id: satnarayan
+  order: 5
+  address:
+    locality: Adarsh Nagar
+    city: Delhi
+- id: reena_satnarayan_husband
+  name: Sanjay
+  name_hi: संजय
+  gender: male
+  relation: husband
+  relation_id: reena_satnarayan
+  origin:
+    village: Jattal
+    district: Panipat
+    state: Haryana
+  address:
+    locality: Adarsh Nagar
+    city: Delhi
