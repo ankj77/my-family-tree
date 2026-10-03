@@ -1210,6 +1210,7 @@ var FT = { views: {} };
   markLang();
 
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
+  document.getElementById('refresh').addEventListener('click', function () { location.reload(); });
 
   FT.zoomBy = function (f) {
     var r = stage.getBoundingClientRect();

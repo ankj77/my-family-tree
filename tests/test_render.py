@@ -472,7 +472,7 @@ class TestAdminControlsShip(unittest.TestCase):
         self.assertIn("New code", html)
         self.assertIn("Log out", html)
         self.assertIn("Use within 24 hours.", html)
-        self.assertIn("#new-code{", html)
+        self.assertIn("document.getElementById('menu').appendChild(newCode);", html)
         self.assertIn("newCode.id = 'new-code'", html)
 
 
@@ -480,7 +480,7 @@ class TestHeaderAndControls(unittest.TestCase):
     def test_header_has_title_who_avatar_menu_and_search(self):
         html = _payload_html()
         self.assertIn("<h1 class=\"title\">Family Roots</h1>", html)
-        for element_id in ("who", "avatar", "menu", "top-actions", "search", "summary", "picks", "lang"):
+        for element_id in ("who", "avatar", "menu", "top-actions", "refresh", "search", "summary", "picks", "lang"):
             self.assertIn('id="%s"' % element_id, html)
         self.assertNotIn('id="more"', html)
         self.assertNotIn('id="extras"', html)

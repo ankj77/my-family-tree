@@ -231,9 +231,10 @@
   }
 
   function adminControls(config) {
-    var newCode = button('+ New code', function () { showCodePanel(config); });
+    var newCode = button('New code', function () { showCodePanel(config); });
     newCode.id = 'new-code';
-    document.getElementById('top-actions').appendChild(newCode);
+    newCode.setAttribute('role', 'menuitem');
+    document.getElementById('menu').appendChild(newCode);
   }
 
   function logOutItem() {

@@ -95,13 +95,13 @@ function relativeWithTypedCodeIsGuestWithLogOut() {
   assert.deepStrictEqual(labels(['top-actions']), []);
 }
 
-function adminSeesAdminNewCodeAndOneLogOut() {
+function adminMenuHasNewCodeAndLogOut() {
   reset({ 'ft-session': JSON.stringify({ kind: 'admin' }) });
   auth.start(function () {});
   assert.strictEqual(elements.who.textContent, 'Admin');
   assert.strictEqual(elements.avatar.textContent, 'A');
-  assert.deepStrictEqual(labels(['top-actions']), ['+ New code']);
-  assert.deepStrictEqual(labels(['menu']), ['Log out']);
+  assert.deepStrictEqual(labels(['top-actions']), []);
+  assert.deepStrictEqual(labels(['menu']), ['New code', 'Log out']);
 }
 
 async function linkLogsInWithName() {
@@ -142,7 +142,7 @@ async function main() {
   await setup();
   await doubleSubmitUnlocksOnce();
   relativeWithTypedCodeIsGuestWithLogOut();
-  adminSeesAdminNewCodeAndOneLogOut();
+  adminMenuHasNewCodeAndLogOut();
   await linkLogsInWithName();
   await linkIsIgnoredWhenAlreadyLoggedIn();
   await usedLinkShowsTimeOver();
