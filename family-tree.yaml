@@ -378,6 +378,13 @@
   relation_id: bhagmal
   note: son of Dada Bhagmal; no biological son — adopted Mayachand (Netram's son)
   life: deceased
+- id: roodi
+  name: Roodi
+  name_hi: रूडी
+  gender: female
+  relation: father
+  relation_id: bhagmal
+  life: deceased
 - id: jainarayan
   name: Jai Narayan
   name_hi: जय नारायण
