@@ -385,6 +385,16 @@
   relation: father
   relation_id: bhagmal
   life: deceased
+- id: pogarmal
+  name: Pogarmal
+  name_hi: पोगरमल
+  gender: male
+  relation: mother
+  relation_id: roodi
+  address:
+    locality: Shakti Nagar
+    city: Delhi
+  life: living
 - id: jainarayan
   name: Jai Narayan
   name_hi: जय नारायण
