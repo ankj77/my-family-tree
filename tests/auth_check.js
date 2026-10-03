@@ -89,6 +89,20 @@ function sessions() {
   assert.strictEqual(auth.sessionState({ kind: 'guest' }, NOW), 'none');
 }
 
+function shareLinks() {
+  var base = 'https://x.io/t/family-tree.html';
+  assert.strictEqual(auth.shareLink(base, 'K7M4-QX9P', '  Sunita  '), base + '#code=K7M4QX9P&name=Sunita');
+  assert.strictEqual(auth.shareLink(base, 'K7M4QX9P', ''), base + '#code=K7M4QX9P');
+  assert.deepStrictEqual(auth.readLink('#code=K7M4QX9P&name=Sunita'), { code: 'K7M4QX9P', name: 'Sunita' });
+  assert.deepStrictEqual(auth.readLink('#code=K7M4QX9P'), { code: 'K7M4QX9P', name: '' });
+  var hindi = auth.shareLink(base, 'K7M4QX9P', 'सुनीता देवी');
+  assert.deepStrictEqual(auth.readLink(hindi.slice(hindi.indexOf('#'))), { code: 'K7M4QX9P', name: 'सुनीता देवी' });
+  assert.strictEqual(auth.readLink('#code=K7M4QX9P&name=' + 'a'.repeat(50)).name.length, 30);
+  assert.strictEqual(auth.shareLink(base, 'K7M4QX9P', 'b'.repeat(50)), base + '#code=K7M4QX9P&name=' + 'b'.repeat(30));
+  assert.strictEqual(auth.readLink(''), null);
+  assert.strictEqual(auth.readLink('#name=Sunita'), null);
+}
+
 async function main() {
   await codesRoundTrip();
   await firstUseWindowIs24Hours();
@@ -98,6 +112,7 @@ async function main() {
   await decisions();
   await adminPasswordShapedLikeACodeStillLogsIn();
   sessions();
+  shareLinks();
   console.log('auth_check: all passed');
 }
 

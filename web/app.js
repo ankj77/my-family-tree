@@ -62,9 +62,10 @@ var FT = { views: {} };
   };
 
   FT.hasPartner = function (n) {
-    return (n.spouses && n.spouses.length > 0) || !!n.placeholder;
+    return FT.partners(n).length > 0;
   };
   FT.partners = function (n) {
+    if (FT.state.bloodline) return [];
     if (n.spouses && n.spouses.length) return n.spouses;
     if (n.placeholder) return [{ id: null, placeholder: true, gender: n.placeholder }];
     return [];
@@ -135,7 +136,7 @@ var FT = { views: {} };
     return 1 + partners;
   };
   FT.COUPLE_GAP = 44;
-  FT.spouseOf = function (n) { return (n.spouses || [])[0] || null; };
+  FT.spouseOf = function (n) { return FT.state.bloodline ? null : (n.spouses || [])[0] || null; };
   FT.nodeW = function (n) {
     return FT.spouseOf(n) ? 2 * FT.CARD_W + FT.COUPLE_GAP : FT.CARD_W;
   };
@@ -170,8 +171,10 @@ var FT = { views: {} };
     if (FT.state.collapsed[n.id]) return [];
     var kids = n.children || [];
     var only = FT.state.only;
-    if (!only) return kids;
-    return kids.filter(function (c) { return only[c.id]; });
+    if (only) kids = kids.filter(function (c) { return only[c.id]; });
+    var living = FT.state.livingOnly;
+    if (living) kids = kids.filter(function (c) { return living[c.id]; });
+    return kids;
   };
 
   FT.place = function (p) {
@@ -911,9 +914,6 @@ var FT = { views: {} };
     sel.addEventListener('change', function () { FT.setView(sel.value); });
   }
 
-  document.getElementById('more').addEventListener('click', function () {
-    document.getElementById('toolbar').classList.toggle('show-extras');
-  });
 
   var RANK_PREFIX = 0, RANK_SUBSTRING = 1, RANK_SUBSEQUENCE = 2;
 
@@ -1202,7 +1202,7 @@ var FT = { views: {} };
 
   function markLang() {
     var next = LANG_OTHER[FT.state.lang];
-    langBtn.textContent = LANG_LABEL[next];
+    langBtn.textContent = 'Switch language (' + LANG_LABEL[next] + ')';
     langBtn.title = 'Show names in ' + (next === 'hi' ? 'Hindi' : 'English');
   }
 
@@ -1216,13 +1216,80 @@ var FT = { views: {} };
   langBtn.addEventListener('click', FT.cycleLang);
   markLang();
 
-  document.getElementById('reset').addEventListener('click', FT.fit);
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
 
-  document.getElementById('summary').textContent=
-    'People '+summary.total+' · Male '+summary.male+' · Female '+summary.female+
-    ' · Generations '+summary.generations+
-    ' · Uncertain '+summary.uncertain+' · Needs-parent '+summary.needs_parent;
+  FT.zoomBy = function (f) {
+    var r = stage.getBoundingClientRect();
+    var mx = r.width / 2, my = r.height / 2;
+    tx = mx - (mx - tx) * f; ty = my - (my - ty) * f; scale *= f; apply();
+  };
+  document.getElementById('zoom-in').addEventListener('click', function () { FT.zoomBy(1.25); });
+  document.getElementById('zoom-out').addEventListener('click', function () { FT.zoomBy(1 / 1.25); });
+  document.getElementById('zoom-fit').addEventListener('click', function () { FT.fit(); });
+
+  FT.setBloodline = function (on) {
+    FT.state.bloodline = on;
+    FT.render();
+    FT.fit();
+  };
+  document.getElementById('show-picker').addEventListener('change', function (e) {
+    FT.setBloodline(e.target.value === 'bloodline');
+  });
+
+  FT.setLivingOnly = function (on) {
+    FT.clearPicks();
+    FT.state.collapsed = {};
+    if (on) {
+      FT.state.livingOnly = FT.filters.livingKeep(tree);
+      FT.state.depthCap = Infinity;
+    } else {
+      FT.state.livingOnly = null;
+      FT.state.depthCap = null;
+      FT.collapseBelowOpenDepth();
+    }
+    FT.render();
+    FT.fit();
+  };
+  document.getElementById('living-only').addEventListener('change', function (e) {
+    FT.setLivingOnly(e.target.checked);
+  });
+
+  var controls = document.getElementById('controls');
+  var controlsToggle = document.getElementById('controls-toggle');
+  function setControlsOpen(open) {
+    controls.classList.toggle('open', open);
+    controlsToggle.setAttribute('aria-expanded', String(open));
+  }
+  controlsToggle.addEventListener('click', function () {
+    setControlsOpen(!controls.classList.contains('open'));
+  });
+  ['mousedown', 'touchstart', 'wheel'].forEach(function (type) {
+    controls.addEventListener(type, function (e) { e.stopPropagation(); }, { passive: true });
+  });
+  setControlsOpen(window.innerWidth > 768);
+
+  var avatar = document.getElementById('avatar');
+  var menu = document.getElementById('menu');
+  function setMenuOpen(open) {
+    menu.classList.toggle('hidden', !open);
+    avatar.setAttribute('aria-expanded', String(open));
+  }
+  avatar.addEventListener('click', function (e) {
+    e.stopPropagation();
+    setMenuOpen(menu.classList.contains('hidden'));
+  });
+  menu.addEventListener('click', function () { setMenuOpen(false); });
+  document.addEventListener('click', function (e) {
+    if (!menu.contains(e.target) && e.target !== avatar) setMenuOpen(false);
+  });
+
+  document.getElementById('summary').innerHTML =
+    '<b>Tree Overview:</b> ' + [
+      summary.total + ' People', summary.male + ' Male', summary.female + ' Female',
+      summary.generations + ' Generations', summary.uncertain + ' Uncertain names',
+      summary.needs_parent + ' Unlinked'
+    ].join(' • ');
+  searchBox.placeholder = 'Search all ' + summary.total + ' members…';
 
   var up=document.getElementById('unlinked');
   if(unlinked.length){

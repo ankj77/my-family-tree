@@ -279,7 +279,7 @@ class TestLanguageToggle(unittest.TestCase):
 
     def test_the_button_names_the_language_you_would_switch_to(self):
         html = _payload_html()
-        self.assertIn("langBtn.textContent = LANG_LABEL[next];", html)
+        self.assertIn("langBtn.textContent = 'Switch language (' + LANG_LABEL[next] + ')';", html)
 
     def test_english_is_the_starting_language(self):
         html = _payload_html()
@@ -307,7 +307,7 @@ class TestFocusIsolatesTheLine(unittest.TestCase):
     def test_focus_keeps_only_the_lines_of_the_picked_people(self):
         html = _payload_html()
         self.assertIn("FT.state.only = keep;", html)
-        self.assertIn("return kids.filter(function (c) { return only[c.id]; });", html)
+        self.assertIn("if (only) kids = kids.filter(function (c) { return only[c.id]; });", html)
 
     def test_focus_reveals_one_level_past_the_deepest_pick(self):
         html = _payload_html()
@@ -472,6 +472,23 @@ class TestAdminControlsShip(unittest.TestCase):
         self.assertIn("New code", html)
         self.assertIn("Log out", html)
         self.assertIn("Use within 24 hours.", html)
-        self.assertIn("time-left", html)
         self.assertIn("#new-code{", html)
         self.assertIn("newCode.id = 'new-code'", html)
+
+
+class TestHeaderAndControls(unittest.TestCase):
+    def test_header_has_title_who_avatar_menu_and_search(self):
+        html = _payload_html()
+        self.assertIn("<h1 class=\"title\">Family Roots</h1>", html)
+        for element_id in ("who", "avatar", "menu", "top-actions", "search", "summary", "picks", "lang"):
+            self.assertIn('id="%s"' % element_id, html)
+        self.assertNotIn('id="more"', html)
+        self.assertNotIn('id="extras"', html)
+
+    def test_floating_controls_are_in_the_page(self):
+        html = _payload_html()
+        for element_id in ("controls", "controls-toggle", "view-picker", "show-picker", "living-only",
+                           "zoom-out", "zoom-fit", "zoom-in", "expand-all"):
+            self.assertIn('id="%s"' % element_id, html)
+        self.assertIn("FT.filters.livingKeep", html)
+        self.assertIn("Bloodline only", html)

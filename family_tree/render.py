@@ -19,6 +19,7 @@ def _script() -> str:
     for name in VIEW_FILES:
         if os.path.exists(os.path.join(WEB_DIR, "views", name)):
             parts.append(_read("views", name))
+    parts.append(_read("filters.js"))
     parts.append(_read("auth.js"))
     parts.append("FT.auth.start(FT.init);")
     return "\n".join(parts)

@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Family Tree</title>
+<title>Family Roots</title>
 <style>/*__CSS__*/</style>
 </head>
 <body>
 <div id="login">
   <form id="login-form">
-    <h1>Family Tree</h1>
+    <h1>Family Roots</h1>
     <p class="login-hi">परिवार वृक्ष</p>
     <input id="login-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
     <button id="login-enter" type="submit">Enter</button>
@@ -17,18 +17,47 @@
   </form>
 </div>
 <div id="toolbar">
-  <select id="view-picker" aria-label="Tree view"></select>
-  <input id="search" placeholder="Search a name (add up to 3)" autocomplete="off">
-  <button id="more" aria-label="More options">⋯</button>
-  <span id="extras">
-    <button id="lang" title="Switch names: EN → हिं → EN+हिं">EN+हिं</button>
-    <button id="expand-all">Expand all</button>
-    <button id="reset">Fit to screen</button>
-  </span>
-  <span class="summary" id="summary"></span>
+  <div class="top-row">
+    <div class="brand">
+      <h1 class="title">Family Roots</h1>
+      <p id="who" class="who"></p>
+    </div>
+    <span id="top-actions"></span>
+    <div class="menu-wrap">
+      <button id="avatar" type="button" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false"></button>
+      <div id="menu" class="hidden" role="menu">
+        <button id="lang" type="button" role="menuitem">Switch language</button>
+      </div>
+    </div>
+  </div>
+  <div class="search-row">
+    <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input id="search" placeholder="Search members" autocomplete="off" aria-label="Search names or villages">
+    <p class="search-hint">Search names or villages</p>
+  </div>
   <div id="picks"></div>
+  <p class="summary" id="summary"></p>
 </div>
 <div id="stage"><svg><g id="viewport"></g></svg>
+  <div id="controls">
+    <button id="controls-toggle" type="button" aria-label="View options" aria-expanded="false">⚙</button>
+    <div id="controls-body">
+      <label class="ctl">View <select id="view-picker" aria-label="Tree view"></select></label>
+      <label class="ctl">Show <select id="show-picker" aria-label="Who to show">
+        <option value="all">Everyone</option>
+        <option value="bloodline">Bloodline only</option>
+      </select></label>
+      <label class="ctl ctl-switch">Living only <input id="living-only" type="checkbox" role="switch"></label>
+      <div class="ctl">Zoom
+        <span class="zoom-buttons">
+          <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+          <button id="zoom-fit" type="button">Fit</button>
+          <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+        </span>
+      </div>
+      <button id="expand-all" type="button">Expand all</button>
+    </div>
+  </div>
   <p id="ornament-motto">Generations grow,<br>roots stay forever</p>
   <p id="ornament-story">Our Roots<br>Our Family<br>Our Story</p>
 </div>

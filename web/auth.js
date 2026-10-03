@@ -97,6 +97,25 @@
     });
   };
 
+  var MAX_NAME = 30;
+
+  function cleanName(name) {
+    return String(name || '').trim().slice(0, MAX_NAME);
+  }
+
+  auth.shareLink = function (base, code, name) {
+    var link = base + '#code=' + String(code).replace('-', '');
+    var clean = cleanName(name);
+    return clean ? link + '&name=' + encodeURIComponent(clean) : link;
+  };
+
+  auth.readLink = function (hash) {
+    var params = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+    var code = params.get('code');
+    if (!code) return null;
+    return { code: code, name: cleanName(params.get('name')) };
+  };
+
   auth.sessionState = function (session, nowMs) {
     if (!session) return 'none';
     if (session.kind === 'admin') return 'admin';
@@ -114,7 +133,9 @@
       expired: 'This code has expired. Ask {c} for a new one.',
       over: 'Your time is over. Ask {c} for a new code.',
       nocrypto: 'This browser cannot check codes here. Open the family tree website link instead.',
-      left: 'Time left: {m} min',
+      who: '{n} · {m} min left',
+      admin: 'Admin',
+      guest: 'Guest',
       logout: 'Log out'
     },
     hi: {
@@ -124,7 +145,9 @@
       expired: 'इस कोड का समय निकल गया है। {c} से नया कोड माँगें।',
       over: 'आपका समय पूरा हो गया। {c} से नया कोड माँगें।',
       nocrypto: 'यह ब्राउज़र यहाँ कोड नहीं जाँच सकता। परिवार वृक्ष की वेबसाइट का लिंक खोलें।',
-      left: 'बचा समय: {m} मिनट',
+      who: '{n} · {m} मिनट बाकी',
+      admin: 'एडमिन',
+      guest: 'अतिथि',
       logout: 'लॉग आउट'
     }
   };
@@ -156,56 +179,75 @@
     var body = document.getElementById('sheet-body');
     body.innerHTML =
       '<h3>New code</h3>' +
+      '<label class="code-name">Who is it for?' +
+      '<input id="code-name" maxlength="30" autocomplete="off" placeholder="Name, e.g. Sunita"></label>' +
       '<div class="code-hours">' +
       '<button type="button" data-hours="1">1 hour</button>' +
       '<button type="button" data-hours="2">2 hours</button>' +
       '</div>' +
+      '<div id="code-result" hidden>' +
       '<p class="code-value" id="code-value"></p>' +
-      '<button type="button" id="code-copy" hidden>Copy</button>' +
-      '<p class="code-note" id="code-note"></p>';
+      '<button type="button" id="code-copy">Copy link</button>' +
+      '<p class="code-link" id="code-link"></p>' +
+      '<p class="code-note" id="code-note"></p>' +
+      '</div>';
     sheet.style.borderLeftColor = 'var(--hl)';
     sheet.classList.remove('hidden');
+    var nameInput = document.getElementById('code-name');
+    var result = document.getElementById('code-result');
     var value = document.getElementById('code-value');
     var copy = document.getElementById('code-copy');
+    var linkText = document.getElementById('code-link');
     var note = document.getElementById('code-note');
     Array.prototype.forEach.call(body.querySelectorAll('[data-hours]'), function (b) {
       b.addEventListener('click', function () {
         var hours = Number(b.getAttribute('data-hours'));
+        var name = nameInput.value.trim();
         auth.makeCode(config.signing_key, Date.now(), hours).then(function (code) {
           value.textContent = code;
-          copy.hidden = false;
-          copy.textContent = 'Copy';
-          note.textContent = 'Use within 24 hours. Lasts ' + (hours === 1 ? '1 hour' : '2 hours') +
-            ' from when they log in.';
+          linkText.textContent = auth.shareLink(location.origin + location.pathname, code, name);
+          copy.textContent = 'Copy link';
+          note.textContent = (name ? 'For ' + name + '. ' : '') + 'Use within 24 hours. Lasts ' +
+            (hours === 1 ? '1 hour' : '2 hours') + ' from when they log in.';
+          result.hidden = false;
         });
       });
     });
     copy.addEventListener('click', function () {
-      var write = navigator.clipboard ? navigator.clipboard.writeText(value.textContent) : Promise.reject();
-      write.then(function () { copy.textContent = 'Copied'; }, function () { selectText(value); });
+      var write = navigator.clipboard ? navigator.clipboard.writeText(linkText.textContent) : Promise.reject();
+      write.then(function () { copy.textContent = 'Copied'; }, function () { selectText(linkText); });
     });
+    nameInput.focus();
+  }
+
+  function whoName(session) {
+    if (session.kind === 'admin') return text.admin;
+    return session.name || text.guest;
+  }
+
+  function showWho(session, label) {
+    document.getElementById('who').textContent = label;
+    document.getElementById('avatar').textContent = whoName(session).charAt(0).toUpperCase();
   }
 
   function adminControls(config) {
     var newCode = button('+ New code', function () { showCodePanel(config); });
     newCode.id = 'new-code';
-    document.getElementById('toolbar').insertBefore(newCode, document.getElementById('more'));
+    document.getElementById('top-actions').appendChild(newCode);
   }
 
-  function logOutButton() {
+  function logOutItem() {
     var logOut = button(text.logout, function () { drop('ft-session'); location.reload(); });
     logOut.id = 'log-out';
-    document.getElementById('toolbar').insertBefore(logOut, document.getElementById('more'));
+    logOut.setAttribute('role', 'menuitem');
+    document.getElementById('menu').appendChild(logOut);
   }
 
   function watch(session) {
-    var label = document.createElement('span');
-    label.id = 'time-left';
-    document.getElementById('toolbar').insertBefore(label, document.getElementById('summary'));
     function tick() {
       var left = session.expires - Date.now();
       if (left <= 0) { location.reload(); return; }
-      label.textContent = text.left.replace('{m}', Math.ceil(left / 60000));
+      showWho(session, text.who.replace('{n}', whoName(session)).replace('{m}', Math.ceil(left / 60000)));
     }
     tick();
     setInterval(tick, 30000);
@@ -228,9 +270,17 @@
     function unlock(session) {
       box.classList.add('hidden');
       onUnlock();
-      if (session.kind === 'admin') adminControls(config); else watch(session);
-      logOutButton();
+      if (session.kind === 'admin') {
+        adminControls(config);
+        showWho(session, text.admin);
+      } else {
+        watch(session);
+      }
+      logOutItem();
     }
+
+    var link = auth.readLink(location.hash);
+    if (link) history.replaceState(null, '', location.pathname + location.search);
 
     var saved = loadJson('ft-session');
     var state = auth.sessionState(saved, Date.now());
@@ -240,24 +290,31 @@
 
     var checking = false;
 
-    document.getElementById('login-form').addEventListener('submit', function (e) {
-      e.preventDefault();
+    function attempt(value, name) {
       if (checking) return;
       checking = true;
       msg.textContent = '';
       var used = loadJson('ft-used-codes') || [];
       Promise.resolve()
-        .then(function () { return auth.decide(config, input.value, Date.now(), used); })
+        .then(function () { return auth.decide(config, value, Date.now(), used); })
         .then(function (r) {
           checking = false;
           if (r.error) { say(r.error === 'used' ? 'over' : r.error); return; }
-          var session = r.kind === 'admin' ? { kind: 'admin' } : { kind: 'code', expires: r.expires };
+          var session = r.kind === 'admin' ? { kind: 'admin' } :
+            { kind: 'code', expires: r.expires, name: name };
           if (r.code) save('ft-used-codes', JSON.stringify(used.concat([r.code])));
           save('ft-session', JSON.stringify(session));
           input.value = '';
           unlock(session);
         })
         .catch(function () { checking = false; say('nocrypto'); });
+    }
+
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      attempt(input.value, '');
     });
+
+    if (link) attempt(link.code, link.name);
   };
 })(typeof FT !== 'undefined' ? (FT.auth = {}) : module.exports);
