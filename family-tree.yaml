@@ -386,6 +386,21 @@
   relation_id: moladhmal
   note: son of Moladh Mal
   life: deceased
+- id: sarbati
+  name: Sarbati
+  name_hi: सरबती
+  gender: female
+  relation: father
+  relation_id: moladhmal
+  life: deceased
+- id: chalti
+  name: Chalti
+  name_hi: चलती
+  gender: female
+  relation: father
+  relation_id: moladhmal
+  note: "husband from Gangana, Sonipat, Haryana (name not recorded)"
+  life: deceased
 - id: mayachand
   name: Mayachand
   name_hi: मायाचंद
