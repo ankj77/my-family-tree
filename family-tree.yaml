@@ -399,8 +399,17 @@
   gender: female
   relation: father
   relation_id: moladhmal
-  note: "husband from Gangana, Sonipat, Haryana (name not recorded)"
   life: deceased
+- id: chalti_husband
+  name: Chalti's husband
+  gender: male
+  relation: husband
+  relation_id: chalti
+  status: uncertain
+  origin:
+    village: Gangana
+    district: Sonipat
+    state: Haryana
 - id: santosh
   name: Santosh
   name_hi: संतोष
