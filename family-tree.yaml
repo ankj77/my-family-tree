@@ -1317,3 +1317,12 @@
   address:
     locality: Adarsh Nagar
     city: Delhi
+- id: jagdishchand_wife
+  name: Rashmi
+  name_hi: रश्मि
+  gender: female
+  relation: wife
+  relation_id: jagdishchand
+  origin:
+    village: Pugthala
+    state: Haryana
