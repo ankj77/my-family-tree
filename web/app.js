@@ -270,7 +270,13 @@ var FT = { views: {} };
 
     var rel = '';
     var parent = p === owner ? FT.parentOf[owner.id] : null;
-    if (parent) rel += '<div><span>Parent</span> ' + personRef(parent.id) + '</div>';
+    if (parent) {
+      var both = FT.parentsOf(owner);
+      var parentRefs = [both.father, both.mother].filter(Boolean).map(function (x) {
+        return x === parent ? personRef(x.id) : spouseRef(x, parent);
+      });
+      rel += '<div><span>Parents</span> ' + parentRefs.join(', ') + '</div>';
+    }
     if (p !== owner) {
       rel += '<div><span>Spouse</span> ' + personRef(owner.id) + '</div>';
     } else if (owner.spouses && owner.spouses.length) {
@@ -284,6 +290,14 @@ var FT = { views: {} };
       rel += '<div><span>Children</span> ' +
         kids.map(function (c) { return personRef(c.id); }).join(', ') + '</div>';
     }
+    var siblings = parent ? parent.children.filter(function (c) { return c !== owner; }) : [];
+    [['male', 'Brothers'], ['female', 'Sisters']].forEach(function (g) {
+      var group = siblings.filter(function (c) { return c.gender === g[0]; });
+      if (group.length) {
+        rel += '<div><span>' + g[1] + '</span> ' +
+          group.map(function (c) { return personRef(c.id); }).join(', ') + '</div>';
+      }
+    });
     if (rel) h += '<div class="sheet-rel">' + rel + '</div>';
     return h;
   }
