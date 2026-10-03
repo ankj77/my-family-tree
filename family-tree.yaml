@@ -68,12 +68,12 @@
   relation_id: udmi
   life: deceased
 - id: richa
-  name: Richa
-  name_hi: ऋचा
-  gender: female
+  name: Richha
+  name_hi: रिच्छा
+  gender: male
   relation: father
   relation_id: udmi
-  note: daughter of Udmi (was read as 'Siddho' — reinterpreted per correction)
+  note: son of Udmi (was read as 'Siddho' — reinterpreted per correction)
   life: deceased
 - id: rajaram
   name: Rajaram
@@ -239,12 +239,9 @@
   name: Niyadar
   name_hi: नियादर
   gender: male
-  relation: mother
+  relation: father
   relation_id: richa
-  origin:
-    village: Bakheta
-    state: Haryana
-  note: child of Richa (was read as 'Nisar')
+  note: son of Richha (was read as 'Nisar')
   life: deceased
 - id: bhairam
   name: Bhairam (Bhaiyaram)
@@ -348,12 +345,9 @@
   name: Lekhram
   name_hi: लेखराम
   gender: male
-  relation: mother
+  relation: father
   relation_id: richa
-  origin:
-    village: Bakheta
-    state: Haryana
-  note: child of Richa (was read as 'Lorvaram')
+  note: son of Richha (was read as 'Lorvaram')
   life: deceased
 - id: bhagmal
   name: Dada Bhagmal
