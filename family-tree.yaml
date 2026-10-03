@@ -11,7 +11,7 @@
   life: deceased
   note: root ancestor — all descend from him
   origin:
-    village: Bhakheta
+    village: Bakheta
     state: Haryana
 - id: harshay
   name: Harshay
@@ -67,7 +67,7 @@
   relation: mother
   relation_id: udmi
   origin:
-    village: Bhakheta
+    village: Bakheta
     state: Haryana
   life: deceased
 - id: richa
@@ -77,7 +77,7 @@
   relation: mother
   relation_id: udmi
   origin:
-    village: Bhakheta
+    village: Bakheta
     state: Haryana
   note: daughter of Udmi (was read as 'Siddho' — reinterpreted per correction)
   life: deceased
@@ -88,7 +88,7 @@
   relation: mother
   relation_id: kannu
   origin:
-    village: Bhakheta
+    village: Bakheta
     state: Haryana
   life: deceased
 - id: panmeshwar
@@ -98,7 +98,7 @@
   relation: mother
   relation_id: kannu
   origin:
-    village: Bhakheta
+    village: Bakheta
     state: Haryana
   life: deceased
 - id: moladhmal
@@ -248,7 +248,7 @@
   relation: mother
   relation_id: richa
   origin:
-    village: Bhakheta
+    village: Bakheta
     state: Haryana
   note: child of Richa (was read as 'Nisar')
   life: deceased
@@ -357,7 +357,7 @@
   relation: mother
   relation_id: richa
   origin:
-    village: Bhakheta
+    village: Bakheta
     state: Haryana
   note: child of Richa (was read as 'Lorvaram')
   life: deceased
