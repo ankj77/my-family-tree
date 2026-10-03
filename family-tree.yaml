@@ -10,6 +10,9 @@
   born: "1549"
   life: deceased
   note: root ancestor — all descend from him
+  origin:
+    village: Bhakheta
+    state: Haryana
 - id: harshay
   name: Harshay
   name_hi: हर्षय
@@ -63,6 +66,9 @@
   gender: male
   relation: mother
   relation_id: udmi
+  origin:
+    village: Bhakheta
+    state: Haryana
   life: deceased
 - id: richa
   name: Richa
@@ -70,6 +76,9 @@
   gender: female
   relation: mother
   relation_id: udmi
+  origin:
+    village: Bhakheta
+    state: Haryana
   note: daughter of Udmi (was read as 'Siddho' — reinterpreted per correction)
   life: deceased
 - id: rajaram
@@ -78,6 +87,9 @@
   gender: male
   relation: mother
   relation_id: kannu
+  origin:
+    village: Bhakheta
+    state: Haryana
   life: deceased
 - id: panmeshwar
   name: Panmeshwar
@@ -85,6 +97,9 @@
   gender: male
   relation: mother
   relation_id: kannu
+  origin:
+    village: Bhakheta
+    state: Haryana
   life: deceased
 - id: moladhmal
   name: Moladh Mal
@@ -232,6 +247,9 @@
   gender: male
   relation: mother
   relation_id: richa
+  origin:
+    village: Bhakheta
+    state: Haryana
   note: child of Richa (was read as 'Nisar')
   life: deceased
 - id: bhairam
@@ -338,6 +356,9 @@
   gender: male
   relation: mother
   relation_id: richa
+  origin:
+    village: Bhakheta
+    state: Haryana
   note: child of Richa (was read as 'Lorvaram')
   life: deceased
 - id: bhagmal
@@ -536,9 +557,6 @@
   relation_id: netram
   order: 1
   note: son of Netram; 4 sons (Kanwarsen, Jugmandar das, Surajbhan, Ramratan)
-  origin:
-    village: Bakheta
-    state: Haryana
   life: deceased
 - id: kanwarsen
   name: Kanwarsen
