@@ -416,6 +416,34 @@
   gender: female
   relation: mother
   relation_id: chalti
+- id: bharpaai
+  name: Bharpaai
+  name_hi: भरपाई
+  gender: female
+  relation: father
+  relation_id: moladhmal
+  life: deceased
+- id: mamkunwar
+  name: Mam Kunwar
+  name_hi: मम कुंवर
+  gender: female
+  relation: father
+  relation_id: moladhmal
+  life: deceased
+- id: kesar
+  name: Kesar
+  name_hi: केसर
+  gender: female
+  relation: father
+  relation_id: moladhmal
+  life: deceased
+- id: hargolal
+  name: Har Golal
+  name_hi: हर गोलाल
+  gender: male
+  relation: husband
+  relation_id: kesar
+  life: deceased
 - id: mayachand
   name: Mayachand
   name_hi: मायाचंद
