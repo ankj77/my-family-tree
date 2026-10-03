@@ -685,6 +685,23 @@
   gender: male
   relation: father
   relation_id: naresh
+- id: annu
+  name: Annu
+  name_hi: अन्नू
+  gender: female
+  relation: father
+  relation_id: naresh
+  note: aka Simpy
+- id: amit_annu
+  name: Amit
+  name_hi: अमित
+  gender: male
+  relation: husband
+  relation_id: annu
+  note: aka Chinnu
+  origin:
+    village: Dehra
+    state: Haryana
 - id: prashan
   name: Prashan
   name_hi: प्रशान
