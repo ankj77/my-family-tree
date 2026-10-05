@@ -16,9 +16,14 @@
   var NEW_CHILD = ['name', 'name_hi', 'gender', 'born', 'life'];
   var NEW_SPOUSE = ['name', 'name_hi', 'gender', 'born', 'life', 'family_id', 'father_name', 'mother_name',
     'origin_village', 'origin_district', 'origin_state'];
+  var EDIT_MOVE = ['father_id', 'mother_id', 'family_id'];
   var EDIT_ALL = ['name', 'name_hi', 'gender', 'life', 'born', 'died', 'status', 'sort_order',
     'address_line', 'address_locality', 'address_city', 'address_state', 'address_country',
     'origin_village', 'origin_district', 'origin_state', 'father_name', 'mother_name', 'note'];
+
+  edit.editNames = function (canMove) {
+    return canMove ? EDIT_ALL.concat(EDIT_MOVE) : EDIT_ALL.slice();
+  };
 
   function esc(s) {
     return String(s === null || s === undefined ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -139,11 +144,11 @@
     if (kind === 'edit') {
       var load = person.can_move ? api.call('GET', '/people') : Promise.resolve(null);
       load.then(function (people) {
-        var names = EDIT_ALL.slice();
+        var names = edit.editNames(!!people);
         var options = {};
         if (people) {
-          names = names.concat(['father_id', 'mother_id']);
           options.father_id = options.mother_id = peopleOptions(people, person.id);
+          options.family_id = familyOptions();
         }
         openForm(body, formHtml('Edit ' + nameOf(person), names, person.edit || {}, options, 'Save'), function (values) {
           var diff = edit.changes(person.edit || {}, values);

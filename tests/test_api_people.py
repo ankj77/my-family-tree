@@ -118,6 +118,13 @@ class TestEditing(ApiCase):
         self.assertEqual(entry["action"], "update")
         self.assertIn("1990", entry["after_json"])
 
+    def test_edit_values_include_links_for_admin(self):
+        self.login("mohan")
+        tree = self.get("/families/bakheta/tree").get_json()["tree"]
+        edit = find(tree, "amit")["edit"]
+        self.assertEqual(edit["family_id"], "bakheta")
+        self.assertEqual(edit["father_id"], "jagdish")
+
     def test_rep_cannot_move(self):
         self.login("jagdish")
         self.assertEqual(self.patch("/people/amit", {"father_id": "mohan"}).status_code, 403)

@@ -246,7 +246,7 @@ def person_extras(graph, access, pending, pid):
         "delete_reason": blocker,
         "delete_pending": pid in pending,
         "links": views.family_links(graph, pid),
-        "edit": {k: row.get(k) for k in rules.EDIT_FIELDS + ("father_id", "mother_id")} if can_edit else None,
+        "edit": {k: row.get(k) for k in rules.EDIT_FIELDS + rules.LINK_FIELDS} if can_edit else None,
     }
 
 

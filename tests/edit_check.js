@@ -18,6 +18,9 @@ assert.deepStrictEqual(edit.payload([['sort_order', '']]), { sort_order: null })
 assert.deepStrictEqual(edit.changes({ name: 'Amit', born: null, city: undefined }, { name: 'Amit', born: '1990', city: null }),
   { born: '1990' });
 
+assert.strictEqual(edit.editNames(false).indexOf('family_id'), -1);
+assert.deepStrictEqual(edit.editNames(true).slice(-3), ['father_id', 'mother_id', 'family_id']);
+
 assert.strictEqual(edit.esc('<b a="1">&'), '&lt;b a=&quot;1&quot;&gt;&amp;');
 assert.strictEqual(edit.esc(null), '');
 console.log('edit_check ok');
