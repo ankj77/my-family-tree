@@ -7,12 +7,13 @@
 <style>/*__CSS__*/</style>
 </head>
 <body>
-<div id="login">
+<div id="login" class="hidden">
   <form id="login-form">
     <h1>Family Roots</h1>
     <p class="login-hi">परिवार वृक्ष</p>
-    <input id="login-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <button id="login-enter" type="submit">Enter</button>
+    <input id="login-user" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Username" aria-label="Username">
+    <input id="login-pass" name="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+    <button id="login-enter" type="submit">Log in</button>
     <p id="login-msg" role="alert"></p>
   </form>
 </div>
@@ -69,10 +70,6 @@
   <button id="sheet-close" aria-label="Close">×</button>
   <div id="sheet-body"></div>
 </div>
-<script id="tree-data" type="application/json">/*__TREE__*/</script>
-<script id="unlinked-data" type="application/json">/*__UNLINKED__*/</script>
-<script id="summary-data" type="application/json">/*__SUMMARY__*/</script>
-<script id="auth-data" type="application/json">/*__AUTH__*/</script>
 <script>/*__APP_JS__*/</script>
 </body>
 </html>

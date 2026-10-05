@@ -1,0 +1,48 @@
+var assert = require('assert');
+var api = require('../web/api.js');
+
+var villages = [
+  { id: 'bakheta', families: [{ id: 'bakheta' }, { id: 'jain' }] },
+  { id: 'pugthala', families: [{ id: 'pugthala' }] }
+];
+assert.strictEqual(api.pickFamily('pugthala', 'jain', 'bakheta', villages), 'pugthala');
+assert.strictEqual(api.pickFamily('gone', 'jain', 'bakheta', villages), 'jain');
+assert.strictEqual(api.pickFamily(null, null, 'bakheta', villages), 'bakheta');
+assert.strictEqual(api.pickFamily(null, null, null, villages), 'bakheta');
+assert.strictEqual(api.pickFamily(null, null, null, []), null);
+
+assert.strictEqual(api.urlFor('bakheta'), '?family=bakheta');
+assert.strictEqual(api.urlFor('bal pabana', 'a&b'), '?family=bal%20pabana&person=a%26b');
+
+assert.strictEqual(api.base('localhost'), 'http://localhost:5000');
+assert.strictEqual(api.base('jainparivar.online'), 'https://api.jainparivar.online');
+
+assert.strictEqual(api.roleText({ is_global: true, roles: [] }), 'Global admin');
+assert.strictEqual(api.roleText({ is_global: false, roles: [{ scope: 'village' }] }), 'Village admin');
+assert.strictEqual(api.roleText({ is_global: false, roles: [{ scope: 'branch' }] }), 'Branch rep');
+assert.strictEqual(api.roleText({ is_global: false, roles: [] }), 'Member');
+
+var loggedOut = 0;
+api.root = 'http://x';
+api.onLoggedOut = function () { loggedOut++; };
+global.fetch = function (url, options) {
+  assert.strictEqual(url, 'http://x/people/amit');
+  assert.strictEqual(options.credentials, 'include');
+  assert.strictEqual(options.headers['Content-Type'], 'application/json');
+  return Promise.resolve({ ok: false, status: 401, text: function () { return Promise.resolve('{"error":"Please log in"}'); } });
+};
+api.call('PATCH', '/people/amit', { born: '1990' }).then(function () {
+  assert.fail('should reject');
+}, function (err) {
+  assert.strictEqual(err.status, 401);
+  assert.strictEqual(err.message, 'Please log in');
+  assert.strictEqual(loggedOut, 1);
+  global.fetch = function () {
+    return Promise.resolve({ ok: false, status: 502, text: function () { return Promise.resolve('<html>Bad gateway</html>'); } });
+  };
+  return api.call('GET', '/me').then(function () { assert.fail('should reject'); }, function (e) {
+    assert.strictEqual(e.message, 'Request failed (502)');
+    assert.strictEqual(loggedOut, 1);
+    console.log('api_check ok');
+  });
+}).catch(function (e) { console.error(e); process.exit(1); });

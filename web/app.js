@@ -1,9 +1,9 @@
 var FT = { views: {} };
-(function () {
+FT.boot = function (data) {
   var NS="http://www.w3.org/2000/svg";
-  var tree=JSON.parse(document.getElementById('tree-data').textContent);
-  var unlinked=JSON.parse(document.getElementById('unlinked-data').textContent);
-  var summary=JSON.parse(document.getElementById('summary-data').textContent);
+  var tree=data.tree;
+  var unlinked=data.unlinked;
+  var summary=data.summary;
   var vp=document.getElementById('viewport');
   var stage=document.getElementById('stage');
 
@@ -324,6 +324,17 @@ var FT = { views: {} };
     sheet.style.borderLeftColor = person.gender === 'female' ? 'var(--rail-f)' :
       person.gender === 'male' ? 'var(--rail-m)' : 'var(--rail-unknown)';
     sheet.classList.remove('hidden');
+    if (FT.onSheet) FT.onSheet(person, node, sheetBody);
+  };
+
+  FT.openPerson = function (id) {
+    var owner = FT.byId[id] || FT.nodes.filter(function (n) {
+      return (n.spouses || []).some(function (s) { return s.id === id; });
+    })[0];
+    if (!owner) return;
+    FT.state.picks = [owner.id];
+    FT.showPicks();
+    if (owner.id !== id) FT.select(id, owner);
   };
 
   FT.lineage = function (id) {
@@ -1324,4 +1335,4 @@ var FT = { views: {} };
       : (window.innerWidth < 768 ? 'horizontal' : 'classic');
     FT.setView(preferred);
   };
-})();
+};

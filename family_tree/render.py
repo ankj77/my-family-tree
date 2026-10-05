@@ -1,6 +1,4 @@
-import json
 import os
-from typing import List
 
 from family_tree.model import Person
 from family_tree.tree import Summary
@@ -12,17 +10,6 @@ VIEW_FILES = ("classic.js", "horizontal.js", "poster.js")
 def _read(*parts) -> str:
     with open(os.path.join(WEB_DIR, *parts), "r", encoding="utf-8") as f:
         return f.read()
-
-
-def _script() -> str:
-    parts = [_read("app.js")]
-    for name in VIEW_FILES:
-        if os.path.exists(os.path.join(WEB_DIR, "views", name)):
-            parts.append(_read("views", name))
-    parts.append(_read("filters.js"))
-    parts.append(_read("auth.js"))
-    parts.append("FT.auth.start(FT.init);")
-    return "\n".join(parts)
 
 
 def _person_json(p: Person) -> dict:
@@ -65,21 +52,22 @@ def summary_json(summary: Summary) -> dict:
     }
 
 
-# ensure_ascii=False keeps Devanagari readable; escape </ so it can't close the script tag
-def _embed(obj) -> str:
-    return json.dumps(obj, ensure_ascii=False).replace("</", "<\\/")
+APP_SCRIPTS = ["app.js"] + ["views/%s" % name for name in VIEW_FILES] + ["filters.js", "api.js", "edit.js"]
+ADMIN_SCRIPTS = ["api.js", "admin.js"]
 
 
-def render_html(root: dict, unlinked: List[Person], summary: Summary, auth: dict = None) -> str:
+def render_page(template: str, scripts, before: str = "", after: str = "") -> str:
+    parts = [before] + [_read(*s.split("/")) for s in scripts if os.path.exists(os.path.join(WEB_DIR, *s.split("/")))] + [after]
     return (
-        _read("index.html")
-        .replace("/*__TREE__*/", _embed(_node_json(root)))
-        .replace("/*__UNLINKED__*/", _embed([_person_json(p) for p in unlinked]))
-        .replace(
-            "/*__SUMMARY__*/",
-            _embed(summary_json(summary)),
-        )
-        .replace("/*__AUTH__*/", _embed(auth))
+        _read(template)
         .replace("/*__CSS__*/", _read("app.css"))
-        .replace("/*__APP_JS__*/", _script())
+        .replace("/*__APP_JS__*/", "\n".join(p for p in parts if p))
     )
+
+
+def render_index() -> str:
+    return render_page("index.html", APP_SCRIPTS, after="FT.api.start();")
+
+
+def render_admin() -> str:
+    return render_page("admin.html", ADMIN_SCRIPTS, before="var FT = {};", after="FT.admin.start();")

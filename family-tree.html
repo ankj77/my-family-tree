@@ -225,36 +225,40 @@
     box-shadow:var(--shadow-card);padding:28px 24px;box-sizing:border-box;text-align:center;}
   #login h1{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;color:var(--name-ink);}
   #login .login-hi{margin:2px 0 20px;color:var(--ink-muted);font-size:15px;}
-  #login-input{width:100%;box-sizing:border-box;font-size:18px;min-height:48px;padding:8px 10px;
-    border:1px solid var(--edge);font-family:var(--font);text-align:center;letter-spacing:.08em;}
+  #login-form input{display:block;width:100%;box-sizing:border-box;font-size:17px;min-height:48px;
+    padding:8px 10px;margin-top:10px;border:1px solid var(--edge);font-family:var(--font);}
+  #family-picker{margin-top:4px;min-height:36px;font-size:14px;font-family:var(--font);
+    border:1px solid var(--edge);background:var(--card);color:var(--ink);max-width:100%;}
+  #sheet .edit-form{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+  #sheet .edit-form label{display:flex;flex-direction:column;gap:2px;font-size:11px;font-weight:600;
+    color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em;}
+  #sheet .edit-form input,#sheet .edit-form select,#sheet .edit-form textarea{font-size:15px;
+    min-height:40px;padding:6px 8px;border:1px solid var(--edge);font-family:var(--font);
+    text-transform:none;letter-spacing:0;color:var(--ink);background:#fff;}
+  #sheet .form-buttons,#sheet .sheet-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  #sheet .form-buttons button,#sheet .sheet-actions button{min-height:44px;padding:6px 14px;
+    font-size:14px;cursor:pointer;font-family:var(--font);}
+  #sheet .form-msg{min-height:1.2em;color:var(--warn);font-size:13px;margin:6px 0 0;}
+  #sheet .sheet-why{flex-basis:100%;margin:0;font-size:12px;color:var(--ink-muted);}
+  #sheet .sheet-links{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:14px;}
+  #sheet .sheet-links a{color:var(--hl);}
   #login-enter{margin-top:12px;width:100%;min-height:48px;font-size:16px;cursor:pointer;
     background:var(--hl);color:#fff;border:0;font-family:var(--font);}
   #login-msg{min-height:1.4em;margin:14px 0 0;font-size:14px;color:var(--warn);}
-  #sheet .code-hours{display:flex;gap:8px;justify-content:center;margin:12px 0;}
-  #sheet .code-hours button{min-height:44px;padding:6px 14px;font-size:15px;cursor:pointer;}
-  #sheet .code-value{font-family:ui-monospace,Menlo,monospace;font-size:30px;letter-spacing:.12em;
-    text-align:center;margin:12px 0;color:var(--ink);user-select:all;}
-  #code-copy{display:block;margin:0 auto;min-height:44px;padding:6px 18px;cursor:pointer;}
-  #sheet .code-note{font-size:13px;color:var(--ink-muted);text-align:center;}
   #refresh{width:44px;height:44px;border-radius:50%;border:1px solid var(--edge);
     background:var(--card);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;
     box-shadow:var(--shadow-card);padding:0;}
   #refresh:hover{background:var(--canvas);}
-  #sheet .code-name{display:block;margin:12px 0 0;font-size:13px;color:var(--ink-muted);}
-  #code-name{display:block;width:100%;box-sizing:border-box;margin-top:4px;min-height:44px;
-    padding:8px 10px;font-size:16px;border:1px solid var(--edge);border-radius:6px;font-family:var(--font);}
-  #code-result[hidden]{display:none;}
-  #sheet .code-link{margin:8px 0;font-size:12px;color:var(--ink-muted);word-break:break-all;
-    text-align:center;user-select:all;}
 </style>
 </head>
 <body>
-<div id="login">
+<div id="login" class="hidden">
   <form id="login-form">
     <h1>Family Roots</h1>
     <p class="login-hi">परिवार वृक्ष</p>
-    <input id="login-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <button id="login-enter" type="submit">Enter</button>
+    <input id="login-user" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Username" aria-label="Username">
+    <input id="login-pass" name="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+    <button id="login-enter" type="submit">Log in</button>
     <p id="login-msg" role="alert"></p>
   </form>
 </div>
@@ -311,16 +315,12 @@
   <button id="sheet-close" aria-label="Close">×</button>
   <div id="sheet-body"></div>
 </div>
-<script id="tree-data" type="application/json">{"id": "ramkrishan", "name": "Ram Krishan", "name_hi": "राम कृष्ण", "gender": "male", "born": "1549", "life": "deceased", "died": null, "note": "root ancestor — all descend from him", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": false, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["harshay"]}], "children": [{"id": "harshay", "name": "Harshay", "name_hi": "हर्षय", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sevakram"]}], "children": [{"id": "sevakram", "name": "Sevak Ram", "name_hi": "सेवकराम", "gender": "male", "born": "1884 (Samvat 1941)", "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["lakshman", "udmi", "kannu"]}], "children": [{"id": "lakshman", "name": "Dada Lakshman", "name_hi": "दादा लक्ष्मण", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Sevak Ram", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["bhagmal", "gaurishankar"]}], "children": [{"id": "bhagmal", "name": "Dada Bhagmal", "name_hi": "दादा भागमल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "'Till 1925'; handwritten word nearby (नवरात्नी?) may be a wife — verify", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["netram", "moladhmal", "khushiram", "roodi"]}], "children": [{"id": "netram", "name": "Netram", "name_hi": "नेतराम", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Dada Bhagmal ('Till 1945')", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["chandgiram", "pooranchand", "rampyari", "mayachand", "kapoorchand"]}], "children": [{"id": "chandgiram", "name": "Chandgiram", "name_hi": "चंदगीराम", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Netram; 4 sons (Kanwarsen, Jugmandar das, Surajbhan, Ramratan)", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "chandgiram_wife", "name": "Patori", "name_hi": "पटोरी", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Kakroi", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "chandgiram_wife", "unattributed": false, "child_ids": ["kanwarsen", "jugmandardas", "surajbhan", "ramratan"]}], "children": [{"id": "kanwarsen", "name": "Kanwarsen", "name_hi": "कंवरसेन", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "parsani", "name": "Parsani Devi", "name_hi": "परसानी देवी", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "parsani", "unattributed": false, "child_ids": ["rajendra", "anil", "vijay", "pawan", "deepak"]}], "children": [{"id": "rajendra", "name": "Rajendra", "name_hi": "राजेंद्र", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sachin", "nishant_r"]}], "children": [{"id": "sachin", "name": "Sachin", "name_hi": "सचिन", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aaditya"]}], "children": [{"id": "aaditya", "name": "Aaditya", "name_hi": "आदित्य", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "nishant_r", "name": "Nishant", "name_hi": "निशांत", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kannav"]}], "children": [{"id": "kannav", "name": "Kannav", "name_hi": "कन्नव", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "anil", "name": "Anil", "name_hi": "अनिल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sunny", "rahul"]}], "children": [{"id": "sunny", "name": "Sunny", "name_hi": "सनी", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aarav"]}], "children": [{"id": "aarav", "name": "Aarav", "name_hi": "आरव", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "rahul", "name": "Rahul", "name_hi": "राहुल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "vijay", "name": "Vijay", "name_hi": "विजय", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "bimla", "name": "Bimla", "name_hi": "बिमला", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Obra", "state": "Uttar Pradesh"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "bimla", "unattributed": false, "child_ids": ["sonia", "jyoti", "ankur"]}], "children": [{"id": "sonia", "name": "Sonia", "name_hi": "सोनिया", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "gautam", "name": "Gautam", "name_hi": "गौतम", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Pathri", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "jyoti", "name": "Jyoti", "name_hi": "ज्योति", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Rohini", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "vikas_jyoti", "name": "Vikas", "name_hi": "विकास", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Rohini", "city": "Delhi"}, "origin": {"village": "Sisai", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "ankur", "name": "Ankur", "name_hi": "अंकुर", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "ridhi", "name": "Ridhi", "name_hi": "रिद्धि", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Bal Pabana", "district": "Karnal", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "ridhi", "unattributed": false, "child_ids": ["avyukt", "raaya"]}], "children": [{"id": "avyukt", "name": "Avyukt", "name_hi": "अव्युक्त", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "raaya", "name": "Raaya", "name_hi": "राया", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "pawan", "name": "Pawan", "name_hi": "पवन", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["abhinav"]}], "children": [{"id": "abhinav", "name": "Abhinav", "name_hi": "अभिनव", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "deepak", "name": "Deepak", "name_hi": "दीपक", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["jinendra"]}], "children": [{"id": "jinendra", "name": "Jinendra", "name_hi": "जिनेंद्र", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "jugmandardas", "name": "Jugmandar das", "name_hi": "जुगमंदर दास", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["naresh", "parveen"]}], "children": [{"id": "naresh", "name": "Naresh", "name_hi": "नरेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "kusum", "name": "Kusum", "name_hi": "कुसुम", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Singhana", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "kusum", "unattributed": false, "child_ids": ["arun", "varun", "annu"]}], "children": [{"id": "arun", "name": "Arun", "name_hi": "अरुण", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["prashan"]}], "children": [{"id": "prashan", "name": "Prashan", "name_hi": "प्रशान", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "varun", "name": "Varun", "name_hi": "वरुण", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["arham"]}], "children": [{"id": "arham", "name": "Arham", "name_hi": "अर्हम", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "annu", "name": "Annu", "name_hi": "अन्नू", "gender": "female", "born": null, "life": null, "died": null, "note": "aka Simpy", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "amit_annu", "name": "Amit", "name_hi": "अमित", "gender": "male", "born": null, "life": null, "died": null, "note": "aka Chinnu", "status": null, "photo": null, "father": "Ramesh Jain", "mother": null, "address": {}, "origin": {"village": "Dehra", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "parveen", "name": "Praveen", "name_hi": "प्रवीण", "gender": "male", "born": null, "life": null, "died": null, "note": "son of Jugmandar das", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "usha_praveen", "name": "Usha", "name_hi": "उषा", "gender": "female", "born": null, "life": null, "died": null, "note": "aka Baby", "status": null, "photo": null, "father": "Inder Sen", "mother": "Trishla (from Ganaur, Haryana)", "address": {}, "origin": {"village": "Rajakhedi", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "usha_praveen", "unattributed": false, "child_ids": ["pushkar"]}], "children": [{"id": "pushkar", "name": "Pushkar", "name_hi": "पुष्कर", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "surajbhan", "name": "Surajbhan", "name_hi": "सूरजभान", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rajesh"]}], "children": [{"id": "rajesh", "name": "Rajesh", "name_hi": "राजेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["vipul"]}], "children": [{"id": "vipul", "name": "Vipul", "name_hi": "विपुल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "ramratan", "name": "Ramratan", "name_hi": "रामरतन", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["dinesh", "mukesh_l", "vinay"]}], "children": [{"id": "dinesh", "name": "Dinesh", "name_hi": "दिनेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["abhishek"]}], "children": [{"id": "abhishek", "name": "Abhishek", "name_hi": "अभिषेक", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "mukesh_l", "name": "Mukesh", "name_hi": "मुकेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "vinay", "name": "Vinay", "name_hi": "विनय", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "pooranchand", "name": "Pooranchand", "name_hi": "पूरनचंद", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Netram", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "attro", "name": "Attro", "name_hi": "अत्तरो", "gender": "female", "born": null, "life": "deceased", "died": "30 Aug 1991", "note": "phool pravah (ashes immersion) by Ram Nivas and Jai Bhagwan", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bal Pabana", "district": "Karnal", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "attro", "unattributed": false, "child_ids": ["subhashchand", "narendra", "jaibhagvan", "jawaharlal", "gulabchand", "mahavirprasad", "ramnivas"]}], "children": [{"id": "subhashchand", "name": "Subhash Chand", "name_hi": "सुभाष चंद", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["anshul"]}], "children": [{"id": "anshul", "name": "Anshul", "name_hi": "अंशुल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "narendra", "name": "Narendra", "name_hi": "नरेंद्र", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["hardik"]}], "children": [{"id": "hardik", "name": "Hardik", "name_hi": "हार्दिक", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jaibhagvan", "name": "Jai Bhagwan", "name_hi": "जय भगवान", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["abhinandan", "surender", "pankaj"]}], "children": [{"id": "abhinandan", "name": "Abhinandan", "name_hi": "अभिनंदन", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["harsh", "anand"]}], "children": [{"id": "harsh", "name": "Harsh", "name_hi": "हर्ष", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "anand", "name": "Anand", "name_hi": "आनंद", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "surender", "name": "Surender", "name_hi": "सुरेंद्र", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "pankaj", "name": "Pankaj", "name_hi": "पंकज", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jawaharlal", "name": "Jawahar Lal", "name_hi": "जवाहर लाल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["nishant_j"]}], "children": [{"id": "nishant_j", "name": "Nishant", "name_hi": "निशांत", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aadit", "agrim"]}], "children": [{"id": "aadit", "name": "Aadit", "name_hi": "आदित", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "agrim", "name": "Agrim", "name_hi": "अग्रिम", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "gulabchand", "name": "Gulab Chand", "name_hi": "गुलाब चंद", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sreyans"]}], "children": [{"id": "sreyans", "name": "Sreyans", "name_hi": "श्रेयांस", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["shaurya"]}], "children": [{"id": "shaurya", "name": "Shaurya", "name_hi": "शौर्य", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "mahavirprasad", "name": "Mahavir Prasad", "name_hi": "महावीर प्रसाद", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rishabh"]}], "children": [{"id": "rishabh", "name": "Rishabh", "name_hi": "ऋषभ", "gender": "male", "born": null, "life": null, "died": null, "note": "son of Mahavir Prasad", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "ramnivas", "name": "Ram Nivas", "name_hi": "राम निवास", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["vikas"]}], "children": [{"id": "vikas", "name": "Vikas", "name_hi": "विकास", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sanyam"]}], "children": [{"id": "sanyam", "name": "Sanyam", "name_hi": "संयम", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}]}, {"id": "rampyari", "name": "Ram Pyari", "name_hi": "राम प्यारी", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "mayachand", "name": "Mayachand", "name_hi": "मायाचंद", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "biological son of Netram; adopted by Khushiram", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "mayachand_wife", "name": "Mayachand's wife", "name_hi": null, "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": "uncertain", "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Halalpur", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "mayachand_wife", "unattributed": false, "child_ids": ["ramesh", "mukesh_m"]}], "children": [{"id": "ramesh", "name": "Ramesh", "name_hi": "रमेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["manish"]}], "children": [{"id": "manish", "name": "Manish", "name_hi": "मनीष", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aayush"]}], "children": [{"id": "aayush", "name": "Aayush", "name_hi": "आयुष", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "mukesh_m", "name": "Mukesh", "name_hi": "मुकेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["akshay"]}], "children": [{"id": "akshay", "name": "Akshay", "name_hi": "अक्षय", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "kapoorchand", "name": "Kapoorchand", "name_hi": "कपूरचंद", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "brother of Chandgiram (son of Netram); no son", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "moladhmal", "name": "Moladh Mal", "name_hi": "मोलाध मल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Dada Bhagmal", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ramnarayan", "ramlal", "jainarayan", "sarbati", "chalti", "bharpaai", "mamkunwar", "kesar"]}], "children": [{"id": "ramnarayan", "name": "Ram Narayan", "name_hi": "राम नारायण", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["jagdishchand", "naveen"]}], "children": [{"id": "jagdishchand", "name": "Jagdish Chand", "name_hi": "जगदीश चंद", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "jagdishchand_wife", "name": "Rashmi", "name_hi": "रश्मि", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": "Basheshar", "mother": null, "address": {}, "origin": {"village": "Pugthala", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "jagdishchand_wife", "unattributed": false, "child_ids": ["ravi"]}], "children": [{"id": "ravi", "name": "Ravi", "name_hi": "रवि", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "naveen", "name": "Naveen", "name_hi": "नवीन", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "ramlal", "name": "Ram Lal", "name_hi": "राम लाल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sanjay", "sandeep"]}], "children": [{"id": "sanjay", "name": "Sanjay", "name_hi": "संजय", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["guddu"]}], "children": [{"id": "guddu", "name": "Guddu", "name_hi": "गुड्डू", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "sandeep", "name": "Sandeep", "name_hi": "संदीप", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jainarayan", "name": "Jai Narayan", "name_hi": "जय नारायण", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Moladh Mal", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["bhanuprakash", "satyaprakash", "jaiprakash", "shribhagwan"]}], "children": [{"id": "bhanuprakash", "name": "Bhanu Prakash", "name_hi": "भानु प्रकाश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kamal", "ankit"]}], "children": [{"id": "kamal", "name": "Kamal", "name_hi": "कमल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["satyam"]}], "children": [{"id": "satyam", "name": "Satyam", "name_hi": "सत्यम", "gender": "male", "born": null, "life": null, "died": null, "note": "GUESS: verify parent", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "ankit", "name": "Ankit", "name_hi": "अंकित", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["tejas"]}], "children": [{"id": "tejas", "name": "Tejas", "name_hi": "तेजस", "gender": "male", "born": null, "life": null, "died": null, "note": "GUESS: verify parent", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "satyaprakash", "name": "Satya Prakash", "name_hi": "सत्य प्रकाश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ashish", "saurabh"]}], "children": [{"id": "ashish", "name": "Ashish", "name_hi": "आशीष", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "saurabh", "name": "Saurabh", "name_hi": "सौरभ", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jaiprakash", "name": "Jai Prakash", "name_hi": "जय प्रकाश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rajiv", "sanjiv"]}], "children": [{"id": "rajiv", "name": "Rajiv", "name_hi": "राजीव", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kartik", "vinayak"]}], "children": [{"id": "kartik", "name": "Kartik", "name_hi": "कार्तिक", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "vinayak", "name": "Vinayak", "name_hi": "विनायक", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "sanjiv", "name": "Sanjiv", "name_hi": "संजीव", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kanishka"]}], "children": [{"id": "kanishka", "name": "Kanishka", "name_hi": "कनिष्क", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "shribhagwan", "name": "Shri Bhagwan", "name_hi": "श्री भगवान", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["girish"]}], "children": [{"id": "girish", "name": "Girish", "name_hi": "गिरीश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "sarbati", "name": "Sarbati", "name_hi": "सरबती", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "chalti", "name": "Chalti", "name_hi": "चलती", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "chalti_husband", "name": "Chalti's husband", "name_hi": null, "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": "uncertain", "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Gangana", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "chalti_husband", "unattributed": false, "child_ids": ["santosh"]}], "children": [{"id": "santosh", "name": "Santosh", "name_hi": "संतोष", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Gangana", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "bharpaai", "name": "Bharpaai", "name_hi": "भरपाई", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "mamkunwar", "name": "Mam Kunwar", "name_hi": "मम कुंवर", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "kesar", "name": "Kesar", "name_hi": "केसर", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "hargolal", "name": "Har Golal", "name_hi": "हर गोलाल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "khushiram", "name": "Khushiram", "name_hi": "खुशीराम", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Dada Bhagmal; no biological son — adopted Mayachand (Netram's son)", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "roodi", "name": "Roodi", "name_hi": "रूडी", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "male", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["pogarmal"]}], "children": [{"id": "pogarmal", "name": "Pogarmal", "name_hi": "पोगरमल", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Shakti Nagar", "city": "Delhi"}, "origin": {}, "origin_inherited": false, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["drkrishan"]}], "children": [{"id": "drkrishan", "name": "Dr. Krishan", "name_hi": "डॉ. कृष्ण", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {}, "origin_inherited": false, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}]}, {"id": "gaurishankar", "name": "Dada Gaurishankar", "name_hi": "दादा गौरीशंकर", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "no children", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "udmi", "name": "Udmi", "name_hi": "उदमी", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Sevak Ram (Till annotation on chart)", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ramjilal", "richa"]}], "children": [{"id": "ramjilal", "name": "Ramjilal", "name_hi": "रामजीलाल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["mamchand"]}], "children": [{"id": "mamchand", "name": "Mamchand", "name_hi": "मामचन्द", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "richa", "name": "Richha", "name_hi": "रिच्छा", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Udmi (was read as 'Siddho' — reinterpreted per correction)", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["niyadar", "lekhram"]}], "children": [{"id": "niyadar", "name": "Niyadar", "name_hi": "नियादर", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Richha (was read as 'Nisar')", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["bhairam", "dharma", "lehrimal"]}], "children": [{"id": "bhairam", "name": "Bhairam (Bhaiyaram)", "name_hi": "भैराम (भैयाराम)", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "also called Bhaiyaram", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["omprakash_omi", "ramkumar", "angori", "kamla", "bimla_bhairam", "santosh_bhairam"]}], "children": [{"id": "omprakash_omi", "name": "Om Prakash (Omi)", "name_hi": "ओम प्रकाश (ओमी)", "gender": "male", "born": null, "life": "living", "died": null, "note": "also called Omi", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "ramkumar", "name": "Ram Kumar", "name_hi": "राम कुमार", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["vijay_ramkumar"]}], "children": [{"id": "vijay_ramkumar", "name": "Vijay", "name_hi": "विजय", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "vijay_ramkumar_wife", "name": "Vijay's wife", "name_hi": null, "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": "uncertain", "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Halalpur", "district": "Narela", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "angori", "name": "Angori", "name_hi": "अंगूरी", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "kamla", "name": "Kamla", "name_hi": "कमला", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "kamla_husband", "name": "Jai Bhagwan", "name_hi": "जय भगवान", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Rajakhedi", "district": "Panipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "bimla_bhairam", "name": "Bimla", "name_hi": "बिमला", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "santosh_bhairam", "name": "Santosh", "name_hi": "संतोष", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "dharma", "name": "Dharma", "name_hi": "धर्मा", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["labhchand", "satnarayan", "srikrishan"]}], "children": [{"id": "labhchand", "name": "Labh Chand (Labha)", "name_hi": "लाभ चंद (लाभा)", "gender": "male", "born": null, "life": "living", "died": null, "note": "also called Labha", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["mahavir", "satta", "peeno"]}], "children": [{"id": "mahavir", "name": "Mahavir", "name_hi": "महावीर", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "mahavir_wife", "name": "Lina", "name_hi": "लीना", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Kassan", "district": "Tijara", "state": "Rajasthan"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "mahavir_wife", "unattributed": false, "child_ids": ["ritvik", "chunu"]}], "children": [{"id": "ritvik", "name": "Ritvik", "name_hi": "ऋत्विक", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "chunu", "name": "Chunu", "name_hi": "चुनू", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "satta", "name": "Satta", "name_hi": "सत्ता", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "satta_husband", "name": "Satta's husband", "name_hi": null, "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": "uncertain", "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Kakroi", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "peeno", "name": "Peeno", "name_hi": "पीनो", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "peeno_husband", "name": "Sudhir", "name_hi": "सुधीर", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"state": "Uttar Pradesh"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "satnarayan", "name": "Sat Narayan", "name_hi": "सत नारायण", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "satnarayan_wife", "name": "Jain Mati", "name_hi": "जैन मती", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": "Chatar Sen", "mother": null, "address": {}, "origin": {"village": "Ridhana", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "satnarayan_wife", "unattributed": false, "child_ids": ["babita_satnarayan", "sunta_satnarayan", "beena_satnarayan", "poonam_satnarayan", "reena_satnarayan", "mukesh_satnarayan"]}], "children": [{"id": "babita_satnarayan", "name": "Babita", "name_hi": "बबीता", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "babita_satnarayan_husband", "name": "Pawan", "name_hi": "पवन", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Gandhra", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "sunta_satnarayan", "name": "Sunta", "name_hi": null, "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "sunta_satnarayan_husband", "name": "Mukesh", "name_hi": "मुकेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Mehandipur", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "beena_satnarayan", "name": "Beena", "name_hi": "बीना", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Tri Nagar", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "beena_satnarayan_husband", "name": "Sunil", "name_hi": "सुनील", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Tri Nagar", "city": "Delhi"}, "origin": {"village": "Kurana", "district": "Gohana", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "poonam_satnarayan", "name": "Poonam", "name_hi": "पूनम", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "poonam_satnarayan_husband", "name": "Vikas", "name_hi": "विकास", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Mehandipur", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "reena_satnarayan", "name": "Reena", "name_hi": "रीना", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Adarsh Nagar", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "reena_satnarayan_husband", "name": "Sanjay", "name_hi": "संजय", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Adarsh Nagar", "city": "Delhi"}, "origin": {"village": "Jattal", "district": "Panipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "mukesh_satnarayan", "name": "Mukesh", "name_hi": "मुकेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "mukesh_satnarayan_wife", "name": "Rakhi", "name_hi": "राखी", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Garhi Jhajra", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "srikrishan", "name": "Sri Krishan", "name_hi": "श्री किशन", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "srikrishan_wife", "name": "Prem", "name_hi": "प्रेम", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "srikrishan_wife", "unattributed": false, "child_ids": ["pankaj_srikrishan", "money_srikrishan"]}], "children": [{"id": "pankaj_srikrishan", "name": "Pankaj", "name_hi": "पंकज", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "pankaj_srikrishan_wife", "name": "Pankaj's wife", "name_hi": null, "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": "uncertain", "photo": null, "father": "Ramesh", "mother": null, "address": {}, "origin": {"village": "Kakroi", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "money_srikrishan", "name": "Money", "name_hi": "मनी", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "lehrimal", "name": "Lehri Mal", "name_hi": "लहरी मल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "lekhram", "name": "Lekhram", "name_hi": "लेखराम", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Richha (was read as 'Lorvaram')", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "kannu", "name": "Kannu", "name_hi": "कन्नू", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Sevak Ram", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rajaram", "panmeshwar"]}], "children": [{"id": "rajaram", "name": "Rajaram", "name_hi": "राजाराम", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "panmeshwar", "name": "Panmeshwar", "name_hi": "पनमेश्वर", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}]}]}</script>
-<script id="unlinked-data" type="application/json">[]</script>
-<script id="summary-data" type="application/json">{"total": 175, "generations": 11, "uncertain": 5, "needs_parent": 0, "male": 136, "female": 39}</script>
-<script id="auth-data" type="application/json">{"contact": "Ankur", "admin": {"salt": "0be5bfdb946ca50fd2002a5296f47d56", "iterations": 200000, "hash": "42d186b3d6d7864e468b118a99879366820af8ef5d1e41a3db510b0b8fd47e2a"}, "signing_key": "0902a92549d0252595b2f11040cd9c1be309931e0f76086a902e0387cdc98f4b"}</script>
 <script>var FT = { views: {} };
-(function () {
+FT.boot = function (data) {
   var NS="http://www.w3.org/2000/svg";
-  var tree=JSON.parse(document.getElementById('tree-data').textContent);
-  var unlinked=JSON.parse(document.getElementById('unlinked-data').textContent);
-  var summary=JSON.parse(document.getElementById('summary-data').textContent);
+  var tree=data.tree;
+  var unlinked=data.unlinked;
+  var summary=data.summary;
   var vp=document.getElementById('viewport');
   var stage=document.getElementById('stage');
 
@@ -641,6 +641,17 @@
     sheet.style.borderLeftColor = person.gender === 'female' ? 'var(--rail-f)' :
       person.gender === 'male' ? 'var(--rail-m)' : 'var(--rail-unknown)';
     sheet.classList.remove('hidden');
+    if (FT.onSheet) FT.onSheet(person, node, sheetBody);
+  };
+
+  FT.openPerson = function (id) {
+    var owner = FT.byId[id] || FT.nodes.filter(function (n) {
+      return (n.spouses || []).some(function (s) { return s.id === id; });
+    })[0];
+    if (!owner) return;
+    FT.state.picks = [owner.id];
+    FT.showPicks();
+    if (owner.id !== id) FT.select(id, owner);
   };
 
   FT.lineage = function (id) {
@@ -1641,7 +1652,7 @@
       : (window.innerWidth < 768 ? 'horizontal' : 'classic');
     FT.setView(preferred);
   };
-})();
+};
 
 FT.views.classic = {
   id: 'classic',
@@ -1883,328 +1894,181 @@ FT.views.poster = {
   };
 })(typeof FT !== 'undefined' ? (FT.filters = {}) : module.exports);
 
-(function (auth) {
-  var ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-  var EPOCH = Date.UTC(2026, 0, 1);
-  var STEP_MS = 10 * 60 * 1000;
-  var HOUR_MS = 60 * 60 * 1000;
-  var FIRST_USE_MS = 24 * HOUR_MS;
-  var SIG_SPACE = 1048576;
+(function (api) {
+  api.base = function (hostname) {
+    return hostname === 'localhost' || hostname === '127.0.0.1'
+      ? 'http://localhost:5000'
+      : 'https://api.jainparivar.online';
+  };
 
-  function hexBytes(hex) {
-    var out = new Uint8Array(hex.length / 2);
-    for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
-    return out;
+  api.pickFamily = function (requested, stored, home, villages) {
+    var ids = [];
+    villages.forEach(function (v) { v.families.forEach(function (f) { ids.push(f.id); }); });
+    var choices = [requested, stored, home];
+    for (var i = 0; i < choices.length; i++) {
+      if (choices[i] && ids.indexOf(choices[i]) >= 0) return choices[i];
+    }
+    return ids[0] || null;
+  };
+
+  api.urlFor = function (familyId, personId) {
+    return '?family=' + encodeURIComponent(familyId) +
+      (personId ? '&person=' + encodeURIComponent(personId) : '');
+  };
+
+  api.roleText = function (me) {
+    if (me.is_global) return 'Global admin';
+    var scopes = me.roles.map(function (r) { return r.scope; });
+    if (scopes.indexOf('village') >= 0) return 'Village admin';
+    if (scopes.indexOf('branch') >= 0) return 'Branch rep';
+    return 'Member';
+  };
+
+  function parse(text) {
+    try { return text ? JSON.parse(text) : {}; } catch (e) { return {}; }
   }
 
-  function bytesHex(buffer) {
-    return Array.prototype.map.call(new Uint8Array(buffer), function (b) {
-      return ('0' + b.toString(16)).slice(-2);
-    }).join('');
-  }
-
-  function signature(keyHex, data) {
-    return crypto.subtle.importKey('raw', hexBytes(keyHex), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-      .then(function (key) {
-        return crypto.subtle.sign('HMAC', key, new Uint8Array([(data >> 16) & 255, (data >> 8) & 255, data & 255]));
-      })
-      .then(function (buffer) {
-        var b = new Uint8Array(buffer);
-        return (b[0] << 12) | (b[1] << 4) | (b[2] >> 4);
+  api.call = function (method, path, body) {
+    var options = { method: method, credentials: 'include', headers: {} };
+    if (body !== undefined) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+    return fetch(api.root + path, options).then(function (r) {
+      return r.text().then(function (text) {
+        var data = parse(text);
+        if (r.ok) return data;
+        var err = new Error(data.error || ('Request failed (' + r.status + ')'));
+        err.status = r.status;
+        if (r.status === 401 && path !== '/login' && api.onLoggedOut) api.onLoggedOut();
+        throw err;
       });
-  }
-
-  function toText(value) {
-    var s = '';
-    for (var i = 0; i < 8; i++) {
-      s = ALPHABET.charAt(value % 32) + s;
-      value = Math.floor(value / 32);
-    }
-    return s.slice(0, 4) + '-' + s.slice(4);
-  }
-
-  function toValue(code) {
-    var value = 0;
-    for (var i = 0; i < 8; i++) value = value * 32 + ALPHABET.indexOf(code.charAt(i));
-    return value;
-  }
-
-  auth.HOUR_MS = HOUR_MS;
-
-  auth.normalize = function (input) {
-    var s = String(input).toUpperCase().replace(/[\s-]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
-    if (s.length !== 8) return null;
-    for (var i = 0; i < 8; i++) if (ALPHABET.indexOf(s.charAt(i)) < 0) return null;
-    return s;
-  };
-
-  auth.makeCode = function (keyHex, nowMs, hours) {
-    var step = Math.floor((nowMs - EPOCH) / STEP_MS);
-    var data = step * 2 + (hours === 2 ? 1 : 0);
-    return signature(keyHex, data).then(function (sig) {
-      return toText(data * SIG_SPACE + sig);
+    }, function () {
+      var err = new Error('Cannot reach the server. Check your internet connection.');
+      err.status = 0;
+      throw err;
     });
   };
 
-  auth.readCode = function (keyHex, input, nowMs) {
-    var code = auth.normalize(input);
-    if (!code) return Promise.resolve({ status: 'bad' });
-    var value = toValue(code);
-    var data = Math.floor(value / SIG_SPACE);
-    return signature(keyHex, data).then(function (expected) {
-      if (expected !== value % SIG_SPACE) return { status: 'bad' };
-      var issued = EPOCH + Math.floor(data / 2) * STEP_MS;
-      if (nowMs - issued >= FIRST_USE_MS) return { status: 'expired' };
-      return { status: 'ok', code: code, hours: data % 2 ? 2 : 1 };
+  function param(name) {
+    var m = new RegExp('[?&]' + name + '=([^&#]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  function store(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+  function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+  api.reloadAt = function (personId) {
+    location.assign(location.pathname + api.urlFor(api.familyId, personId));
+  };
+
+  function showLogin(message) {
+    document.getElementById('login').classList.remove('hidden');
+    document.getElementById('login-msg').textContent = message || '';
+    document.getElementById('login-user').focus();
+  }
+
+  function wireLogin() {
+    var form = document.getElementById('login-form');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = document.getElementById('login-msg');
+      msg.textContent = '';
+      api.call('POST', '/login', {
+        username: document.getElementById('login-user').value,
+        password: document.getElementById('login-pass').value
+      }).then(function () { location.reload(); }, function (err) { msg.textContent = err.message; });
     });
-  };
+  }
 
-  auth.hashPassword = function (password, saltHex, iterations) {
-    return crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits'])
-      .then(function (key) {
-        return crypto.subtle.deriveBits(
-          { name: 'PBKDF2', salt: hexBytes(saltHex), iterations: iterations, hash: 'SHA-256' }, key, 256);
-      })
-      .then(bytesHex);
-  };
-
-  auth.decide = function (config, input, nowMs, usedCodes) {
-    if (!config || !String(input).trim()) return Promise.resolve({ error: 'wrong' });
-    var admin = config.admin;
-    return auth.hashPassword(input, admin.salt, admin.iterations).then(function (hash) {
-      if (hash === admin.hash) return { kind: 'admin' };
-      return auth.readCode(config.signing_key, input, nowMs).then(function (r) {
-        if (r.status === 'bad') return { error: 'wrong' };
-        if (r.status === 'expired') return { error: 'expired' };
-        if (usedCodes.indexOf(r.code) >= 0) return { error: 'used' };
-        return { kind: 'code', code: r.code, expires: nowMs + r.hours * HOUR_MS };
+  function familySwitcher(villages, current) {
+    var select = document.createElement('select');
+    select.id = 'family-picker';
+    select.setAttribute('aria-label', 'Family');
+    villages.forEach(function (v) {
+      var group = document.createElement('optgroup');
+      group.label = v.name;
+      v.families.forEach(function (f) {
+        var option = document.createElement('option');
+        option.value = f.id;
+        option.textContent = f.name;
+        if (f.id === current) option.selected = true;
+        group.appendChild(option);
       });
+      select.appendChild(group);
     });
-  };
-
-  var MAX_NAME = 30;
-
-  function cleanName(name) {
-    return String(name || '').trim().slice(0, MAX_NAME);
+    select.addEventListener('change', function () {
+      location.assign(location.pathname + api.urlFor(select.value));
+    });
+    document.querySelector('#toolbar .brand').appendChild(select);
   }
 
-  auth.shareLink = function (base, code, name) {
-    var link = base + '#code=' + String(code).replace('-', '');
-    var clean = cleanName(name);
-    return clean ? link + '&name=' + encodeURIComponent(clean) : link;
-  };
-
-  auth.readLink = function (hash) {
-    var params = new URLSearchParams(String(hash || '').replace(/^#/, ''));
-    var code = params.get('code');
-    if (!code) return null;
-    return { code: code, name: cleanName(params.get('name')) };
-  };
-
-  auth.sessionState = function (session, nowMs) {
-    if (!session) return 'none';
-    if (session.kind === 'admin') return 'admin';
-    if (session.kind === 'code' && typeof session.expires === 'number') {
-      return nowMs < session.expires ? 'active' : 'over';
-    }
-    return 'none';
-  };
-
-  var TEXT = {
-    en: {
-      placeholder: 'Enter your code or password',
-      enter: 'Enter',
-      wrong: "That code isn't right. Check it and try again.",
-      expired: 'This code has expired. Ask {c} for a new one.',
-      over: 'Your time is over. Ask {c} for a new code.',
-      nocrypto: 'This browser cannot check codes here. Open the family tree website link instead.',
-      who: '{n} · {m} min left',
-      admin: 'Admin',
-      guest: 'Guest',
-      logout: 'Log out'
-    },
-    hi: {
-      placeholder: 'अपना कोड या पासवर्ड डालें',
-      enter: 'खोलें',
-      wrong: 'यह कोड सही नहीं है। जाँचकर फिर से डालें।',
-      expired: 'इस कोड का समय निकल गया है। {c} से नया कोड माँगें।',
-      over: 'आपका समय पूरा हो गया। {c} से नया कोड माँगें।',
-      nocrypto: 'यह ब्राउज़र यहाँ कोड नहीं जाँच सकता। परिवार वृक्ष की वेबसाइट का लिंक खोलें।',
-      who: '{n} · {m} मिनट बाकी',
-      admin: 'एडमिन',
-      guest: 'अतिथि',
-      logout: 'लॉग आउट'
-    }
-  };
-  var text = TEXT.en;
-
-  function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
-  function save(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
-  function drop(key) { try { localStorage.removeItem(key); } catch (e) {} }
-  function loadJson(key) { try { return JSON.parse(load(key)); } catch (e) { return null; } }
-
-  function button(label, onClick) {
+  function menuItem(label, onClick) {
     var b = document.createElement('button');
     b.type = 'button';
+    b.setAttribute('role', 'menuitem');
     b.textContent = label;
     b.addEventListener('click', onClick);
-    return b;
+    document.getElementById('menu').appendChild(b);
   }
 
-  function selectText(node) {
-    var range = document.createRange();
-    range.selectNodeContents(node);
-    var selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-  }
-
-  function showCodePanel(config) {
-    var sheet = document.getElementById('sheet');
+  function passwordSheet() {
     var body = document.getElementById('sheet-body');
-    body.innerHTML =
-      '<h3>New code</h3>' +
-      '<label class="code-name">Who is it for?' +
-      '<input id="code-name" maxlength="30" autocomplete="off" placeholder="Name, e.g. Sunita"></label>' +
-      '<div class="code-hours">' +
-      '<button type="button" data-hours="1">1 hour</button>' +
-      '<button type="button" data-hours="2">2 hours</button>' +
-      '</div>' +
-      '<div id="code-result" hidden>' +
-      '<p class="code-value" id="code-value"></p>' +
-      '<button type="button" id="code-copy">Copy link</button>' +
-      '<p class="code-link" id="code-link"></p>' +
-      '<p class="code-note" id="code-note"></p>' +
-      '</div>';
-    sheet.style.borderLeftColor = 'var(--hl)';
-    sheet.classList.remove('hidden');
-    var nameInput = document.getElementById('code-name');
-    var result = document.getElementById('code-result');
-    var value = document.getElementById('code-value');
-    var copy = document.getElementById('code-copy');
-    var linkText = document.getElementById('code-link');
-    var note = document.getElementById('code-note');
-    Array.prototype.forEach.call(body.querySelectorAll('[data-hours]'), function (b) {
-      b.addEventListener('click', function () {
-        var hours = Number(b.getAttribute('data-hours'));
-        var name = nameInput.value.trim();
-        auth.makeCode(config.signing_key, Date.now(), hours).then(function (code) {
-          value.textContent = code;
-          linkText.textContent = auth.shareLink(location.origin + location.pathname, code, name);
-          copy.textContent = 'Copy link';
-          note.textContent = (name ? 'For ' + name + '. ' : '') + 'Use within 24 hours. Lasts ' +
-            (hours === 1 ? '1 hour' : '2 hours') + ' from when they log in.';
-          result.hidden = false;
-        });
-      });
-    });
-    copy.addEventListener('click', function () {
-      var write = navigator.clipboard ? navigator.clipboard.writeText(linkText.textContent) : Promise.reject();
-      write.then(function () { copy.textContent = 'Copied'; }, function () { selectText(linkText); });
-    });
-    nameInput.focus();
-  }
-
-  function whoName(session) {
-    if (session.kind === 'admin') return text.admin;
-    return session.name || text.guest;
-  }
-
-  function showWho(session, label) {
-    document.getElementById('who').textContent = label;
-    document.getElementById('avatar').textContent = whoName(session).charAt(0).toUpperCase();
-  }
-
-  function adminControls(config) {
-    var newCode = button('New code', function () { showCodePanel(config); });
-    newCode.id = 'new-code';
-    newCode.setAttribute('role', 'menuitem');
-    document.getElementById('menu').appendChild(newCode);
-  }
-
-  function logOutItem() {
-    var logOut = button(text.logout, function () { drop('ft-session'); location.reload(); });
-    logOut.id = 'log-out';
-    logOut.setAttribute('role', 'menuitem');
-    document.getElementById('menu').appendChild(logOut);
-  }
-
-  function watch(session) {
-    function tick() {
-      var left = session.expires - Date.now();
-      if (left <= 0) { location.reload(); return; }
-      showWho(session, text.who.replace('{n}', whoName(session)).replace('{m}', Math.ceil(left / 60000)));
-    }
-    tick();
-    setInterval(tick, 30000);
-    document.addEventListener('visibilitychange', tick);
-  }
-
-  auth.start = function (onUnlock) {
-    var config = JSON.parse(document.getElementById('auth-data').textContent);
-    var contact = (config && config.contact) || 'the admin';
-    text = TEXT[load('ft-lang') === 'hi' ? 'hi' : 'en'];
-    var box = document.getElementById('login');
-    var input = document.getElementById('login-input');
-    var msg = document.getElementById('login-msg');
-    input.placeholder = text.placeholder;
-    input.setAttribute('aria-label', text.placeholder);
-    document.getElementById('login-enter').textContent = text.enter;
-
-    function say(key) { msg.textContent = text[key].replace('{c}', contact); }
-
-    function unlock(session) {
-      box.classList.add('hidden');
-      onUnlock();
-      if (session.kind === 'admin') {
-        adminControls(config);
-        showWho(session, text.admin);
-      } else {
-        watch(session);
-      }
-      logOutItem();
-    }
-
-    var link = auth.readLink(location.hash);
-    if (link) history.replaceState(null, '', location.pathname + location.search);
-
-    var saved = loadJson('ft-session');
-    var state = auth.sessionState(saved, Date.now());
-    if (state === 'admin' || state === 'active') { unlock(saved); return; }
-    if (state === 'over') { drop('ft-session'); say('over'); }
-    input.focus();
-
-    var checking = false;
-
-    function attempt(value, name) {
-      if (checking) return;
-      checking = true;
-      msg.textContent = '';
-      var used = loadJson('ft-used-codes') || [];
-      Promise.resolve()
-        .then(function () { return auth.decide(config, value, Date.now(), used); })
-        .then(function (r) {
-          checking = false;
-          if (r.error) { say(r.error === 'used' ? 'over' : r.error); return; }
-          var session = r.kind === 'admin' ? { kind: 'admin' } :
-            { kind: 'code', expires: r.expires, name: name };
-          if (r.code) save('ft-used-codes', JSON.stringify(used.concat([r.code])));
-          save('ft-session', JSON.stringify(session));
-          input.value = '';
-          unlock(session);
-        })
-        .catch(function () { checking = false; say('nocrypto'); });
-    }
-
-    document.getElementById('login-form').addEventListener('submit', function (e) {
+    body.innerHTML = '<h3>Change password</h3><form id="pw-form" class="edit-form">' +
+      '<label>Old password<input type="password" name="old" autocomplete="current-password" required></label>' +
+      '<label>New password<input type="password" name="new" autocomplete="new-password" minlength="8" required></label>' +
+      '<div class="form-buttons"><button type="submit">Save</button></div>' +
+      '<p class="form-msg" role="alert"></p></form>';
+    document.getElementById('sheet').classList.remove('hidden');
+    var form = document.getElementById('pw-form');
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
-      attempt(input.value, '');
+      var msg = form.querySelector('.form-msg');
+      api.call('POST', '/me/password', { old: form.elements.old.value, 'new': form.elements['new'].value })
+        .then(function () { msg.textContent = 'Password changed.'; form.reset(); },
+              function (err) { msg.textContent = err.message; });
     });
+  }
 
-    if (link) attempt(link.code, link.name);
+  function accountMenu(me) {
+    var name = me.name || me.name_hi || me.username;
+    document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
+    document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
+    menuItem('Change password', passwordSheet);
+    if (me.is_admin) menuItem('Admin', function () { location.assign('admin.html'); });
+    menuItem('Log out', function () {
+      api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
+    });
+  }
+
+  api.start = function () {
+    api.root = api.base(location.hostname);
+    wireLogin();
+    api.call('GET', '/me').then(function (me) {
+      api.me = me;
+      return api.call('GET', '/villages').then(function (villages) {
+        api.villages = villages;
+        var id = api.pickFamily(param('family'), stored('ft-family'), me.home_family, villages);
+        if (!id) throw new Error('No family has been set up yet.');
+        api.familyId = id;
+        store('ft-family', id);
+        return api.call('GET', '/families/' + encodeURIComponent(id) + '/tree');
+      }).then(function (data) {
+        document.getElementById('login').classList.add('hidden');
+        FT.boot(data);
+        FT.init();
+        familySwitcher(api.villages, api.familyId);
+        accountMenu(me);
+        api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
+        var person = param('person');
+        if (person) FT.openPerson(person);
+      });
+    }).catch(function (err) {
+      showLogin(err.status === 401 ? '' : err.message);
+    });
   };
-})(typeof FT !== 'undefined' ? (FT.auth = {}) : module.exports);
+})(typeof FT !== 'undefined' ? (FT.api = {}) : module.exports);
 
-FT.auth.start(FT.init);</script>
+FT.api.start();</script>
 </body>
 </html>
