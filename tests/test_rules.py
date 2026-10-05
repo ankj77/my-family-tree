@@ -112,3 +112,9 @@ class TestCleanFields(unittest.TestCase):
     def test_text_must_be_text(self):
         with self.assertRaisesRegex(RuleError, "must be text"):
             clean_fields({"name": 5}, EDIT_FIELDS)
+
+    def test_choice_must_be_text(self):
+        with self.assertRaisesRegex(RuleError, "gender must be one of"):
+            clean_fields({"gender": ["male"]}, EDIT_FIELDS)
+        with self.assertRaisesRegex(RuleError, "gender must be one of"):
+            clean_fields({"gender": {}}, EDIT_FIELDS)

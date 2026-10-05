@@ -45,7 +45,7 @@ def clean_fields(data: dict, allowed) -> dict:
             if len(value) > TEXT_FIELDS[key]:
                 raise RuleError("%s is longer than %d characters" % (key, TEXT_FIELDS[key]))
         elif key in CHOICES:
-            if value not in CHOICES[key]:
+            if not isinstance(value, str) or value not in CHOICES[key]:
                 raise RuleError("%s must be one of: %s" % (key, ", ".join(sorted(CHOICES[key]))))
         elif key == "sort_order":
             if isinstance(value, bool) or not isinstance(value, int):
