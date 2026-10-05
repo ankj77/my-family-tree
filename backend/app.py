@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from datetime import datetime, timedelta, timezone
 
 import pymysql
@@ -458,3 +459,259 @@ def decide_delete(request_id, decision):
     delete_person(cur, graph, actor, pid, "delete_approve")
     commit_checked(cur)
     return jsonify(status="deleted")
+
+
+USERNAME_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{2,63}$")
+
+
+def clean_username(value):
+    name = str(value or "").strip().lower()
+    if not USERNAME_RE.match(name):
+        raise RuleError("A username needs 3 to 64 letters, digits, dots, dashes or underscores")
+    return name
+
+
+def usernames(cur):
+    cur.execute("SELECT person_id, username FROM accounts")
+    return {r["person_id"]: r["username"] for r in cur.fetchall()}
+
+
+def require_admin(access):
+    if not access.is_admin():
+        raise ApiError(403, "Only admins can do this")
+
+
+def manageable(graph, access, pid):
+    if pid not in graph.account_ids:
+        raise ApiError(404, "%s has no login" % name_of(graph, pid))
+    if not access.can_manage_account(pid):
+        raise ApiError(403, "You cannot manage %s's login" % name_of(graph, pid))
+
+
+@app.get("/accounts")
+def list_accounts():
+    _, graph, access = context()
+    require_admin(access)
+    names = usernames(conn().cursor())
+    return jsonify([
+        {"person_id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"),
+         "family_id": graph.home_family(pid), "username": names.get(pid),
+         "can_manage": access.can_manage_account(pid)}
+        for pid, row in graph.people.items()
+        if (row.get("life") == "living" or pid in names) and access.is_admin_over(pid)
+    ])
+
+
+@app.post("/accounts")
+def create_account():
+    actor, graph, access = context()
+    data = body()
+    pid = data.get("person_id")
+    if pid not in graph.people:
+        raise ApiError(404, "No such person")
+    if not access.can_manage_account(pid):
+        raise ApiError(403, "You cannot make a login for %s" % name_of(graph, pid))
+    if pid in graph.account_ids:
+        raise RuleError("%s already has a login" % name_of(graph, pid))
+    if graph.people[pid].get("life") != "living":
+        raise RuleError("Only living people get a login; mark %s as living first" % name_of(graph, pid))
+    cur = conn().cursor()
+    taken = set(usernames(cur).values())
+    username = clean_username(data["username"]) if data.get("username") else naming.username(name_of(graph, pid), taken)
+    if username in taken:
+        raise RuleError("The username %s is taken" % username)
+    password = auth.new_password()
+    db.insert_rows(cur, "accounts", [{"person_id": pid, "username": username, "password_hash": auth.make_hash(password)}])
+    log(cur, actor, pid, "account_create", None, {"username": username})
+    commit_checked(cur)
+    return jsonify(username=username, password=password), 201
+
+
+@app.patch("/accounts/<pid>")
+def rename_account(pid):
+    actor, graph, access = context()
+    manageable(graph, access, pid)
+    username = clean_username(body().get("username"))
+    cur = conn().cursor()
+    names = usernames(cur)
+    if username in set(names.values()) - {names[pid]}:
+        raise RuleError("The username %s is taken" % username)
+    cur.execute("UPDATE accounts SET username=%s WHERE person_id=%s", (username, pid))
+    log(cur, actor, pid, "account_rename", {"username": names[pid]}, {"username": username})
+    conn().commit()
+    return jsonify(username=username)
+
+
+@app.post("/accounts/<pid>/password")
+def reset_password(pid):
+    actor, graph, access = context()
+    manageable(graph, access, pid)
+    password = auth.new_password()
+    cur = conn().cursor()
+    cur.execute("UPDATE accounts SET password_hash=%s, failed_logins=0, locked_until=NULL WHERE person_id=%s",
+                (auth.make_hash(password), pid))
+    cur.execute("DELETE FROM sessions WHERE person_id=%s", (pid,))
+    log(cur, actor, pid, "password_reset")
+    conn().commit()
+    return jsonify(username=usernames(cur)[pid], password=password)
+
+
+@app.delete("/accounts/<pid>")
+def delete_account(pid):
+    actor, graph, access = context()
+    manageable(graph, access, pid)
+    if is_last_global(access.grants, pid):
+        raise RuleError("%s is the only global admin; make someone else global admin first" % name_of(graph, pid))
+    cur = conn().cursor()
+    cur.execute("DELETE FROM accounts WHERE person_id=%s", (pid,))
+    log(cur, actor, pid, "account_delete")
+    conn().commit()
+    return jsonify(status="deleted")
+
+
+def scope_name(graph, grant):
+    if grant["scope"] == "village":
+        village = graph.villages.get(grant["scope_id"])
+        return village["name"] if village else grant["scope_id"]
+    if grant["scope"] == "branch":
+        return name_of(graph, grant["scope_id"])
+    return "Everything"
+
+
+@app.get("/role-grants")
+def list_grants():
+    _, graph, access = context()
+    require_admin(access)
+    return jsonify([
+        {"id": g["id"], "person_id": g["person_id"], "person": name_of(graph, g["person_id"]),
+         "scope": g["scope"], "scope_id": g["scope_id"], "scope_name": scope_name(graph, g)}
+        for g in access.grants
+    ])
+
+
+@app.post("/role-grants")
+def create_grant():
+    actor, graph, access = context()
+    data = body()
+    pid, scope = data.get("person_id"), data.get("scope")
+    scope_id = "" if scope == "global" else str(data.get("scope_id") or "")
+    if scope not in RANK:
+        raise RuleError("scope must be global, village or branch")
+    if pid not in graph.people:
+        raise ApiError(404, "No such person")
+    if pid not in graph.account_ids:
+        raise RuleError("%s needs a login before getting a role" % name_of(graph, pid))
+    if scope == "village" and scope_id not in graph.villages:
+        raise ApiError(404, "No such village")
+    if scope == "branch" and scope_id not in graph.people:
+        raise ApiError(404, "No such person to root the branch")
+    if not access.can_grant(scope, scope_id):
+        raise ApiError(403, "You cannot give that role")
+    if any(g["person_id"] == pid and g["scope"] == scope and g["scope_id"] == scope_id for g in access.grants):
+        raise RuleError("%s already has that role" % name_of(graph, pid))
+    cur = conn().cursor()
+    cur.execute("INSERT INTO role_grants (person_id, scope, scope_id) VALUES (%s, %s, %s)", (pid, scope, scope_id))
+    grant_id = cur.lastrowid
+    log(cur, actor, pid, "role_grant", None, {"scope": scope, "scope_id": scope_id})
+    conn().commit()
+    return jsonify(id=grant_id), 201
+
+
+@app.delete("/role-grants/<int:grant_id>")
+def delete_grant(grant_id):
+    actor, graph, access = context()
+    grant = next((g for g in access.grants if g["id"] == grant_id), None)
+    if grant is None:
+        raise ApiError(404, "No such role")
+    if not access.can_grant(grant["scope"], grant["scope_id"]):
+        raise ApiError(403, "You cannot remove that role")
+    if grant["scope"] == "global" and is_last_global(access.grants, grant["person_id"]):
+        raise RuleError("This is the only global admin; make someone else global admin first")
+    cur = conn().cursor()
+    cur.execute("DELETE FROM role_grants WHERE id=%s", (grant_id,))
+    log(cur, actor, grant["person_id"], "role_revoke", {"scope": grant["scope"], "scope_id": grant["scope_id"]}, None)
+    conn().commit()
+    return jsonify(status="removed")
+
+
+def required_text(data, key, label):
+    value = str(data.get(key) or "").strip()
+    if not value:
+        raise RuleError("%s is required" % label)
+    if len(value) > 200:
+        raise RuleError("%s is longer than 200 characters" % label)
+    return value
+
+
+@app.post("/villages")
+def create_village():
+    actor, graph, access = context()
+    if not access.is_global:
+        raise ApiError(403, "Only a global admin can add villages")
+    data = body()
+    name = required_text(data, "name", "Village name")
+    extra = {}
+    for key, label in (("district", "District"), ("state", "State")):
+        value = str(data.get(key) or "").strip()
+        if len(value) > 200:
+            raise RuleError("%s is longer than 200 characters" % label)
+        extra[key] = value or None
+    vid = naming.slug(name, set(graph.villages), fallback="village")
+    cur = conn().cursor()
+    db.insert_rows(cur, "villages", [dict(extra, id=vid, name=name)])
+    log(cur, actor, None, "village_create", None, dict(extra, id=vid, name=name))
+    conn().commit()
+    return jsonify(id=vid), 201
+
+
+@app.post("/families")
+def create_family():
+    actor, graph, access = context()
+    data = body()
+    village_id = data.get("village_id")
+    if village_id not in graph.villages:
+        raise ApiError(404, "No such village")
+    if not access.can_create_family(village_id):
+        raise ApiError(403, "You cannot add families to this village")
+    name = required_text(data, "name", "Family name")
+    root = data.get("root") if isinstance(data.get("root"), dict) else {}
+    root_fields = rules.clean_fields(root, rules.EDIT_FIELDS)
+    fid = naming.slug(name, set(graph.families), fallback="family")
+    pid = naming.slug(root_fields.get("name") or root_fields.get("name_hi") or "", set(graph.people))
+    cur = conn().cursor()
+    db.insert_rows(cur, "families", [{"id": fid, "village_id": village_id, "name": name, "root_person_id": None}])
+    db.insert_rows(cur, "people", [dict(root_fields, id=pid, family_id=fid, updated_by=actor)])
+    cur.execute("UPDATE families SET root_person_id=%s WHERE id=%s", (pid, fid))
+    log(cur, actor, pid, "family_create", None, {"family": fid, "name": name, "village": village_id})
+    commit_checked(cur)
+    return jsonify(id=fid, root_person_id=pid), 201
+
+
+def _loads(value):
+    return json.loads(value) if isinstance(value, str) else value
+
+
+@app.get("/change-log")
+def change_log():
+    _, graph, access = context()
+    require_admin(access)
+    try:
+        limit = max(1, min(int(request.args.get("limit", 100)), 500))
+    except ValueError:
+        raise ApiError(400, "limit must be a number")
+    person_id = request.args.get("person_id")
+    cur = conn().cursor()
+    sql = "SELECT id, at, actor_id, person_id, action, before_json, after_json FROM change_log"
+    args = []
+    if person_id:
+        sql += " WHERE person_id=%s"
+        args.append(person_id)
+    cur.execute(sql + " ORDER BY at DESC, id DESC LIMIT %d" % limit, args)
+    out = []
+    for r in cur.fetchall():
+        if not access.is_global and not (r["person_id"] in graph.people and access.is_admin_over(r["person_id"])):
+            continue
+        out.append({"id": r["id"], "at": r["at"].isoformat(), "actor_id": r["actor_id"],
+                    "person_id": r["person_id"], "action": r["action"],
+                    "before": _loads(r["before_json"]), "after": _loads(r["after_json"])})
+    return jsonify(out)

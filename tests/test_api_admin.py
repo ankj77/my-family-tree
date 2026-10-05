@@ -1,0 +1,132 @@
+from tests.apicase import ORIGIN, ApiCase
+
+
+class TestAccounts(ApiCase):
+    def test_list_in_scope(self):
+        self.login("bash")
+        ids = {a["person_id"] for a in self.get("/accounts").get_json()}
+        self.assertEqual(ids, {"bash", "rashmi"})
+        self.post("/logout")
+        self.login("amit")
+        self.assertEqual(self.get("/accounts").status_code, 403)
+
+    def test_create_and_use(self):
+        self.login("mohan")
+        r = self.post("/accounts", {"person_id": "neha"})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        made = r.get_json()
+        self.assertEqual(made["username"], "neha")
+        self.assertEqual(len(made["password"]), 10)
+        self.assertEqual(self.post("/accounts", {"person_id": "neha"}).status_code, 409)
+        self.post("/logout")
+        self.assertEqual(self.post("/login", {"username": "neha", "password": made["password"]}).status_code, 200)
+
+    def test_only_living(self):
+        self.login("mohan")
+        self.assertEqual(self.post("/accounts", {"person_id": "ram"}).status_code, 409)
+
+    def test_out_of_scope(self):
+        self.login("bash")
+        self.assertEqual(self.post("/accounts", {"person_id": "neha"}).status_code, 403)
+
+    def test_bad_username(self):
+        self.login("mohan")
+        self.assertEqual(self.post("/accounts", {"person_id": "neha", "username": "no way!"}).status_code, 409)
+        self.assertEqual(self.post("/accounts", {"person_id": "neha", "username": "AMIT"}).status_code, 409)
+
+    def test_reset_ends_sessions(self):
+        rashmi = self.app_client()
+        r = rashmi.post("/login", json={"username": "rashmi", "password": "pw-rashmi"}, headers=ORIGIN)
+        self.assertEqual(r.status_code, 200)
+        self.login("bash")
+        r = self.post("/accounts/rashmi/password")
+        self.assertEqual(r.status_code, 200, r.get_json())
+        self.assertEqual(rashmi.get("/me").status_code, 401)
+        self.post("/logout")
+        self.assertEqual(self.post("/login", {"username": "rashmi", "password": r.get_json()["password"]}).status_code, 200)
+
+    def test_cannot_reset_higher_role(self):
+        self.login("bash")
+        self.assertEqual(self.post("/accounts/mohan/password").status_code, 403)
+
+    def test_rename(self):
+        self.login("mohan")
+        self.assertEqual(self.patch("/accounts/amit", {"username": "amit.jain"}).status_code, 200)
+        self.post("/logout")
+        self.assertEqual(self.post("/login", {"username": "amit.jain", "password": "pw-amit"}).status_code, 200)
+
+    def test_last_global_admin_keeps_login(self):
+        self.login("mohan")
+        self.assertEqual(self.delete("/accounts/mohan").status_code, 409)
+
+    def test_remove_login(self):
+        self.login("mohan")
+        self.assertEqual(self.delete("/accounts/amit").status_code, 200)
+        self.assertEqual(self.query("SELECT COUNT(*) AS n FROM accounts WHERE person_id='amit'")[0]["n"], 0)
+
+
+class TestRoles(ApiCase):
+    def test_grant_and_revoke(self):
+        self.login("mohan")
+        r = self.post("/role-grants", {"person_id": "amit", "scope": "village", "scope_id": "bakheta"})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        self.assertEqual(self.post("/role-grants", {"person_id": "amit", "scope": "village",
+                                                    "scope_id": "bakheta"}).status_code, 409)
+        grants = self.get("/role-grants").get_json()
+        made = next(g for g in grants if g["person_id"] == "amit")
+        self.assertEqual(made["scope_name"], "Bakheta")
+        self.assertEqual(self.delete("/role-grants/%d" % made["id"]).status_code, 200)
+
+    def test_village_admin_limits(self):
+        self.login("bash")
+        self.assertEqual(self.post("/role-grants", {"person_id": "rashmi", "scope": "village",
+                                                    "scope_id": "pugthala"}).status_code, 403)
+        self.assertEqual(self.post("/role-grants", {"person_id": "rashmi", "scope": "branch",
+                                                    "scope_id": "rashmi"}).status_code, 201)
+
+    def test_needs_a_login(self):
+        self.login("mohan")
+        r = self.post("/role-grants", {"person_id": "vikram", "scope": "branch", "scope_id": "neha"})
+        self.assertEqual(r.status_code, 409)
+
+    def test_last_global_admin(self):
+        self.login("mohan")
+        mine = next(g for g in self.get("/role-grants").get_json() if g["scope"] == "global")
+        self.assertEqual(self.delete("/role-grants/%d" % mine["id"]).status_code, 409)
+        self.post("/role-grants", {"person_id": "amit", "scope": "global"})
+        self.assertEqual(self.delete("/role-grants/%d" % mine["id"]).status_code, 200)
+
+
+class TestVillagesAndFamilies(ApiCase):
+    def test_village_create(self):
+        self.login("mohan")
+        r = self.post("/villages", {"name": "Bal Pabana", "district": "Karnal", "state": "Haryana"})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        self.assertEqual(r.get_json()["id"], "bal_pabana")
+        self.post("/logout")
+        self.login("bash")
+        self.assertEqual(self.post("/villages", {"name": "X"}).status_code, 403)
+
+    def test_family_create(self):
+        self.login("bash")
+        r = self.post("/families", {"village_id": "pugthala", "name": "Jain",
+                                    "root": {"name": "Lala", "gender": "male"}})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        fid = r.get_json()["id"]
+        tree = self.get("/families/%s/tree" % fid).get_json()["tree"]
+        self.assertEqual(tree["name"], "Lala")
+        self.assertEqual(self.post("/families", {"village_id": "bakheta", "name": "Other",
+                                                 "root": {"name": "Y"}}).status_code, 403)
+
+
+class TestChangeLog(ApiCase):
+    def test_admin_reads_log(self):
+        self.login("mohan")
+        self.patch("/people/amit", {"born": "1991"})
+        entries = self.get("/change-log?limit=10").get_json()
+        self.assertEqual(entries[0]["action"], "update")
+        self.assertEqual(entries[0]["after"], {"born": "1991"})
+        self.assertEqual(entries[0]["before"], {"born": None})
+        self.post("/logout")
+        self.login("amit")
+        self.assertEqual(self.get("/change-log").status_code, 403)

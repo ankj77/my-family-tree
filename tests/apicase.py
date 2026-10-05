@@ -44,3 +44,6 @@ class ApiCase(DbCase):
 
     def delete(self, path):
         return self.client.delete(path, headers=ORIGIN)
+
+    def app_client(self):
+        return app.test_client()
