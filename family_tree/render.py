@@ -54,6 +54,17 @@ def _node_json(node: dict) -> dict:
     return d
 
 
+def summary_json(summary: Summary) -> dict:
+    return {
+        "total": summary.total,
+        "generations": summary.generations,
+        "uncertain": summary.uncertain,
+        "needs_parent": summary.needs_parent,
+        "male": summary.male,
+        "female": summary.female,
+    }
+
+
 # ensure_ascii=False keeps Devanagari readable; escape </ so it can't close the script tag
 def _embed(obj) -> str:
     return json.dumps(obj, ensure_ascii=False).replace("</", "<\\/")
@@ -66,14 +77,7 @@ def render_html(root: dict, unlinked: List[Person], summary: Summary, auth: dict
         .replace("/*__UNLINKED__*/", _embed([_person_json(p) for p in unlinked]))
         .replace(
             "/*__SUMMARY__*/",
-            _embed({
-                "total": summary.total,
-                "generations": summary.generations,
-                "uncertain": summary.uncertain,
-                "needs_parent": summary.needs_parent,
-                "male": summary.male,
-                "female": summary.female,
-            }),
+            _embed(summary_json(summary)),
         )
         .replace("/*__AUTH__*/", _embed(auth))
         .replace("/*__CSS__*/", _read("app.css"))
