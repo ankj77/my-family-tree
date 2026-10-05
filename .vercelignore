@@ -8,3 +8,6 @@ db
 .venv
 *.html
 family-tree.yaml
+admin-password.txt
+.DS_Store
+.env*
