@@ -1,0 +1,4 @@
+Flask>=3.0,<4
+PyMySQL>=1.1,<2
+certifi>=2024.2.2
+PyYAML>=6.0,<7
