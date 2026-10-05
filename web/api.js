@@ -8,7 +8,7 @@
   api.pickFamily = function (requested, stored, home, villages) {
     var ids = [];
     villages.forEach(function (v) { v.families.forEach(function (f) { ids.push(f.id); }); });
-    var choices = [requested, stored, home];
+    var choices = [requested, home, stored];
     for (var i = 0; i < choices.length; i++) {
       if (choices[i] && ids.indexOf(choices[i]) >= 0) return choices[i];
     }

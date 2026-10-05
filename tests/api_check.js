@@ -6,7 +6,8 @@ var villages = [
   { id: 'pugthala', families: [{ id: 'pugthala' }] }
 ];
 assert.strictEqual(api.pickFamily('pugthala', 'jain', 'bakheta', villages), 'pugthala');
-assert.strictEqual(api.pickFamily('gone', 'jain', 'bakheta', villages), 'jain');
+assert.strictEqual(api.pickFamily('gone', 'jain', 'bakheta', villages), 'bakheta');
+assert.strictEqual(api.pickFamily(null, 'jain', null, villages), 'jain');
 assert.strictEqual(api.pickFamily(null, null, 'bakheta', villages), 'bakheta');
 assert.strictEqual(api.pickFamily(null, null, null, villages), 'bakheta');
 assert.strictEqual(api.pickFamily(null, null, null, []), null);
