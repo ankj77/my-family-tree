@@ -69,9 +69,9 @@ A daughter's husband appears beside her as a spouse, as today.
 
 ## What this is, and what it is not
 
-- The data moves out of the public repo **from now on**. Old commits still contain
-  `family-tree.yaml` and the generated HTML. The owner accepted this; the data is not
-  sensitive.
+- The pages stop carrying people data. `family-tree.yaml` stays in the public repo for
+  now, and old commits keep the generated HTML. The owner accepted this; the data is
+  not sensitive.
 - The API only answers logged-in users. This is real access control, unlike the
   access codes it replaces.
 - The page no longer works offline or from disk; it needs the API.
@@ -144,12 +144,14 @@ All tables use InnoDB and utf8mb4 (for Devanagari).
 | note | TEXT NULL | |
 | sort_order | INT NULL | the YAML `order` |
 | address_line, address_locality, address_city, address_state, address_country | VARCHAR(200) NULL | |
+| origin_village, origin_district, origin_state | VARCHAR(200) NULL | own home village; used for in-laws whose family is not recorded (Rashmi: Pugthala) |
 | updated_at | TIMESTAMP | |
 | updated_by | VARCHAR(64) NULL | person id of the editor |
 
-The YAML `origin` fields are dropped. A person's village is their family's village (or
-their spouse's family's village for in-laws with no family). The "family line"
-inheritance code in `model.py` is no longer needed.
+A person's village shown on the page is their own `origin_*` if set, otherwise their
+family's village (marked "(family line)", as today). The import copies `origin` only
+for people who have it written in the YAML (the root and 25 in-laws). The "family
+line" inheritance code in `model.py` is not used by the API.
 
 ### marriages
 
@@ -179,7 +181,7 @@ The UNIQUE keys keep today's rule of one spouse each.
 | id | BIGINT AUTO_INCREMENT PK |
 | person_id | VARCHAR(64) FK accounts ON DELETE CASCADE |
 | scope | ENUM('global','village','branch') |
-| scope_id | VARCHAR(64) NULL (village id, or branch-root person id; NULL for global) |
+| scope_id | VARCHAR(64) NOT NULL DEFAULT '' (village id, or branch-root person id; '' for global, so the UNIQUE key works) |
 | UNIQUE | (person_id, scope, scope_id) |
 
 ### sessions
@@ -196,7 +198,7 @@ The UNIQUE keys keep today's rule of one spouse each.
 |---|---|
 | id | BIGINT AUTO_INCREMENT PK |
 | person_id | VARCHAR(64) FK people ON DELETE CASCADE |
-| requested_by | VARCHAR(64) FK people |
+| requested_by | VARCHAR(64) (no FK, so requests survive the requester's deletion) |
 | status | ENUM('pending','approved','rejected') |
 | decided_by | VARCHAR(64) NULL |
 | created_at, decided_at | DATETIME |
@@ -210,7 +212,7 @@ The UNIQUE keys keep today's rule of one spouse each.
 | actor_id | VARCHAR(64) |
 | person_id | VARCHAR(64) NULL (no FK, so entries survive deletes) |
 | action | VARCHAR(32): create, update, delete, delete_request, delete_approve, delete_reject, account_create, password_reset, account_delete, role_grant, role_revoke, village_create, family_create |
-| before, after | JSON NULL |
+| before_json, after_json | JSON NULL (`BEFORE` is a reserved word) |
 
 ## Rules checked on every write
 
@@ -222,6 +224,8 @@ nothing is saved and the API answers 409 with a readable reason.
 - Each family has exactly one root: one person in the family with no tree parent,
   not counting `needs-parent` people. It must equal `families.root_person_id`.
 - One spouse each (also enforced by the UNIQUE keys).
+- Husband and wife are not in the same family (a tree draws each person once, either
+  as a child or as a spouse).
 - Accounts only for people with `life = living`.
 - **Delete** is allowed only when the person has no children (as father or mother),
   and is not the only link of a spouse with no family. Delete that in-law first.
@@ -248,6 +252,7 @@ All bodies are JSON. Writes must be `Content-Type: application/json`.
 | Method | Path | Does |
 |---|---|---|
 | GET | `/villages` | villages, each with its families |
+| GET | `/people` | everyone, short form (id, names, gender, life, family, has_account), for pickers |
 | GET | `/families/{id}/tree` | `{tree, unlinked, summary}`, the same shapes the page embeds today. Every person also gets `can_edit`, `can_delete` (`"direct"`, `"request"` or `false`, with a reason), `delete_pending`, `family_id`, and links to other families they appear in |
 
 ### Editing
@@ -266,9 +271,12 @@ All bodies are JSON. Writes must be `Content-Type: application/json`.
 | POST | `/families` | `{village_id, name, root: {...fields}}`, creating the family and its root person together |
 | GET | `/delete-requests` | pending requests in scope |
 | POST | `/delete-requests/{id}/approve`, `/reject` | approve re-checks the delete rules |
+| GET | `/accounts` | living people (and anyone with a login) in the caller's scope, with username |
 | POST | `/accounts` | `{person_id, username?}`; returns `{username, password}` once |
+| PATCH | `/accounts/{person_id}` | `{username}`, rename a login |
 | POST | `/accounts/{person_id}/password` | reset; returns the new password once |
 | DELETE | `/accounts/{person_id}` | remove a login |
+| GET | `/role-grants` | every role, with names (admins only) |
 | POST | `/role-grants` | `{person_id, scope, scope_id}` |
 | DELETE | `/role-grants/{id}` | |
 | GET | `/change-log?person_id=&limit=` | newest first |
@@ -283,6 +291,7 @@ One function, `can(actor, action, person)`, used by every endpoint:
 - Branch rep: yes if the person is in one of their branches. Delete becomes a request.
 - Account and role actions also check that the target holds no higher role than the
   caller.
+- The last global admin cannot lose that role or their login.
 
 ### Errors
 
@@ -378,8 +387,9 @@ Claude:
 7. Smoke-test the live API.
 8. Push the pages that use the API. From this push, relatives need a login. The owner
    creates accounts first.
-9. Remove `family-tree.yaml`, `family-tree.html` data and `auth.json` from the repo.
-   History stays.
+9. Stop writing people data into the pages, and remove `auth.json` and the access-code
+   code. `family-tree.yaml` stays in the repo for now (owner's decision, 2026-10-06);
+   it is no longer what the site shows.
 10. Add the weekly backup Action, with a token for `ankj77/family-tree-backup` stored
     as a repo secret.
 
