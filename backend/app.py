@@ -288,11 +288,12 @@ def child_links(graph, parent_id):
     spouse = graph.spouse.get(parent_id)
     wives = {w for _, w in graph.marriages}
     is_mother = parent_id in wives or (spouse is None and parent.get("gender") == "female")
-    links = {"family_id": graph.home_family(parent_id)}
     if is_mother:
-        links.update(mother_id=parent_id, father_id=spouse)
+        links = {"mother_id": parent_id, "father_id": spouse}
     else:
-        links.update(father_id=parent_id, mother_id=spouse)
+        links = {"father_id": parent_id, "mother_id": spouse}
+    father = graph.people.get(links["father_id"])
+    links["family_id"] = (father and father.get("family_id")) or graph.home_family(parent_id)
     return links
 
 
@@ -353,6 +354,14 @@ def update_person(pid):
             raise ApiError(404, "No such person: %s" % fields[key])
     if fields.get("family_id") is not None and fields["family_id"] not in graph.families:
         raise ApiError(404, "No such family")
+    for key in ("father_id", "mother_id"):
+        if fields.get(key) is not None and not access.is_admin_over(fields[key]):
+            raise ApiError(403, "You cannot move %s under %s" % (name_of(graph, pid), name_of(graph, fields[key])))
+    family_id = fields.get("family_id")
+    if family_id is not None and not (
+        access.is_global or graph.families[family_id]["village_id"] in access.admin_villages()
+    ):
+        raise ApiError(403, "You cannot move people into the %s family" % graph.families[family_id]["name"])
     if not fields:
         return jsonify(id=pid)
     before = {k: graph.people[pid].get(k) for k in fields}
@@ -363,6 +372,17 @@ def update_person(pid):
     log(cur, actor, pid, "update", before, fields)
     commit_checked(cur)
     return jsonify(id=pid)
+
+
+def is_last_global(grants, pid):
+    return {g["person_id"] for g in grants if g["scope"] == "global"} == {pid}
+
+
+def delete_guard(graph, access, pid):
+    if access.rank_of(pid) > 0 and not access.can_manage_account(pid):
+        raise ApiError(403, "%s holds a role you cannot remove" % name_of(graph, pid))
+    if is_last_global(access.grants, pid):
+        raise RuleError("%s is the only global admin; make someone else global admin first" % name_of(graph, pid))
 
 
 def delete_person(cur, graph, actor, pid, action):
@@ -379,6 +399,7 @@ def remove_person(pid):
     mode = access.delete_mode(pid)
     if mode is None:
         raise ApiError(403, "You cannot delete %s" % name_of(graph, pid))
+    delete_guard(graph, access, pid)
     blocker = rules.delete_blocker(graph, pid)
     if blocker:
         raise RuleError(blocker)
@@ -423,6 +444,8 @@ def decide_delete(request_id, decision):
     pid = row["person_id"]
     if not access.is_admin_over(pid):
         raise ApiError(403, "You cannot decide this request")
+    if decision == "approve":
+        delete_guard(graph, access, pid)
     if decision == "reject":
         cur.execute("UPDATE delete_requests SET status='rejected', decided_by=%s, decided_at=%s WHERE id=%s",
                     (actor, now(), request_id))

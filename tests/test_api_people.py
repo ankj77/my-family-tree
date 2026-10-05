@@ -1,3 +1,4 @@
+from family_tree import auth
 from tests.apicase import ApiCase
 
 
@@ -199,3 +200,46 @@ class TestDeleting(ApiCase):
         self.login("rashmi")
         self.assertEqual(self.get("/me").get_json()["roles"], [])
         self.assertEqual(self.get("/families/bakheta/tree").status_code, 200)
+
+
+class TestScope(ApiCase):
+    def add_person(self, pid, family_id, father_id, grant=None):
+        with self.conn.cursor() as cur:
+            cur.execute("INSERT INTO people (id, name, gender, family_id, father_id) VALUES (%s, %s, 'male', %s, %s)",
+                        (pid, pid.title(), family_id, father_id))
+            if grant:
+                cur.execute("INSERT INTO accounts (person_id, username, password_hash) VALUES (%s, %s, %s)",
+                            (pid, pid, auth.make_hash("pw-" + pid, iterations=1000)))
+                cur.execute("INSERT INTO role_grants (person_id, scope, scope_id) VALUES (%s, %s, '')", (pid, grant))
+        self.conn.commit()
+
+    def test_village_admin_cannot_delete_global_admin(self):
+        self.add_person("pg", "pugthala", "bash", "global")
+        self.login("bash")
+        self.assertEqual(self.delete("/people/pg").status_code, 403)
+        self.assertEqual(self.query("SELECT COUNT(*) AS n FROM people WHERE id='pg'")[0]["n"], 1)
+
+    def test_last_global_admin_cannot_delete_self(self):
+        self.add_person("solo", "bakheta", "ram", "global")
+        with self.conn.cursor() as cur:
+            cur.execute("DELETE FROM role_grants WHERE person_id='mohan'")
+        self.conn.commit()
+        self.login("solo")
+        r = self.delete("/people/solo")
+        self.assertEqual(r.status_code, 409)
+        self.assertIn("only global admin", r.get_json()["error"])
+        self.assertEqual(self.query("SELECT COUNT(*) AS n FROM people WHERE id='solo'")[0]["n"], 1)
+
+    def test_village_admin_cannot_move_out_of_scope(self):
+        self.assertEqual(self.login("bash").status_code, 200)
+        self.assertEqual(self.patch("/people/rashmi", {"family_id": "bakheta"}).status_code, 403)
+        self.assertEqual(self.patch("/people/rashmi", {"father_id": "jagdish"}).status_code, 403)
+        self.assertEqual(self.query("SELECT father_id FROM people WHERE id='rashmi'")[0]["father_id"], "bash")
+
+    def test_child_under_pugthala_wife_joins_fathers_family(self):
+        self.login("jagdish")
+        r = self.post("/people", {"as": "child", "parent_id": "rashmi", "name": "Tara", "gender": "female"})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        row = self.query("SELECT family_id, father_id, mother_id FROM people WHERE id='tara'")[0]
+        self.assertEqual(row, {"family_id": "bakheta", "father_id": "jagdish", "mother_id": "rashmi"})
+        self.assertEqual(self.patch("/people/tara", {"born": "2000"}).status_code, 200)
