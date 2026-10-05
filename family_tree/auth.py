@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import json
 import os
 import secrets
@@ -43,3 +44,32 @@ def set_admin_password(path: str, password: str) -> dict:
         json.dump(auth, f, indent=2)
         f.write("\n")
     return auth
+
+
+PASSWORD_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"
+PASSWORD_LENGTH = 10
+
+
+def make_hash(password: str, iterations: int = ITERATIONS) -> str:
+    salt = secrets.token_hex(16)
+    return "pbkdf2_sha256$%d$%s$%s" % (iterations, salt, hash_password(password, salt, iterations))
+
+
+def check_hash(password: str, stored: str) -> bool:
+    parts = stored.split("$")
+    if len(parts) != 4 or parts[0] != "pbkdf2_sha256":
+        return False
+    _, iterations, salt, digest = parts
+    return hmac.compare_digest(hash_password(password, salt, int(iterations)), digest)
+
+
+def new_password() -> str:
+    return "".join(secrets.choice(PASSWORD_ALPHABET) for _ in range(PASSWORD_LENGTH))
+
+
+def new_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()

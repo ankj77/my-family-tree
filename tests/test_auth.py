@@ -123,5 +123,34 @@ class TestAuthJs(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+from family_tree.auth import (PASSWORD_ALPHABET, check_hash, make_hash, new_password,
+                              new_token, token_hash)
+
+
+class TestAccountHelpers(unittest.TestCase):
+    def test_hash_round_trip(self):
+        stored = make_hash("open sesame", iterations=1000)
+        self.assertTrue(stored.startswith("pbkdf2_sha256$1000$"))
+        self.assertTrue(check_hash("open sesame", stored))
+        self.assertFalse(check_hash("open sesamE", stored))
+
+    def test_same_password_different_salt(self):
+        self.assertNotEqual(make_hash("x" * 8, iterations=1000), make_hash("x" * 8, iterations=1000))
+
+    def test_bad_stored_value_is_false_not_crash(self):
+        self.assertFalse(check_hash("x", "garbage"))
+        self.assertFalse(check_hash("x", "md5$1$aa$bb"))
+
+    def test_new_password(self):
+        pw = new_password()
+        self.assertEqual(len(pw), 10)
+        self.assertTrue(all(c in PASSWORD_ALPHABET for c in pw))
+
+    def test_tokens(self):
+        self.assertNotEqual(new_token(), new_token())
+        self.assertEqual(len(token_hash("abc")), 64)
+        self.assertEqual(token_hash("abc"), token_hash("abc"))
+
+
 if __name__ == "__main__":
     unittest.main()
