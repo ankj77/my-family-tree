@@ -21,6 +21,10 @@
     }).join('; ');
   };
 
+  admin.logPath = function (personId) {
+    return '/change-log?limit=100' + (personId ? '&person_id=' + encodeURIComponent(personId) : '');
+  };
+
   function api() { return FT.api; }
   function say(text) { document.getElementById('admin-msg').textContent = text; }
   function label(p) { return p ? (p.name || p.name_hi || p.id) : ''; }
@@ -71,12 +75,13 @@
           table(['Person', 'Family', 'Username', ''], list.map(function (a) {
             var id = esc(a.person_id);
             var buttons = !a.can_manage ? '' : a.username
-              ? '<button type="button" data-reset="' + id + '">Reset password</button> ' +
+              ? '<button type="button" data-rename="' + id + '">Change username</button> ' +
+                '<button type="button" data-reset="' + id + '">Reset password</button> ' +
                 '<button type="button" data-remove="' + id + '">Remove login</button>'
               : '<button type="button" data-create="' + id + '">Create login</button>';
             var key = [a.name, a.name_hi, a.username].filter(Boolean).join(' ').toLowerCase();
             return '<tr data-search="' + esc(key) + '"><td>' + esc(a.name || a.name_hi) + '</td><td>' +
-              esc(familyName(a.family_id)) + '</td><td>' + esc(a.username || '—') + '</td><td>' + buttons + '</td></tr>';
+              esc(familyName(a.family_id)) + '</td><td class="uname">' + esc(a.username || '—') + '</td><td>' + buttons + '</td></tr>';
           }));
       });
     },
@@ -121,8 +126,13 @@
       return Promise.resolve(html);
     },
     log: function () {
-      return api().call('GET', '/change-log?limit=100').then(function (list) {
-        return table(['When', 'Who', 'Person', 'What', 'Details'], list.map(function (e) {
+      return api().call('GET', admin.logPath(state.logPerson)).then(function (list) {
+        var options = [['', 'Everyone']].concat(state.people.map(function (p) { return [p.id, label(p)]; }));
+        var filter = '<label>Person<select id="log-person">' + options.map(function (o) {
+          return '<option value="' + esc(o[0]) + '"' + (o[0] === (state.logPerson || '') ? ' selected' : '') + '>' +
+            esc(o[1]) + '</option>';
+        }).join('') + '</select></label>';
+        return filter + table(['When', 'Who', 'Person', 'What', 'Details'], list.map(function (e) {
           return '<tr><td>' + esc(e.at.replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(personName(e.actor_id)) +
             '</td><td>' + esc(e.person_id ? personName(e.person_id) : '') + '</td><td>' + esc(e.action) +
             '</td><td>' + esc(admin.describe(e)) + '</td></tr>';
@@ -149,6 +159,13 @@
     main.innerHTML = '<p>Loading…</p>';
     return tabs[state.tab]().then(function (html) {
       main.innerHTML = html;
+      var logPerson = document.getElementById('log-person');
+      if (logPerson) {
+        logPerson.addEventListener('change', function () {
+          state.logPerson = logPerson.value;
+          open('log');
+        });
+      }
       var search = document.getElementById('acct-search');
       if (search) {
         search.addEventListener('input', function () {
@@ -177,7 +194,7 @@
   function done(promise, after) {
     say('');
     promise.then(function (r) {
-      return open(state.tab).then(function () { if (after) after(r); });
+      return reload().then(function () { return open(state.tab); }).then(function () { if (after) after(r); });
     }, function (err) { say(err.message); });
   }
 
@@ -188,11 +205,24 @@
     return false;
   }
 
+  function startRename(button, id) {
+    var cell = button.closest('tr').querySelector('.uname');
+    var current = cell.textContent;
+    cell.innerHTML = '<form data-form="rename" data-id="' + esc(id) + '"><input name="username" autocomplete="off" value="' +
+      esc(current) + '" aria-label="New username"> <button type="submit">Save</button></form>';
+    cell.querySelector('input').focus();
+  }
+
   function onClick(e) {
     var b = e.target.closest('button');
     if (!b) return;
     var id;
-    if (b.hasAttribute('data-post')) done(api().call('POST', b.getAttribute('data-post'), {}));
+    var post = b.getAttribute('data-post');
+    if (post) {
+      if (/\/approve$/.test(post) && !armed(b)) return;
+      done(api().call('POST', post, {}));
+    }
+    else if ((id = b.getAttribute('data-rename'))) startRename(b, id);
     else if ((id = b.getAttribute('data-create'))) done(api().call('POST', '/accounts', { person_id: id }), showSecret);
     else if ((id = b.getAttribute('data-reset'))) done(api().call('POST', '/accounts/' + encodeURIComponent(id) + '/password', {}), showSecret);
     else if ((id = b.getAttribute('data-remove')) && armed(b)) done(api().call('DELETE', '/accounts/' + encodeURIComponent(id)));
@@ -207,7 +237,9 @@
     Array.prototype.forEach.call(form.elements, function (el) { if (el.name) v[el.name] = el.value.trim(); });
     var kind = form.getAttribute('data-form');
     var request;
-    if (kind === 'grant') {
+    if (kind === 'rename') {
+      request = api().call('PATCH', '/accounts/' + encodeURIComponent(form.getAttribute('data-id')), { username: v.username });
+    } else if (kind === 'grant') {
       request = api().call('POST', '/role-grants', {
         person_id: v.person_id, scope: v.scope,
         scope_id: v.scope === 'village' ? v.village_id : v.scope === 'branch' ? v.branch_id : ''
@@ -220,7 +252,7 @@
         root: { name: v.root_name || null, name_hi: v.root_name_hi || null, gender: v.root_gender }
       });
     }
-    done(request.then(function (r) { return reload().then(function () { return r; }); }), function () { say('Saved.'); });
+    done(request, function () { say('Saved.'); });
   }
 
   admin.start = function () {
