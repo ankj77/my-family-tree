@@ -16,6 +16,7 @@ SESSION_DAYS = 30
 LOCK_AFTER = 5
 LOCK_MINUTES = 15
 WRITE_METHODS = ("POST", "PATCH", "DELETE")
+DUMMY_HASH = auth.make_hash("not-a-real-password")
 
 app = Flask(__name__)
 
@@ -171,15 +172,17 @@ def login():
                 (username,))
     account = cur.fetchone()
     if account is None:
+        auth.check_hash(password, DUMMY_HASH)
         raise ApiError(401, "Wrong username or password")
     if account["locked_until"] and account["locked_until"] > now():
         raise ApiError(429, "Too many wrong passwords. Try again in %d minutes." % LOCK_MINUTES)
     pid = account["person_id"]
     if not auth.check_hash(password, account["password_hash"]):
-        failed = account["failed_logins"] + 1
-        locked = now() + timedelta(minutes=LOCK_MINUTES) if failed >= LOCK_AFTER else None
-        cur.execute("UPDATE accounts SET failed_logins=%s, locked_until=%s WHERE person_id=%s",
-                    (0 if locked else failed, locked, pid))
+        cur.execute("UPDATE accounts SET failed_logins = failed_logins + 1 WHERE person_id=%s", (pid,))
+        cur.execute("SELECT failed_logins FROM accounts WHERE person_id=%s", (pid,))
+        if cur.fetchone()["failed_logins"] >= LOCK_AFTER:
+            cur.execute("UPDATE accounts SET locked_until=%s, failed_logins=0 WHERE person_id=%s",
+                        (now() + timedelta(minutes=LOCK_MINUTES), pid))
         conn().commit()
         raise ApiError(401, "Wrong username or password")
     token = auth.new_token()

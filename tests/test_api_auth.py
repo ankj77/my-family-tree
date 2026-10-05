@@ -32,6 +32,20 @@ class TestLogin(ApiCase):
         r = self.post("/login", {"username": "amit", "password": "pw-amit"})
         self.assertEqual(r.status_code, 429)
 
+    def test_right_password_resets_counter(self):
+        for _ in range(4):
+            self.post("/login", {"username": "amit", "password": "nope"})
+        self.assertEqual(self.query("SELECT failed_logins FROM accounts WHERE person_id='amit'")[0]["failed_logins"], 4)
+        self.login("amit")
+        self.assertEqual(self.query("SELECT failed_logins FROM accounts WHERE person_id='amit'")[0]["failed_logins"], 0)
+
+    def test_lock_sets_deadline_and_resets_counter(self):
+        for _ in range(5):
+            self.post("/login", {"username": "amit", "password": "nope"})
+        row = self.query("SELECT failed_logins, locked_until FROM accounts WHERE person_id='amit'")[0]
+        self.assertEqual(row["failed_logins"], 0)
+        self.assertIsNotNone(row["locked_until"])
+
     def test_admin_flags(self):
         me = self.login("mohan").get_json()
         self.assertTrue(me["is_admin"])
