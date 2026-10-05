@@ -1,0 +1,10 @@
+web
+docs
+tests
+photos
+db
+.superpowers
+.idea
+.venv
+*.html
+family-tree.yaml
