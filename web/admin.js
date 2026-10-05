@@ -74,10 +74,11 @@
         return '<input id="acct-search" placeholder="Search living people" aria-label="Search living people">' +
           table(['Person', 'Family', 'Username', ''], list.map(function (a) {
             var id = esc(a.person_id);
+            var own = a.person_id === state.me.id;
             var buttons = !a.can_manage ? '' : a.username
-              ? '<button type="button" data-rename="' + id + '">Change username</button> ' +
-                '<button type="button" data-reset="' + id + '">Reset password</button> ' +
-                '<button type="button" data-remove="' + id + '">Remove login</button>'
+              ? '<button type="button" data-rename="' + id + '">Change username</button>' +
+                (own ? '' : ' <button type="button" data-reset="' + id + '">Reset password</button> ' +
+                  '<button type="button" data-remove="' + id + '">Remove login</button>')
               : '<button type="button" data-create="' + id + '">Create login</button>';
             var key = [a.name, a.name_hi, a.username].filter(Boolean).join(' ').toLowerCase();
             return '<tr data-search="' + esc(key) + '"><td>' + esc(a.name || a.name_hi) + '</td><td>' +
@@ -191,11 +192,15 @@
     });
   }
 
-  function done(promise, after) {
+  function done(promise, after, button) {
     say('');
+    if (button) button.disabled = true;
     promise.then(function (r) {
       return reload().then(function () { return open(state.tab); }).then(function () { if (after) after(r); });
-    }, function (err) { say(err.message); });
+    }, function (err) {
+      if (button) button.disabled = false;
+      say(err.message);
+    });
   }
 
   function armed(button) {
@@ -220,13 +225,13 @@
     var post = b.getAttribute('data-post');
     if (post) {
       if (/\/approve$/.test(post) && !armed(b)) return;
-      done(api().call('POST', post, {}));
+      done(api().call('POST', post, {}), null, b);
     }
     else if ((id = b.getAttribute('data-rename'))) startRename(b, id);
-    else if ((id = b.getAttribute('data-create'))) done(api().call('POST', '/accounts', { person_id: id }), showSecret);
-    else if ((id = b.getAttribute('data-reset'))) done(api().call('POST', '/accounts/' + encodeURIComponent(id) + '/password', {}), showSecret);
-    else if ((id = b.getAttribute('data-remove')) && armed(b)) done(api().call('DELETE', '/accounts/' + encodeURIComponent(id)));
-    else if ((id = b.getAttribute('data-revoke')) && armed(b)) done(api().call('DELETE', '/role-grants/' + id));
+    else if ((id = b.getAttribute('data-create'))) done(api().call('POST', '/accounts', { person_id: id }), showSecret, b);
+    else if ((id = b.getAttribute('data-reset'))) done(api().call('POST', '/accounts/' + encodeURIComponent(id) + '/password', {}), showSecret, b);
+    else if ((id = b.getAttribute('data-remove')) && armed(b)) done(api().call('DELETE', '/accounts/' + encodeURIComponent(id)), null, b);
+    else if ((id = b.getAttribute('data-revoke')) && armed(b)) done(api().call('DELETE', '/role-grants/' + id), null, b);
   }
 
   function onSubmit(e) {
@@ -252,7 +257,7 @@
         root: { name: v.root_name || null, name_hi: v.root_name_hi || null, gender: v.root_gender }
       });
     }
-    done(request, function () { say('Saved.'); });
+    done(request, function () { say('Saved.'); }, form.querySelector('button[type=submit]'));
   }
 
   admin.start = function () {

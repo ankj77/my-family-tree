@@ -105,8 +105,13 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var msg = form.querySelector('.form-msg');
+      var submit = form.querySelector('button[type=submit]');
       msg.textContent = 'Saving…';
-      onSubmit(readForm(form)).catch(function (err) { msg.textContent = err.message; });
+      submit.disabled = true;
+      onSubmit(readForm(form)).catch(function (err) {
+        submit.disabled = false;
+        msg.textContent = err.message;
+      });
     });
     var first = form.querySelector('input,select,textarea');
     if (first) first.focus();
@@ -132,7 +137,12 @@
       '<button type="button" data-yes>' + esc(yesLabel) + '</button>' +
       '<button type="button" data-no>Cancel</button><p class="form-msg" role="alert"></p>';
     box.querySelector('[data-yes]').addEventListener('click', function () {
-      onYes().catch(function (err) { box.querySelector('.form-msg').textContent = err.message; });
+      var yes = this;
+      yes.disabled = true;
+      onYes().catch(function (err) {
+        yes.disabled = false;
+        box.querySelector('.form-msg').textContent = err.message;
+      });
     });
     return box.querySelector('[data-no]');
   }
