@@ -26,7 +26,7 @@ class TestRenderIndex(unittest.TestCase):
 
     def test_only_the_api_is_external(self):
         stripped = self.html.replace("http://www.w3.org", "").replace("https://api.jainparivar.online", "")
-        stripped = stripped.replace("http://localhost:5000", "")
+        stripped = stripped.replace("http://localhost:5001", "")
         self.assertNotIn("http://", stripped)
         self.assertNotIn("https://", stripped)
 

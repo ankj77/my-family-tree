@@ -321,7 +321,7 @@ One function, `can(actor, action, person)`, used by every endpoint:
   The page opens on the user's own family (or their spouse's), then the last one
   viewed. The URL carries `?family=<id>` so links can be shared.
 - **Account menu**: Change password, Log out, and Admin (admins only).
-- API base URL: `https://api.jainparivar.online`, or `http://localhost:5000` when the
+- API base URL: `https://api.jainparivar.online`, or `http://localhost:5001` when the
   page is opened from `localhost`.
 
 ### Detail sheet

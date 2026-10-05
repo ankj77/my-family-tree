@@ -14,7 +14,7 @@ assert.strictEqual(api.pickFamily(null, null, null, []), null);
 assert.strictEqual(api.urlFor('bakheta'), '?family=bakheta');
 assert.strictEqual(api.urlFor('bal pabana', 'a&b'), '?family=bal%20pabana&person=a%26b');
 
-assert.strictEqual(api.base('localhost'), 'http://localhost:5000');
+assert.strictEqual(api.base('localhost'), 'http://localhost:5001');
 assert.strictEqual(api.base('jainparivar.online'), 'https://api.jainparivar.online');
 
 assert.strictEqual(api.roleText({ is_global: true, roles: [] }), 'Global admin');
