@@ -1,7 +1,7 @@
 import unittest
 from functools import lru_cache
 
-from family_tree.render import render_index
+from family_tree.render import render_admin, render_index
 
 
 @lru_cache(maxsize=None)
@@ -442,6 +442,15 @@ class TestSearchFindsMarriedInPeople(unittest.TestCase):
         html = _payload_html()
         self.assertIn("['father', 'mother'].forEach", html)
         self.assertIn("m.via + ' of '", html)
+
+
+class TestRenderAdmin(unittest.TestCase):
+    def test_admin_page(self):
+        html = render_admin()
+        self.assertIn("var FT = {};", html)
+        self.assertIn("FT.admin.start();", html)
+        self.assertIn('id="tabs"', html)
+        self.assertNotIn("FT.boot = ", html)
 
 
 if __name__ == "__main__":

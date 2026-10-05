@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family Roots Admin</title>
+<style>/*__CSS__*/
+  html,body{height:auto;}
+  body{display:block;overflow:auto;}
+  #admin{max-width:960px;margin:0 auto;padding:16px;box-sizing:border-box;color:var(--ink);}
+  #admin a{color:var(--hl);}
+  #admin h1{font-family:var(--serif);font-size:26px;margin:8px 0 12px;}
+  #tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+  #tabs button{min-height:44px;padding:6px 14px;font-size:14px;cursor:pointer;border:1px solid var(--edge);
+    background:var(--card);font-family:var(--font);}
+  #tabs button[aria-current="page"]{background:var(--hl);color:#fff;border-color:var(--hl);}
+  #admin-msg{min-height:1.3em;color:var(--warn);}
+  #main table{width:100%;border-collapse:collapse;background:var(--card);font-size:14px;}
+  #main th,#main td{text-align:left;padding:8px;border-bottom:1px solid var(--rule);vertical-align:top;}
+  #main td button{min-height:36px;margin:2px 0;cursor:pointer;}
+  #main .admin-form{display:flex;flex-direction:column;gap:8px;max-width:420px;}
+  #main .admin-form label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--ink-muted);}
+  #main input,#main select{min-height:40px;font-size:15px;padding:6px 8px;border:1px solid var(--edge);
+    font-family:var(--font);}
+  #main .admin-form button{min-height:44px;cursor:pointer;}
+  #acct-search{width:100%;box-sizing:border-box;margin-bottom:10px;}
+  .secret{background:var(--band);padding:12px;margin:0 0 12px;}
+  .secret-value{font-family:ui-monospace,Menlo,monospace;font-size:16px;}
+  @media (max-width:600px){#main table,#main tbody,#main tr,#main td{display:block;}#main thead{display:none;}
+    #main tr{border-bottom:1px solid var(--edge);padding:6px 0;}#main td{border:0;padding:2px 0;}}
+</style>
+</head>
+<body>
+<div id="admin">
+  <p><a href="./">← Back to the tree</a></p>
+  <h1>Admin</h1>
+  <nav id="tabs" aria-label="Admin sections"></nav>
+  <div id="secret" class="secret" hidden></div>
+  <p id="admin-msg" role="alert"></p>
+  <main id="main"></main>
+</div>
+<script>/*__APP_JS__*/</script>
+</body>
+</html>

@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family Roots Admin</title>
+<style>:root{
+  --canvas:#F7F2E4;
+  --card:#FFFDF7;
+  --edge:#B9C6A4;
+  --rule:#DEE4CC;
+  --rail-m:#4A6FA5;
+  --rail-f:#C4708A;
+  --rail-unknown:#A89880;
+  --card-m:#EEF3FA;
+  --card-f:#FBEFF3;
+  --ink:#3A3A2E;
+  --ink-muted:#6F6A57;
+  --name-ink:#234A21;
+  --living:#4A8C4A;
+  --connector:#A8935F;
+  --bark:#8A6240;
+  --bark-trunk:#6B4A2E;
+  --leaf-1:#6F9C52;
+  --leaf-2:#8FBA6C;
+  --leaf-3:#BCD79C;
+  --leaf-spouse:#E7C4D3;
+  --hl:#C86B2A;
+  --warn:#B5432F;
+  --band:#EFE7D2;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari","Nirmala UI",sans-serif;
+  --serif:"Iowan Old Style",Georgia,"Times New Roman","Noto Serif Devanagari",serif;
+  --shadow-card:0 1px 2px rgba(70,60,30,.07),0 4px 10px rgba(70,60,30,.06);
+}
+  html,body{margin:0;height:100%;font-family:var(--font);}
+  body{display:flex;flex-direction:column;background:var(--canvas);}
+  #toolbar{flex:0 0 auto;position:relative;padding:12px 16px 0;background:var(--card);
+    border-bottom:1px solid var(--edge);box-shadow:var(--shadow-card);z-index:10;
+    box-sizing:border-box;font-size:13px;font-weight:500;color:var(--ink);}
+  #toolbar .top-row{display:flex;align-items:center;gap:10px;}
+  #toolbar .brand{flex:1 1 auto;min-width:0;}
+  #toolbar .title{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;
+    line-height:1.15;color:var(--ink);}
+  #toolbar .who{margin:2px 0 0;min-height:1.3em;font-size:13px;color:var(--ink-muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #top-actions{display:flex;gap:8px;}
+  .menu-wrap{position:relative;}
+  #avatar{width:44px;height:44px;border-radius:50%;border:2px solid var(--card);
+    box-shadow:0 0 0 1px var(--edge);background:var(--name-ink);color:#fff;cursor:pointer;
+    font-family:var(--serif);font-size:19px;font-weight:600;padding:0;}
+  #menu{position:absolute;right:0;top:52px;min-width:220px;background:var(--card);
+    border:1px solid var(--edge);border-radius:10px;box-shadow:var(--shadow-card);
+    padding:6px;z-index:40;}
+  #menu.hidden{display:none;}
+  #menu button{display:block;width:100%;min-height:44px;text-align:left;padding:8px 12px;
+    background:none;border:0;border-radius:7px;font-family:var(--font);font-size:15px;
+    color:var(--ink);cursor:pointer;}
+  #menu button:hover{background:var(--canvas);}
+  #toolbar .search-row{position:relative;max-width:680px;margin:12px auto 0;}
+  #toolbar .search-icon{position:absolute;left:14px;top:12px;width:20px;height:20px;
+    fill:none;stroke:var(--ink-muted);stroke-width:2;stroke-linecap:round;pointer-events:none;}
+  #search{width:100%;box-sizing:border-box;min-height:46px;padding:8px 16px 8px 44px;
+    border:1px solid var(--edge);border-radius:999px;background:var(--canvas);
+    font-size:16px;font-family:var(--font);color:var(--ink);}
+  #search:focus{outline:2px solid var(--hl);outline-offset:1px;background:var(--card);}
+  #toolbar .search-hint{margin:4px 0 0;text-align:center;font-size:12px;color:var(--ink-muted);}
+  #picks:not(:empty){display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;}
+  #toolbar .summary{margin:10px -16px 0;padding:8px 16px;background:var(--band);
+    border-top:1px solid var(--edge);font-size:13px;line-height:1.5;color:var(--ink);}
+  #toolbar .summary b{font-weight:700;}
+  #stage{flex:1 1 auto;position:relative;overflow:hidden;background:var(--canvas);
+    cursor:grab;touch-action:none;}
+  #stage.grabbing{cursor:grabbing;}
+  svg{width:100%;height:100%;display:block;}
+  .edge{fill:none;stroke:var(--connector);stroke-width:1.25px;}
+  .edge.branch{stroke:var(--bark);stroke-linecap:round;}
+  .edge.branch.hl{stroke:var(--hl);}
+  .edge.hl{stroke:var(--hl);stroke-width:2.5px;}
+  .toggle{fill:var(--card);stroke:var(--bark);stroke-width:2px;cursor:pointer;
+    pointer-events:none;}
+  .toggle-sign{font-size:15px;font-weight:700;fill:var(--bark);font-family:var(--font);
+    cursor:pointer;pointer-events:none;}
+  .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
+  #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:var(--card);
+    border-left:1px solid var(--edge);border-bottom:1px solid var(--edge);padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
+  #unlinked h4{margin:0 0 6px;}
+  #unlinked.empty{display:none;}
+  .card-bg{fill:var(--card);stroke:var(--edge);stroke-width:1.25px;}
+  .card-shadow{fill:var(--ink);opacity:.09;pointer-events:none;}
+  .card-hit{fill:transparent;pointer-events:all;}
+  .card-name{font-size:14px;font-weight:600;font-family:var(--serif);
+    fill:var(--name-ink);pointer-events:none;}
+  .card-meta{font-size:11px;fill:var(--ink-muted);pointer-events:none;}
+  .living-dot{fill:var(--living);pointer-events:none;}
+  .card-row{cursor:pointer;}
+  .card-row.unfilled{cursor:default;}
+  .card-row.unfilled .card-name{fill:var(--ink-muted);font-style:italic;font-weight:400;}
+  .card-row.deceased .card-rail{opacity:.7;}
+  .card-row.deceased .card-name{fill:var(--ink-muted);}
+  .card-row.uncertain .card-name{fill:var(--warn);}
+  .card.hl .card-bg{stroke:var(--hl);stroke-width:2px;}
+  .avatar{pointer-events:none;}
+  #sheet{position:absolute;right:0;top:0;bottom:0;width:320px;background:var(--card);
+    border-left:4px solid var(--rail-unknown);box-shadow:var(--shadow-card);
+    padding:16px;overflow:auto;z-index:20;box-sizing:border-box;font-size:13px;color:var(--ink);}
+  #sheet.hidden{display:none;}
+  #sheet-close{position:absolute;right:8px;top:8px;width:44px;height:44px;
+    border:0;background:none;font-size:24px;line-height:1;cursor:pointer;color:var(--ink-muted);}
+  .sheet-photo{display:block;width:96px;height:96px;border-radius:50%;
+    object-fit:cover;margin:0 auto 10px;border:1px solid var(--edge);}
+  #sheet h3{margin:0 0 2px;text-align:center;font-size:18px;font-weight:600;
+    font-family:var(--serif);color:var(--name-ink);}
+  .sheet-hi{margin:0 0 12px;text-align:center;color:var(--ink-muted);}
+  #sheet dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;}
+  #sheet dt{color:var(--ink-muted);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+  #sheet dd{margin:0;font-size:13px;color:var(--ink);}
+  .sheet-rel{margin-top:12px;padding-top:10px;border-top:1px solid var(--edge);line-height:1.9;}
+  .sheet-rel span{color:var(--ink-muted);margin-right:4px;}
+  .sheet-rel a{color:var(--rail-m);text-decoration:none;}
+  #ornament-motto,#ornament-story{position:absolute;margin:0;pointer-events:none;
+    font-family:var(--serif);font-style:italic;color:var(--name-ink);opacity:.75;z-index:4;}
+  #ornament-motto{left:16px;bottom:16px;font-size:15px;line-height:1.45;
+    background:var(--card);border:1px solid var(--edge);border-radius:8px;padding:10px 14px;}
+  #ornament-story{right:20px;bottom:20px;font-size:24px;line-height:1.3;text-align:right;}
+  @media (max-width:768px){
+    #ornament-motto{display:none;}
+    #ornament-story{font-size:16px;right:12px;bottom:12px;}
+  }
+  #controls{position:absolute;top:12px;right:12px;z-index:6;display:flex;flex-direction:column;
+    align-items:flex-end;gap:6px;cursor:default;}
+  #controls-toggle{width:44px;height:44px;border-radius:50%;border:1px solid var(--edge);
+    background:var(--card);box-shadow:var(--shadow-card);font-size:20px;cursor:pointer;color:var(--ink);}
+  #controls-body{display:none;width:220px;background:var(--card);border:1px solid var(--edge);
+    border-radius:10px;box-shadow:var(--shadow-card);padding:8px 12px;box-sizing:border-box;}
+  #controls.open #controls-body{display:block;}
+  #controls .ctl{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    min-height:44px;font-size:14px;color:var(--ink);border-bottom:1px solid var(--rule);}
+  #controls select{min-height:36px;max-width:130px;font-size:14px;font-family:var(--font);
+    border:1px solid var(--edge);border-radius:6px;background:var(--card);color:var(--ink);}
+  #controls .ctl-switch{cursor:pointer;}
+  #living-only{width:20px;height:20px;accent-color:var(--hl);cursor:pointer;}
+  #controls .zoom-buttons{display:flex;gap:4px;}
+  #controls .zoom-buttons button{min-width:40px;min-height:36px;border:1px solid var(--edge);
+    border-radius:6px;background:var(--card);font-size:15px;cursor:pointer;color:var(--ink);}
+  #expand-all{display:block;width:100%;margin-top:8px;min-height:40px;border:1px solid var(--edge);
+    border-radius:6px;background:var(--card);font-size:14px;cursor:pointer;color:var(--ink);}
+  @media (max-width:768px){
+    #sheet{right:0;left:0;top:auto;bottom:0;width:auto;max-height:60%;
+      border-left:0;border-top:1px solid var(--edge);border-radius:12px 12px 0 0;
+      box-shadow:var(--shadow-card);}
+    #toolbar{padding:10px 12px 0;}
+    #toolbar .title{font-size:22px;}
+    #toolbar .summary{margin:8px -12px 0;padding:6px 12px;font-size:12px;}
+  }
+  .poster-ground{fill:var(--connector);opacity:.22;}
+  .poster-root{fill:none;stroke:var(--bark-trunk);stroke-linecap:round;opacity:.85;}
+  .poster-trunk{fill:var(--bark-trunk);}
+  .poster-branch{fill:none;stroke:var(--bark);stroke-linecap:round;}
+  .poster-branch.hl{stroke:var(--hl);}
+  .poster-leaf{stroke:none;}
+  .parent-card .pc-name{font-family:var(--serif);font-size:14.5px;font-weight:600;
+    fill:var(--name-ink);pointer-events:none;}
+  .parent-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
+  .parent-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
+  .pc-motif{pointer-events:none;}
+  .pc-motif .petal{fill:var(--rail-f);opacity:.9;}
+  .pc-motif .petal.outer{opacity:.55;}
+  .pc-motif.female .motif-line{stroke:var(--leaf-1);}
+  .pc-motif .leaf{fill:var(--leaf-1);}
+  .pc-motif .vein{stroke:var(--card-m);stroke-width:.8px;}
+  .garland{pointer-events:none;}
+  .garland .leaf{fill:var(--leaf-1);}
+  .garland-rope{fill:none;stroke:#D9731A;stroke-width:9px;stroke-linecap:round;}
+  .curl{stroke:#B35A0E;stroke-width:.7px;}
+  .rose{fill:#B3121B;stroke:#7A0A10;stroke-width:.7px;}
+  .rose-core{fill:#D62A33;}
+  .spouse-link{stroke:var(--bark);stroke-width:2px;}
+  .spouse-card{cursor:pointer;}
+  .gap-bg{fill:transparent;stroke:var(--ink-muted);stroke-width:1.6px;stroke-dasharray:7 5;cursor:pointer;}
+  .place-hit .card-bg{stroke:#D9731A;stroke-width:2.5px;}
+  .sg-place .sg-name::before{content:'\2302  ';color:#D9731A;}
+  .sg-place.area .sg-name::before,.sg-place.city .sg-name::before{content:'\25C9  ';color:var(--rail-m);}
+  .spouse-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
+  .spouse-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
+  .motif-line{fill:none;stroke:var(--bark);stroke-width:1.4px;stroke-linecap:round;}
+  .pc-sub{font-size:11.5px;fill:var(--ink-muted);pointer-events:none;}
+  .pc-rule{stroke:var(--rule);stroke-width:1px;}
+  .pc-label{font-size:9.5px;fill:var(--ink-muted);letter-spacing:.05em;pointer-events:none;}
+  .pc-value{font-size:12.5px;fill:var(--ink);pointer-events:none;}
+  .pc-icon-bg{opacity:.28;pointer-events:none;}
+  .pc-icon-fg{opacity:.95;pointer-events:none;}
+  .pc-icon-cut{fill:var(--card);pointer-events:none;}
+  #picks{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+    padding-top:2px;}
+  #picks:empty{display:none;}
+  .pick{display:inline-flex;align-items:center;gap:4px;min-height:38px;
+    padding:2px 4px 2px 14px;border:1px solid var(--edge);border-radius:999px;
+    background:var(--canvas);font-family:var(--serif);font-size:15px;
+    color:var(--name-ink);}
+  .pick button{min-width:34px;min-height:34px;border:0;border-radius:50%;
+    background:none;font-size:18px;line-height:1;color:var(--ink-muted);cursor:pointer;}
+  .pick-place{border-color:#D9731A;}
+  .pick button:hover{background:var(--card);color:var(--warn);}
+  .pick-clear{min-height:38px;padding:0 14px;border:1px solid var(--edge);
+    border-radius:999px;background:var(--card);font-family:var(--font);
+    font-size:13px;color:var(--ink-muted);cursor:pointer;}
+  .pick-note{font-size:14px;color:var(--ink-muted);}
+  .pick-note b{font-family:var(--serif);font-size:15px;color:var(--hl);}
+  #suggest{position:fixed;z-index:30;max-height:52vh;overflow-y:auto;
+    background:var(--card);border:1px solid var(--edge);border-radius:10px;
+    box-shadow:var(--shadow-card);padding:4px;box-sizing:border-box;}
+  #suggest.hidden{display:none;}
+  .sg-row{display:block;width:100%;min-height:44px;text-align:left;cursor:pointer;
+    background:none;border:0;border-radius:7px;padding:6px 10px;font-family:var(--font);}
+  .sg-row:hover,.sg-row.on{background:var(--canvas);}
+  .sg-row:focus-visible{outline:2px solid var(--hl);}
+  .sg-name{display:block;font-family:var(--serif);font-size:14px;font-weight:600;
+    color:var(--name-ink);}
+  .sg-hint{display:block;font-size:11px;color:var(--ink-muted);}
+  .sg-more{margin:4px 10px 6px;font-size:11px;color:var(--ink-muted);}
+  #login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    background:var(--canvas);padding:16px;box-sizing:border-box;}
+  #login.hidden{display:none;}
+  #login-form{width:100%;max-width:340px;background:var(--card);border-top:4px solid var(--hl);
+    box-shadow:var(--shadow-card);padding:28px 24px;box-sizing:border-box;text-align:center;}
+  #login h1{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;color:var(--name-ink);}
+  #login .login-hi{margin:2px 0 20px;color:var(--ink-muted);font-size:15px;}
+  #login-form input{display:block;width:100%;box-sizing:border-box;font-size:17px;min-height:48px;
+    padding:8px 10px;margin-top:10px;border:1px solid var(--edge);font-family:var(--font);}
+  #family-picker{margin-top:4px;min-height:36px;font-size:14px;font-family:var(--font);
+    border:1px solid var(--edge);background:var(--card);color:var(--ink);max-width:100%;}
+  #sheet .edit-form{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+  #sheet .edit-form label{display:flex;flex-direction:column;gap:2px;font-size:11px;font-weight:600;
+    color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em;}
+  #sheet .edit-form input,#sheet .edit-form select,#sheet .edit-form textarea{font-size:15px;
+    min-height:40px;padding:6px 8px;border:1px solid var(--edge);font-family:var(--font);
+    text-transform:none;letter-spacing:0;color:var(--ink);background:#fff;}
+  #sheet .form-buttons,#sheet .sheet-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  #sheet .form-buttons button,#sheet .sheet-actions button{min-height:44px;padding:6px 14px;
+    font-size:14px;cursor:pointer;font-family:var(--font);}
+  #sheet .form-msg{min-height:1.2em;color:var(--warn);font-size:13px;margin:6px 0 0;}
+  #sheet .sheet-why{flex-basis:100%;margin:0;font-size:12px;color:var(--ink-muted);}
+  #sheet .sheet-links{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:14px;}
+  #sheet .sheet-links a{color:var(--hl);}
+  #login-enter{margin-top:12px;width:100%;min-height:48px;font-size:16px;cursor:pointer;
+    background:var(--hl);color:#fff;border:0;font-family:var(--font);}
+  #login-msg{min-height:1.4em;margin:14px 0 0;font-size:14px;color:var(--warn);}
+  #refresh{width:44px;height:44px;border-radius:50%;border:1px solid var(--edge);
+    background:var(--card);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;
+    box-shadow:var(--shadow-card);padding:0;}
+  #refresh:hover{background:var(--canvas);}
+
+  html,body{height:auto;}
+  body{display:block;overflow:auto;}
+  #admin{max-width:960px;margin:0 auto;padding:16px;box-sizing:border-box;color:var(--ink);}
+  #admin a{color:var(--hl);}
+  #admin h1{font-family:var(--serif);font-size:26px;margin:8px 0 12px;}
+  #tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+  #tabs button{min-height:44px;padding:6px 14px;font-size:14px;cursor:pointer;border:1px solid var(--edge);
+    background:var(--card);font-family:var(--font);}
+  #tabs button[aria-current="page"]{background:var(--hl);color:#fff;border-color:var(--hl);}
+  #admin-msg{min-height:1.3em;color:var(--warn);}
+  #main table{width:100%;border-collapse:collapse;background:var(--card);font-size:14px;}
+  #main th,#main td{text-align:left;padding:8px;border-bottom:1px solid var(--rule);vertical-align:top;}
+  #main td button{min-height:36px;margin:2px 0;cursor:pointer;}
+  #main .admin-form{display:flex;flex-direction:column;gap:8px;max-width:420px;}
+  #main .admin-form label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--ink-muted);}
+  #main input,#main select{min-height:40px;font-size:15px;padding:6px 8px;border:1px solid var(--edge);
+    font-family:var(--font);}
+  #main .admin-form button{min-height:44px;cursor:pointer;}
+  #acct-search{width:100%;box-sizing:border-box;margin-bottom:10px;}
+  .secret{background:var(--band);padding:12px;margin:0 0 12px;}
+  .secret-value{font-family:ui-monospace,Menlo,monospace;font-size:16px;}
+  @media (max-width:600px){#main table,#main tbody,#main tr,#main td{display:block;}#main thead{display:none;}
+    #main tr{border-bottom:1px solid var(--edge);padding:6px 0;}#main td{border:0;padding:2px 0;}}
+</style>
+</head>
+<body>
+<div id="admin">
+  <p><a href="./">← Back to the tree</a></p>
+  <h1>Admin</h1>
+  <nav id="tabs" aria-label="Admin sections"></nav>
+  <div id="secret" class="secret" hidden></div>
+  <p id="admin-msg" role="alert"></p>
+  <main id="main"></main>
+</div>
+<script>var FT = {};
+(function (api) {
+  api.base = function (hostname) {
+    return hostname === 'localhost' || hostname === '127.0.0.1'
+      ? 'http://localhost:5000'
+      : 'https://api.jainparivar.online';
+  };
+
+  api.pickFamily = function (requested, stored, home, villages) {
+    var ids = [];
+    villages.forEach(function (v) { v.families.forEach(function (f) { ids.push(f.id); }); });
+    var choices = [requested, stored, home];
+    for (var i = 0; i < choices.length; i++) {
+      if (choices[i] && ids.indexOf(choices[i]) >= 0) return choices[i];
+    }
+    return ids[0] || null;
+  };
+
+  api.urlFor = function (familyId, personId) {
+    return '?family=' + encodeURIComponent(familyId) +
+      (personId ? '&person=' + encodeURIComponent(personId) : '');
+  };
+
+  api.roleText = function (me) {
+    if (me.is_global) return 'Global admin';
+    var scopes = me.roles.map(function (r) { return r.scope; });
+    if (scopes.indexOf('village') >= 0) return 'Village admin';
+    if (scopes.indexOf('branch') >= 0) return 'Branch rep';
+    return 'Member';
+  };
+
+  function parse(text) {
+    try { return text ? JSON.parse(text) : {}; } catch (e) { return {}; }
+  }
+
+  api.call = function (method, path, body) {
+    var options = { method: method, credentials: 'include', headers: {} };
+    if (body !== undefined) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+    return fetch(api.root + path, options).then(function (r) {
+      return r.text().then(function (text) {
+        var data = parse(text);
+        if (r.ok) return data;
+        var err = new Error(data.error || ('Request failed (' + r.status + ')'));
+        err.status = r.status;
+        if (r.status === 401 && path !== '/login' && api.onLoggedOut) api.onLoggedOut();
+        throw err;
+      });
+    }, function () {
+      var err = new Error('Cannot reach the server. Check your internet connection.');
+      err.status = 0;
+      throw err;
+    });
+  };
+
+  function param(name) {
+    var m = new RegExp('[?&]' + name + '=([^&#]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  function store(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+  function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+  api.reloadAt = function (personId) {
+    location.assign(location.pathname + api.urlFor(api.familyId, personId));
+  };
+
+  function showLogin(message) {
+    document.getElementById('login').classList.remove('hidden');
+    document.getElementById('login-msg').textContent = message || '';
+    document.getElementById('login-user').focus();
+  }
+
+  function wireLogin() {
+    var form = document.getElementById('login-form');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = document.getElementById('login-msg');
+      msg.textContent = '';
+      api.call('POST', '/login', {
+        username: document.getElementById('login-user').value,
+        password: document.getElementById('login-pass').value
+      }).then(function () { location.reload(); }, function (err) { msg.textContent = err.message; });
+    });
+  }
+
+  function familySwitcher(villages, current) {
+    var select = document.createElement('select');
+    select.id = 'family-picker';
+    select.setAttribute('aria-label', 'Family');
+    villages.forEach(function (v) {
+      var group = document.createElement('optgroup');
+      group.label = v.name;
+      v.families.forEach(function (f) {
+        var option = document.createElement('option');
+        option.value = f.id;
+        option.textContent = f.name;
+        if (f.id === current) option.selected = true;
+        group.appendChild(option);
+      });
+      select.appendChild(group);
+    });
+    select.addEventListener('change', function () {
+      location.assign(location.pathname + api.urlFor(select.value));
+    });
+    document.querySelector('#toolbar .brand').appendChild(select);
+  }
+
+  function menuItem(label, onClick) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'menuitem');
+    b.textContent = label;
+    b.addEventListener('click', onClick);
+    document.getElementById('menu').appendChild(b);
+  }
+
+  function passwordSheet() {
+    var body = document.getElementById('sheet-body');
+    body.innerHTML = '<h3>Change password</h3><form id="pw-form" class="edit-form">' +
+      '<label>Old password<input type="password" name="old" autocomplete="current-password" required></label>' +
+      '<label>New password<input type="password" name="new" autocomplete="new-password" minlength="8" required></label>' +
+      '<div class="form-buttons"><button type="submit">Save</button></div>' +
+      '<p class="form-msg" role="alert"></p></form>';
+    document.getElementById('sheet').classList.remove('hidden');
+    var form = document.getElementById('pw-form');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = form.querySelector('.form-msg');
+      api.call('POST', '/me/password', { old: form.elements.old.value, 'new': form.elements['new'].value })
+        .then(function () { msg.textContent = 'Password changed.'; form.reset(); },
+              function (err) { msg.textContent = err.message; });
+    });
+  }
+
+  function accountMenu(me) {
+    var name = me.name || me.name_hi || me.username;
+    document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
+    document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
+    menuItem('Change password', passwordSheet);
+    if (me.is_admin) menuItem('Admin', function () { location.assign('admin.html'); });
+    menuItem('Log out', function () {
+      api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
+    });
+  }
+
+  api.start = function () {
+    api.root = api.base(location.hostname);
+    wireLogin();
+    api.call('GET', '/me').then(function (me) {
+      api.me = me;
+      return api.call('GET', '/villages').then(function (villages) {
+        api.villages = villages;
+        var id = api.pickFamily(param('family'), stored('ft-family'), me.home_family, villages);
+        if (!id) throw new Error('No family has been set up yet.');
+        api.familyId = id;
+        store('ft-family', id);
+        return api.call('GET', '/families/' + encodeURIComponent(id) + '/tree');
+      }).then(function (data) {
+        document.getElementById('login').classList.add('hidden');
+        FT.boot(data);
+        FT.init();
+        familySwitcher(api.villages, api.familyId);
+        accountMenu(me);
+        api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
+        var person = param('person');
+        if (person) FT.openPerson(person);
+      });
+    }).catch(function (err) {
+      showLogin(err.status === 401 ? '' : err.message);
+    });
+  };
+})(typeof FT !== 'undefined' ? (FT.api = {}) : module.exports);
+
+(function (admin) {
+  var TABS = [['deletes', 'Pending deletes'], ['accounts', 'Accounts'], ['roles', 'Roles'],
+    ['families', 'Villages & families'], ['log', 'Change log']];
+  var ROLE = { global: 'Global admin', village: 'Village admin', branch: 'Branch rep' };
+  var state = {};
+  var main;
+
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  admin.esc = esc;
+
+  admin.describe = function (entry) {
+    var before = entry.before || {}, after = entry.after || {};
+    return Object.keys(after).filter(function (k) { return before[k] !== after[k]; }).map(function (k) {
+      var was = before[k] === null || before[k] === undefined ? '—' : before[k];
+      var now = after[k] === null || after[k] === undefined ? '—' : after[k];
+      return k + ': ' + was + ' → ' + now;
+    }).join('; ');
+  };
+
+  function api() { return FT.api; }
+  function say(text) { document.getElementById('admin-msg').textContent = text; }
+  function label(p) { return p ? (p.name || p.name_hi || p.id) : ''; }
+  function personName(id) { return label(state.byId[id]) || id; }
+
+  function familyName(id) {
+    var name = '';
+    state.villages.forEach(function (v) { v.families.forEach(function (f) { if (f.id === id) name = f.name; }); });
+    return name;
+  }
+
+  function table(head, rows) {
+    if (!rows.length) return '<p>Nothing here yet.</p>';
+    return '<table><thead><tr>' + head.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') +
+      '</tr></thead><tbody>' + rows.join('') + '</tbody></table>';
+  }
+
+  function select(name, title, options) {
+    return '<label>' + esc(title) + '<select name="' + name + '">' + options.map(function (o) {
+      return '<option value="' + esc(o[0]) + '">' + esc(o[1]) + '</option>';
+    }).join('') + '</select></label>';
+  }
+
+  function text(name, title) {
+    return '<label>' + esc(title) + '<input name="' + name + '" autocomplete="off"></label>';
+  }
+
+  function adminOf(villageId) {
+    return state.me.is_global || state.me.roles.some(function (r) {
+      return r.scope === 'village' && r.scope_id === villageId;
+    });
+  }
+
+  var tabs = {
+    deletes: function () {
+      return api().call('GET', '/delete-requests').then(function (list) {
+        return table(['Person', 'Asked by', 'When', ''], list.map(function (r) {
+          return '<tr><td>' + esc(r.person) + '</td><td>' + esc(r.requested_by) + '</td><td>' +
+            esc(r.created_at.slice(0, 10)) + '</td><td>' +
+            '<button type="button" data-post="/delete-requests/' + r.id + '/approve">Approve</button> ' +
+            '<button type="button" data-post="/delete-requests/' + r.id + '/reject">Reject</button></td></tr>';
+        }));
+      });
+    },
+    accounts: function () {
+      return api().call('GET', '/accounts').then(function (list) {
+        return '<input id="acct-search" placeholder="Search living people" aria-label="Search living people">' +
+          table(['Person', 'Family', 'Username', ''], list.map(function (a) {
+            var id = esc(a.person_id);
+            var buttons = !a.can_manage ? '' : a.username
+              ? '<button type="button" data-reset="' + id + '">Reset password</button> ' +
+                '<button type="button" data-remove="' + id + '">Remove login</button>'
+              : '<button type="button" data-create="' + id + '">Create login</button>';
+            var key = [a.name, a.name_hi, a.username].filter(Boolean).join(' ').toLowerCase();
+            return '<tr data-search="' + esc(key) + '"><td>' + esc(a.name || a.name_hi) + '</td><td>' +
+              esc(familyName(a.family_id)) + '</td><td>' + esc(a.username || '—') + '</td><td>' + buttons + '</td></tr>';
+          }));
+      });
+    },
+    roles: function () {
+      return api().call('GET', '/role-grants').then(function (list) {
+        var holders = state.people.filter(function (p) { return p.has_account; }).map(function (p) { return [p.id, label(p)]; });
+        var scopes = (state.me.is_global ? [['village', 'Village admin'], ['global', 'Global admin']] : []).concat([['branch', 'Branch rep']]);
+        var villages = state.villages.filter(function (v) { return adminOf(v.id); }).map(function (v) { return [v.id, v.name]; });
+        var everyone = state.people.map(function (p) { return [p.id, label(p) + (p.family_id ? ' (' + familyName(p.family_id) + ')' : '')]; });
+        return table(['Person', 'Role', 'Covers', ''], list.map(function (g) {
+          return '<tr><td>' + esc(g.person) + '</td><td>' + esc(ROLE[g.scope]) + '</td><td>' + esc(g.scope_name) +
+            '</td><td><button type="button" data-revoke="' + g.id + '">Remove</button></td></tr>';
+        })) +
+          '<h3>Give a role</h3><form data-form="grant" class="admin-form">' +
+          select('person_id', 'Person (must have a login)', holders) +
+          select('scope', 'Role', scopes) +
+          select('village_id', 'Village (for village admin)', villages) +
+          select('branch_id', 'Branch starts at (for branch rep)', everyone) +
+          '<button type="submit">Give role</button></form>';
+      });
+    },
+    families: function () {
+      var html = state.villages.map(function (v) {
+        return '<h3>' + esc(v.name) + '</h3><ul>' + v.families.map(function (f) {
+          return '<li><a href="./?family=' + encodeURIComponent(f.id) + '">' + esc(f.name) + '</a> — starts at ' +
+            esc(personName(f.root_person_id)) + '</li>';
+        }).join('') + '</ul>';
+      }).join('');
+      if (state.me.is_global) {
+        html += '<h3>Add a village</h3><form data-form="village" class="admin-form">' +
+          text('name', 'Village name') + text('district', 'District') + text('state', 'State') +
+          '<button type="submit">Add village</button></form>';
+      }
+      var mine = state.villages.filter(function (v) { return adminOf(v.id); }).map(function (v) { return [v.id, v.name]; });
+      if (mine.length) {
+        html += '<h3>Add a family</h3><form data-form="family" class="admin-form">' +
+          select('village_id', 'Village', mine) + text('name', 'Family name') +
+          text('root_name', 'Eldest known ancestor') + text('root_name_hi', 'Ancestor, Hindi name') +
+          select('root_gender', 'Ancestor gender', [['male', 'Male'], ['female', 'Female']]) +
+          '<button type="submit">Add family</button></form>';
+      }
+      return Promise.resolve(html);
+    },
+    log: function () {
+      return api().call('GET', '/change-log?limit=100').then(function (list) {
+        return table(['When', 'Who', 'Person', 'What', 'Details'], list.map(function (e) {
+          return '<tr><td>' + esc(e.at.replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(personName(e.actor_id)) +
+            '</td><td>' + esc(e.person_id ? personName(e.person_id) : '') + '</td><td>' + esc(e.action) +
+            '</td><td>' + esc(admin.describe(e)) + '</td></tr>';
+        }));
+      });
+    }
+  };
+
+  function reload() {
+    return Promise.all([api().call('GET', '/people'), api().call('GET', '/villages')]).then(function (r) {
+      state.people = r[0];
+      state.byId = {};
+      r[0].forEach(function (p) { state.byId[p.id] = p; });
+      state.villages = r[1];
+    });
+  }
+
+  function open(tab) {
+    state.tab = tabs[tab] ? tab : 'deletes';
+    history.replaceState(null, '', '#' + state.tab);
+    Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function (b) {
+      b.setAttribute('aria-current', b.getAttribute('data-tab') === state.tab ? 'page' : 'false');
+    });
+    main.innerHTML = '<p>Loading…</p>';
+    return tabs[state.tab]().then(function (html) {
+      main.innerHTML = html;
+      var search = document.getElementById('acct-search');
+      if (search) {
+        search.addEventListener('input', function () {
+          var q = search.value.trim().toLowerCase();
+          Array.prototype.forEach.call(main.querySelectorAll('tr[data-search]'), function (tr) {
+            tr.hidden = q && tr.getAttribute('data-search').indexOf(q) < 0;
+          });
+        });
+      }
+    }, function (err) { main.innerHTML = '<p class="form-msg">' + esc(err.message) + '</p>'; });
+  }
+
+  function showSecret(r) {
+    var box = document.getElementById('secret');
+    box.hidden = false;
+    box.innerHTML = '<p>Send this to them now. The password is shown only once.</p>' +
+      '<p class="secret-value">Username: <b>' + esc(r.username) + '</b><br>Password: <b>' + esc(r.password) + '</b></p>' +
+      '<button type="button" id="secret-copy">Copy</button>';
+    document.getElementById('secret-copy').addEventListener('click', function () {
+      var textValue = 'Family Roots login\nhttps://jainparivar.online\nUsername: ' + r.username + '\nPassword: ' + r.password;
+      if (navigator.clipboard) navigator.clipboard.writeText(textValue);
+      this.textContent = 'Copied';
+    });
+  }
+
+  function done(promise, after) {
+    say('');
+    promise.then(function (r) {
+      return open(state.tab).then(function () { if (after) after(r); });
+    }, function (err) { say(err.message); });
+  }
+
+  function armed(button) {
+    if (button.getAttribute('data-armed') === '1') return true;
+    button.setAttribute('data-armed', '1');
+    button.textContent = 'Click again to confirm';
+    return false;
+  }
+
+  function onClick(e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    var id;
+    if (b.hasAttribute('data-post')) done(api().call('POST', b.getAttribute('data-post'), {}));
+    else if ((id = b.getAttribute('data-create'))) done(api().call('POST', '/accounts', { person_id: id }), showSecret);
+    else if ((id = b.getAttribute('data-reset'))) done(api().call('POST', '/accounts/' + encodeURIComponent(id) + '/password', {}), showSecret);
+    else if ((id = b.getAttribute('data-remove')) && armed(b)) done(api().call('DELETE', '/accounts/' + encodeURIComponent(id)));
+    else if ((id = b.getAttribute('data-revoke')) && armed(b)) done(api().call('DELETE', '/role-grants/' + id));
+  }
+
+  function onSubmit(e) {
+    var form = e.target.closest('form[data-form]');
+    if (!form) return;
+    e.preventDefault();
+    var v = {};
+    Array.prototype.forEach.call(form.elements, function (el) { if (el.name) v[el.name] = el.value.trim(); });
+    var kind = form.getAttribute('data-form');
+    var request;
+    if (kind === 'grant') {
+      request = api().call('POST', '/role-grants', {
+        person_id: v.person_id, scope: v.scope,
+        scope_id: v.scope === 'village' ? v.village_id : v.scope === 'branch' ? v.branch_id : ''
+      });
+    } else if (kind === 'village') {
+      request = api().call('POST', '/villages', { name: v.name, district: v.district || null, state: v.state || null });
+    } else {
+      request = api().call('POST', '/families', {
+        village_id: v.village_id, name: v.name,
+        root: { name: v.root_name || null, name_hi: v.root_name_hi || null, gender: v.root_gender }
+      });
+    }
+    done(request.then(function (r) { return reload().then(function () { return r; }); }), function () { say('Saved.'); });
+  }
+
+  admin.start = function () {
+    FT.api.root = FT.api.base(location.hostname);
+    main = document.getElementById('main');
+    main.addEventListener('click', onClick);
+    main.addEventListener('submit', onSubmit);
+    api().call('GET', '/me').then(function (me) {
+      state.me = me;
+      if (!me.is_admin) { main.innerHTML = '<p>Only admins can open this page.</p>'; return null; }
+      var nav = document.getElementById('tabs');
+      nav.innerHTML = TABS.map(function (t) {
+        return '<button type="button" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>';
+      }).join('');
+      nav.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-tab]');
+        if (b) open(b.getAttribute('data-tab'));
+      });
+      return reload().then(function () { return open(location.hash.slice(1)); });
+    }).catch(function (err) {
+      if (err.status === 401) location.assign('./');
+      else main.innerHTML = '<p class="form-msg">' + esc(err.message) + '</p>';
+    });
+  };
+})(typeof FT !== 'undefined' ? (FT.admin = {}) : module.exports);
+
+FT.admin.start();</script>
+</body>
+</html>
