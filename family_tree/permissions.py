@@ -41,8 +41,22 @@ class Access:
     def delete_mode(self, pid: str) -> Optional[str]:
         return {"admin": "direct", "branch": "request"}.get(self.level(pid))
 
+    def _covers(self, grant: dict) -> bool:
+        if self.is_global:
+            return True
+        if grant["scope"] == "global":
+            return False
+        if grant["scope"] == "village":
+            return grant["scope_id"] in self.admin_villages()
+        if grant["scope"] == "branch":
+            return self.graph.village_of(grant["scope_id"]) in self.admin_villages()
+        return False
+
     def can_manage_account(self, pid: str) -> bool:
-        return self.is_admin_over(pid) and self.rank_of(pid) <= self.rank_of(self.actor_id)
+        if not (self.is_admin_over(pid) and self.rank_of(pid) <= self.rank_of(self.actor_id)):
+            return False
+        target_grants = [g for g in self.grants if g["person_id"] == pid]
+        return all(self._covers(g) for g in target_grants)
 
     def can_grant(self, scope: str, scope_id: str) -> bool:
         if scope in ("global", "village"):

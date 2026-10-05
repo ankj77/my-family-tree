@@ -67,3 +67,21 @@ class TestAccess(unittest.TestCase):
 
     def test_unknown_person(self):
         self.assertIsNone(self.access("mohan").level("nobody"))
+
+    def test_village_admin_cannot_manage_account_with_uncovered_village_grant(self):
+        grants = SAMPLE_GRANTS + [{"id": 9, "person_id": "rashmi", "scope": "village", "scope_id": "bakheta"}]
+        self.assertFalse(self.access("bash", grants).can_manage_account("rashmi"))
+
+    def test_village_admin_can_manage_account_with_covered_branch_grant(self):
+        grants = SAMPLE_GRANTS + [{"id": 9, "person_id": "rashmi", "scope": "branch", "scope_id": "bash"}]
+        self.assertTrue(self.access("bash", grants).can_manage_account("rashmi"))
+
+    def test_village_admin_cannot_manage_account_with_uncovered_branch_grant(self):
+        grants = SAMPLE_GRANTS + [{"id": 9, "person_id": "rashmi", "scope": "branch", "scope_id": "amit"}]
+        self.assertFalse(self.access("bash", grants).can_manage_account("rashmi"))
+
+    def test_global_admin_can_manage_all_grants(self):
+        grants_with_village = SAMPLE_GRANTS + [{"id": 9, "person_id": "rashmi", "scope": "village", "scope_id": "bakheta"}]
+        self.assertTrue(self.access("mohan", grants_with_village).can_manage_account("rashmi"))
+        grants_with_branch = SAMPLE_GRANTS + [{"id": 9, "person_id": "rashmi", "scope": "branch", "scope_id": "amit"}]
+        self.assertTrue(self.access("mohan", grants_with_branch).can_manage_account("rashmi"))
