@@ -230,3 +230,208 @@ def change_password():
     log(cur, actor, actor, "password_change")
     conn().commit()
     return jsonify(status="changed")
+
+
+def person_extras(graph, access, pending, pid):
+    mode = access.delete_mode(pid)
+    blocker = rules.delete_blocker(graph, pid) if mode else None
+    can_edit = access.can_edit(pid)
+    row = graph.people[pid]
+    return {
+        "family_id": row.get("family_id"),
+        "can_edit": can_edit,
+        "can_move": access.is_admin_over(pid),
+        "can_delete": mode if mode and not blocker else False,
+        "delete_reason": blocker,
+        "delete_pending": pid in pending,
+        "links": views.family_links(graph, pid),
+        "edit": {k: row.get(k) for k in rules.EDIT_FIELDS + ("father_id", "mother_id")} if can_edit else None,
+    }
+
+
+@app.get("/villages")
+def list_villages():
+    _, graph, _ = context()
+    out = []
+    for village in graph.villages.values():
+        families = [
+            {"id": f["id"], "name": f["name"], "root_person_id": f["root_person_id"]}
+            for f in graph.families.values() if f["village_id"] == village["id"]
+        ]
+        out.append(dict(village, families=families))
+    return jsonify(out)
+
+
+@app.get("/people")
+def list_people():
+    _, graph, _ = context()
+    return jsonify([
+        {"id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"), "gender": row.get("gender"),
+         "life": row.get("life"), "family_id": row.get("family_id"), "has_account": pid in graph.account_ids}
+        for pid, row in graph.people.items()
+    ])
+
+
+@app.get("/families/<family_id>/tree")
+def family_tree(family_id):
+    _, graph, access = context()
+    if family_id not in graph.families:
+        raise ApiError(404, "No such family")
+    cur = conn().cursor()
+    cur.execute("SELECT person_id FROM delete_requests WHERE status='pending'")
+    pending = {r["person_id"] for r in cur.fetchall()}
+    return jsonify(views.family_json(graph, family_id, lambda pid: person_extras(graph, access, pending, pid)))
+
+
+def child_links(graph, parent_id):
+    parent = graph.people[parent_id]
+    spouse = graph.spouse.get(parent_id)
+    wives = {w for _, w in graph.marriages}
+    is_mother = parent_id in wives or (spouse is None and parent.get("gender") == "female")
+    links = {"family_id": graph.home_family(parent_id)}
+    if is_mother:
+        links.update(mother_id=parent_id, father_id=spouse)
+    else:
+        links.update(father_id=parent_id, mother_id=spouse)
+    return links
+
+
+@app.post("/people")
+def create_person():
+    actor, graph, access = context()
+    data = dict(body())
+    kind = data.pop("as", None)
+    if kind == "child":
+        anchor = data.pop("parent_id", None)
+    elif kind == "spouse":
+        anchor = data.pop("spouse_id", None)
+    else:
+        raise ApiError(400, 'Say "as": "child" or "as": "spouse"')
+    if anchor not in graph.people:
+        raise ApiError(404, "No such person")
+    if not access.can_edit(anchor):
+        raise ApiError(403, "You cannot edit %s" % name_of(graph, anchor))
+    allowed = rules.EDIT_FIELDS + (("family_id",) if kind == "spouse" else ())
+    fields = rules.clean_fields(data, allowed)
+    if kind == "child":
+        fields.update(child_links(graph, anchor))
+    else:
+        if anchor in graph.spouse:
+            raise RuleError("%s already has a spouse: %s" % (name_of(graph, anchor), name_of(graph, graph.spouse[anchor])))
+        if fields.get("family_id") is not None and fields["family_id"] not in graph.families:
+            raise ApiError(404, "No such family")
+        anchor_gender = graph.people[anchor].get("gender")
+        if not fields.get("gender"):
+            fields["gender"] = {"male": "female", "female": "male"}.get(anchor_gender)
+        if fields.get("gender") is None or fields["gender"] == anchor_gender:
+            raise RuleError("Choose the spouse's gender; husband and wife must differ")
+    pid = naming.slug(fields.get("name") or fields.get("name_hi") or "", set(graph.people))
+    fields.update(id=pid, updated_by=actor)
+    cur = conn().cursor()
+    db.insert_rows(cur, "people", [fields])
+    if kind == "spouse":
+        husband, wife = (pid, anchor) if fields["gender"] == "male" else (anchor, pid)
+        db.insert_rows(cur, "marriages", [{"husband_id": husband, "wife_id": wife}])
+    log(cur, actor, pid, "create", None, fields)
+    commit_checked(cur)
+    return jsonify(id=pid), 201
+
+
+@app.patch("/people/<pid>")
+def update_person(pid):
+    actor, graph, access = context()
+    if pid not in graph.people:
+        raise ApiError(404, "No such person")
+    if not access.can_edit(pid):
+        raise ApiError(403, "You cannot edit %s" % name_of(graph, pid))
+    data = body()
+    if set(data) & set(rules.LINK_FIELDS) and not access.is_admin_over(pid):
+        raise ApiError(403, "Only an admin can move a person to other parents or another family")
+    fields = rules.clean_fields(data, rules.EDIT_FIELDS + rules.LINK_FIELDS)
+    for key in ("father_id", "mother_id"):
+        if fields.get(key) is not None and fields[key] not in graph.people:
+            raise ApiError(404, "No such person: %s" % fields[key])
+    if fields.get("family_id") is not None and fields["family_id"] not in graph.families:
+        raise ApiError(404, "No such family")
+    if not fields:
+        return jsonify(id=pid)
+    before = {k: graph.people[pid].get(k) for k in fields}
+    assignments = ", ".join("%s=%%s" % k for k in fields)
+    cur = conn().cursor()
+    cur.execute("UPDATE people SET %s, updated_by=%%s WHERE id=%%s" % assignments,
+                list(fields.values()) + [actor, pid])
+    log(cur, actor, pid, "update", before, fields)
+    commit_checked(cur)
+    return jsonify(id=pid)
+
+
+def delete_person(cur, graph, actor, pid, action):
+    log(cur, actor, pid, action, graph.people[pid], None)
+    cur.execute("DELETE FROM role_grants WHERE scope='branch' AND scope_id=%s", (pid,))
+    cur.execute("DELETE FROM people WHERE id=%s", (pid,))
+
+
+@app.delete("/people/<pid>")
+def remove_person(pid):
+    actor, graph, access = context()
+    if pid not in graph.people:
+        raise ApiError(404, "No such person")
+    mode = access.delete_mode(pid)
+    if mode is None:
+        raise ApiError(403, "You cannot delete %s" % name_of(graph, pid))
+    blocker = rules.delete_blocker(graph, pid)
+    if blocker:
+        raise RuleError(blocker)
+    cur = conn().cursor()
+    if mode == "request":
+        cur.execute("SELECT id FROM delete_requests WHERE person_id=%s AND status='pending'", (pid,))
+        if cur.fetchone() is None:
+            cur.execute("INSERT INTO delete_requests (person_id, requested_by) VALUES (%s, %s)", (pid, actor))
+            log(cur, actor, pid, "delete_request")
+        conn().commit()
+        return jsonify(status="requested"), 202
+    delete_person(cur, graph, actor, pid, "delete")
+    commit_checked(cur)
+    return jsonify(status="deleted")
+
+
+@app.get("/delete-requests")
+def list_delete_requests():
+    _, graph, access = context()
+    if not access.is_admin():
+        raise ApiError(403, "Only admins see delete requests")
+    cur = conn().cursor()
+    cur.execute("SELECT id, person_id, requested_by, created_at FROM delete_requests "
+                "WHERE status='pending' ORDER BY created_at, id")
+    return jsonify([
+        {"id": r["id"], "person_id": r["person_id"], "person": name_of(graph, r["person_id"]),
+         "requested_by": name_of(graph, r["requested_by"]), "created_at": r["created_at"].isoformat()}
+        for r in cur.fetchall() if access.is_admin_over(r["person_id"])
+    ])
+
+
+@app.post("/delete-requests/<int:request_id>/<decision>")
+def decide_delete(request_id, decision):
+    if decision not in ("approve", "reject"):
+        raise ApiError(404, "Not found")
+    actor, graph, access = context()
+    cur = conn().cursor()
+    cur.execute("SELECT person_id FROM delete_requests WHERE id=%s AND status='pending'", (request_id,))
+    row = cur.fetchone()
+    if row is None:
+        raise ApiError(404, "No such pending request")
+    pid = row["person_id"]
+    if not access.is_admin_over(pid):
+        raise ApiError(403, "You cannot decide this request")
+    if decision == "reject":
+        cur.execute("UPDATE delete_requests SET status='rejected', decided_by=%s, decided_at=%s WHERE id=%s",
+                    (actor, now(), request_id))
+        log(cur, actor, pid, "delete_reject")
+        conn().commit()
+        return jsonify(status="rejected")
+    blocker = rules.delete_blocker(graph, pid)
+    if blocker:
+        raise RuleError(blocker)
+    delete_person(cur, graph, actor, pid, "delete_approve")
+    commit_checked(cur)
+    return jsonify(status="deleted")
