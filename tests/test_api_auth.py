@@ -96,3 +96,19 @@ class TestOwnPassword(ApiCase):
         self.post("/logout")
         self.assertEqual(self.post("/login", {"username": "amit", "password": "pw-amit"}).status_code, 401)
         self.assertEqual(self.post("/login", {"username": "amit", "password": "newpass99"}).status_code, 200)
+
+
+class TestDummyHash(ApiCase):
+    def test_precomputed_with_current_cost(self):
+        from backend.app import DUMMY_HASH
+        self.assertTrue(DUMMY_HASH.startswith("pbkdf2_sha256$200000$"))
+
+
+class TestDbSafety(ApiCase):
+    def test_refuses_unsafe_urls(self):
+        import unittest
+        from tests.dbcase import refuse_unsafe
+        refuse_unsafe("mysql://root@localhost/family_tree_test")
+        for url in ("mysql://root@localhost/family_tree", "mysql://u@db.example.com/family_tree_test"):
+            with self.assertRaises(unittest.SkipTest):
+                refuse_unsafe(url)

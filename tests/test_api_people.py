@@ -97,6 +97,15 @@ class TestAdding(ApiCase):
         again = self.post("/people", {"as": "spouse", "spouse_id": "amit", "name": "Other"})
         self.assertEqual(again.status_code, 409)
 
+    def test_spouse_with_born_in_family_is_unlinked(self):
+        self.login("mohan")
+        r = self.post("/people", {"as": "spouse", "spouse_id": "amit", "name": "Pooja", "family_id": "pugthala"})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        row = self.query("SELECT family_id, status FROM people WHERE id='pooja'")[0]
+        self.assertEqual(row, {"family_id": "pugthala", "status": "needs-parent"})
+        unlinked = self.get("/families/pugthala/tree").get_json()["unlinked"]
+        self.assertIn("pooja", [c["id"] for c in unlinked])
+
     def test_spouse_same_gender_refused(self):
         self.login("jagdish")
         r = self.post("/people", {"as": "spouse", "spouse_id": "amit", "name": "Raj", "gender": "male"})

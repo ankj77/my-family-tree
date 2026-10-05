@@ -16,8 +16,10 @@ SESSION_COOKIE = "ft_session"
 SESSION_DAYS = 30
 LOCK_AFTER = 5
 LOCK_MINUTES = 15
+CHANGE_LOG_BATCH = 500
+CHANGE_LOG_SCAN_MAX = 5000
 WRITE_METHODS = ("POST", "PATCH", "DELETE")
-DUMMY_HASH = auth.make_hash("not-a-real-password")
+DUMMY_HASH = "pbkdf2_sha256$200000$d8e709509b359ebae9b0587035ee4238$5b559c05ce4a45f434d9532f086df0e8e7943db549b71005cdf351362ed4bb4f"
 
 app = Flask(__name__)
 
@@ -322,6 +324,8 @@ def create_person():
             raise RuleError("%s already has a spouse: %s" % (name_of(graph, anchor), name_of(graph, graph.spouse[anchor])))
         if fields.get("family_id") is not None and fields["family_id"] not in graph.families:
             raise ApiError(404, "No such family")
+        if fields.get("family_id") is not None:
+            fields["status"] = "needs-parent"
         anchor_gender = graph.people[anchor].get("gender")
         if not fields.get("gender"):
             fields["gender"] = {"male": "female", "female": "male"}.get(anchor_gender)
@@ -379,7 +383,13 @@ def is_last_global(grants, pid):
     return {g["person_id"] for g in grants if g["scope"] == "global"} == {pid}
 
 
+def require_can_remove_roles(graph, access, pid):
+    if not all(access.can_grant(g["scope"], g["scope_id"]) for g in access.grants if g["person_id"] == pid):
+        raise ApiError(403, "%s holds a role you cannot remove" % name_of(graph, pid))
+
+
 def delete_guard(graph, access, pid):
+    require_can_remove_roles(graph, access, pid)
     if access.rank_of(pid) > 0 and not access.can_manage_account(pid):
         raise ApiError(403, "%s holds a role you cannot remove" % name_of(graph, pid))
     if is_last_global(access.grants, pid):
@@ -546,6 +556,8 @@ def rename_account(pid):
 def reset_password(pid):
     actor, graph, access = context()
     manageable(graph, access, pid)
+    if pid == actor:
+        raise RuleError("Use Change password for your own login")
     password = auth.new_password()
     cur = conn().cursor()
     cur.execute("UPDATE accounts SET password_hash=%s, failed_logins=0, locked_until=NULL WHERE person_id=%s",
@@ -560,6 +572,7 @@ def reset_password(pid):
 def delete_account(pid):
     actor, graph, access = context()
     manageable(graph, access, pid)
+    require_can_remove_roles(graph, access, pid)
     if is_last_global(access.grants, pid):
         raise RuleError("%s is the only global admin; make someone else global admin first" % name_of(graph, pid))
     cur = conn().cursor()
@@ -695,6 +708,18 @@ def _loads(value):
     return json.loads(value) if isinstance(value, str) else value
 
 
+def change_visible(graph, access, row):
+    if access.is_global:
+        return True
+    if row["person_id"] in graph.people:
+        return access.is_admin_over(row["person_id"])
+    for snapshot in (_loads(row["before_json"]), _loads(row["after_json"])):
+        family = graph.families.get((snapshot or {}).get("family_id"))
+        if family:
+            return family["village_id"] in access.admin_villages()
+    return False
+
+
 @app.get("/change-log")
 def change_log():
     _, graph, access = context()
@@ -710,12 +735,18 @@ def change_log():
     if person_id:
         sql += " WHERE person_id=%s"
         args.append(person_id)
-    cur.execute(sql + " ORDER BY at DESC, id DESC LIMIT %d" % limit, args)
+    sql += " ORDER BY at DESC, id DESC LIMIT %d OFFSET %%s" % CHANGE_LOG_BATCH
     out = []
-    for r in cur.fetchall():
-        if not access.is_global and not (r["person_id"] in graph.people and access.is_admin_over(r["person_id"])):
-            continue
-        out.append({"id": r["id"], "at": r["at"].isoformat(), "actor_id": r["actor_id"],
-                    "person_id": r["person_id"], "action": r["action"],
-                    "before": _loads(r["before_json"]), "after": _loads(r["after_json"])})
+    offset = 0
+    while len(out) < limit and offset < CHANGE_LOG_SCAN_MAX:
+        cur.execute(sql, args + [offset])
+        rows = cur.fetchall()
+        for r in rows:
+            if len(out) < limit and change_visible(graph, access, r):
+                out.append({"id": r["id"], "at": r["at"].isoformat(), "actor_id": r["actor_id"],
+                            "person_id": r["person_id"], "action": r["action"],
+                            "before": _loads(r["before_json"]), "after": _loads(r["after_json"])})
+        if len(rows) < CHANGE_LOG_BATCH:
+            break
+        offset += CHANGE_LOG_BATCH
     return jsonify(out)

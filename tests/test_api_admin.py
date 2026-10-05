@@ -143,3 +143,55 @@ class TestChangeLog(ApiCase):
         self.post("/logout")
         self.login("amit")
         self.assertEqual(self.get("/change-log").status_code, 403)
+
+
+class TestFinalFixes(ApiCase):
+    def test_own_password_reset_refused(self):
+        self.login("mohan")
+        r = self.post("/accounts/mohan/password")
+        self.assertEqual(r.status_code, 409)
+        self.assertEqual(self.get("/me").status_code, 200)
+
+    def test_peer_village_admin_cannot_be_removed(self):
+        self.conn.cursor().execute("INSERT INTO role_grants (person_id, scope, scope_id) VALUES ('rashmi', 'village', 'pugthala')")
+        self.conn.commit()
+        self.login("bash")
+        self.assertEqual(self.delete("/accounts/rashmi").status_code, 403)
+        self.assertEqual(self.delete("/people/rashmi").status_code, 403)
+        self.assertEqual(self.query("SELECT COUNT(*) AS n FROM role_grants WHERE person_id='rashmi'")[0]["n"], 1)
+        self.assertEqual(self.query("SELECT COUNT(*) AS n FROM accounts WHERE person_id='rashmi'")[0]["n"], 1)
+
+    def test_peer_admin_childless_person_delete_refused(self):
+        with self.conn.cursor() as cur:
+            cur.execute("INSERT INTO people (id, name, family_id, father_id, gender, life) "
+                        "VALUES ('kaka', 'Kaka', 'pugthala', 'bash', 'male', 'living')")
+            cur.execute("INSERT INTO accounts (person_id, username, password_hash) VALUES ('kaka', 'kaka', 'x')")
+            cur.execute("INSERT INTO role_grants (person_id, scope, scope_id) VALUES ('kaka', 'village', 'pugthala')")
+        self.conn.commit()
+        self.login("bash")
+        self.assertEqual(self.delete("/people/kaka").status_code, 403)
+        self.assertEqual(self.query("SELECT COUNT(*) AS n FROM people WHERE id='kaka'")[0]["n"], 1)
+
+    def test_village_admin_sees_own_deletions_in_log(self):
+        with self.conn.cursor() as cur:
+            cur.execute("INSERT INTO people (id, name, family_id, father_id, gender, life) "
+                        "VALUES ('kaka', 'Kaka', 'pugthala', 'bash', 'male', 'living')")
+        self.conn.commit()
+        self.login("bash")
+        self.assertEqual(self.delete("/people/kaka").status_code, 200)
+        actions = [(e["action"], e["person_id"]) for e in self.get("/change-log?limit=1").get_json()]
+        self.assertEqual(actions, [("delete", "kaka")])
+        self.post("/logout")
+        self.login("jagdish")
+        self.assertEqual(self.get("/change-log").status_code, 403)
+
+    def test_log_limit_applies_after_filtering(self):
+        self.login("mohan")
+        self.patch("/people/amit", {"born": "1991"})
+        for n in range(3):
+            self.patch("/people/bash", {"born": "190%d" % n})
+        self.post("/logout")
+        self.login("bash")
+        entries = self.get("/change-log?limit=2").get_json()
+        self.assertEqual(len(entries), 2)
+        self.assertTrue(all(e["person_id"] == "bash" for e in entries))

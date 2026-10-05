@@ -1,5 +1,6 @@
 import os
 import unittest
+from urllib.parse import urlsplit
 
 from backend import db
 
@@ -8,9 +9,22 @@ TABLES = ("change_log", "delete_requests", "sessions", "role_grants", "accounts"
           "marriages", "people", "families", "villages")
 
 
+LOCAL_HOSTS = ("localhost", "127.0.0.1", "::1")
+
+
+def refuse_unsafe(url):
+    parts = urlsplit(url)
+    name = parts.path.lstrip("/")
+    if not name.endswith("_test"):
+        raise unittest.SkipTest("TEST_DATABASE_URL database %r must end with _test; tests DROP it" % name)
+    if parts.hostname not in LOCAL_HOSTS:
+        raise unittest.SkipTest("TEST_DATABASE_URL host %r is not local; tests DROP the database" % parts.hostname)
+
+
 class DbCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        refuse_unsafe(TEST_URL)
         server_url, name = TEST_URL.rsplit("/", 1)
         try:
             server = db.connect(server_url + "/")
