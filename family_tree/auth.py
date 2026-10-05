@@ -48,6 +48,7 @@ def set_admin_password(path: str, password: str) -> dict:
 
 PASSWORD_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"
 PASSWORD_LENGTH = 10
+MAX_ITERATIONS = 1000000
 
 
 def make_hash(password: str, iterations: int = ITERATIONS) -> str:
@@ -59,8 +60,14 @@ def check_hash(password: str, stored: str) -> bool:
     parts = stored.split("$")
     if len(parts) != 4 or parts[0] != "pbkdf2_sha256":
         return False
-    _, iterations, salt, digest = parts
-    return hmac.compare_digest(hash_password(password, salt, int(iterations)), digest)
+    _, iterations_str, salt, digest = parts
+    try:
+        iterations = int(iterations_str)
+        if iterations < 1 or iterations > MAX_ITERATIONS:
+            return False
+        return hmac.compare_digest(hash_password(password, salt, iterations), digest)
+    except (ValueError, TypeError):
+        return False
 
 
 def new_password() -> str:

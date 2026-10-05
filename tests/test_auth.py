@@ -140,6 +140,12 @@ class TestAccountHelpers(unittest.TestCase):
     def test_bad_stored_value_is_false_not_crash(self):
         self.assertFalse(check_hash("x", "garbage"))
         self.assertFalse(check_hash("x", "md5$1$aa$bb"))
+        self.assertFalse(check_hash("x", "pbkdf2_sha256$abc$aa$bb"))
+        self.assertFalse(check_hash("x", "pbkdf2_sha256$0$aa$bb"))
+        self.assertFalse(check_hash("x", "$-1$"))
+        self.assertFalse(check_hash("x", "pbkdf2_sha256$1$zz$bb"))
+        self.assertFalse(check_hash("x", "pbkdf2_sha256$1$aa$é"))
+        self.assertFalse(check_hash("x", "pbkdf2_sha256$99999999$aa$bb"))
 
     def test_new_password(self):
         pw = new_password()
