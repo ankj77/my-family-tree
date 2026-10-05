@@ -605,6 +605,8 @@ def create_grant():
         raise ApiError(404, "No such village")
     if scope == "branch" and scope_id not in graph.people:
         raise ApiError(404, "No such person to root the branch")
+    if not access.can_manage_account(pid):
+        raise ApiError(403, "You cannot give roles to %s" % name_of(graph, pid))
     if not access.can_grant(scope, scope_id):
         raise ApiError(403, "You cannot give that role")
     if any(g["person_id"] == pid and g["scope"] == scope and g["scope_id"] == scope_id for g in access.grants):
@@ -623,6 +625,8 @@ def delete_grant(grant_id):
     grant = next((g for g in access.grants if g["id"] == grant_id), None)
     if grant is None:
         raise ApiError(404, "No such role")
+    if not access.can_manage_account(grant["person_id"]):
+        raise ApiError(403, "You cannot change %s's roles" % name_of(graph, grant["person_id"]))
     if not access.can_grant(grant["scope"], grant["scope_id"]):
         raise ApiError(403, "You cannot remove that role")
     if grant["scope"] == "global" and is_last_global(access.grants, grant["person_id"]):

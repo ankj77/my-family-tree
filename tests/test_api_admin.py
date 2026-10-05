@@ -84,6 +84,19 @@ class TestRoles(ApiCase):
         self.assertEqual(self.post("/role-grants", {"person_id": "rashmi", "scope": "branch",
                                                     "scope_id": "rashmi"}).status_code, 201)
 
+    def test_cannot_give_roles_to_out_of_scope_person(self):
+        self.login("bash")
+        r = self.post("/role-grants", {"person_id": "amit", "scope": "branch", "scope_id": "rashmi"})
+        self.assertEqual(r.status_code, 403)
+
+    def test_cannot_revoke_roles_of_higher_holder(self):
+        self.query("INSERT INTO role_grants (person_id, scope, scope_id) VALUES ('mohan', 'branch', 'bash')")
+        self.conn.commit()
+        self.login("bash")
+        r = self.delete("/role-grants/%d" % self.query("SELECT id FROM role_grants WHERE person_id='mohan' AND scope='branch'")[0]["id"])
+        self.assertEqual(r.status_code, 403)
+        self.assertEqual(self.query("SELECT COUNT(*) AS n FROM role_grants WHERE person_id='mohan' AND scope='branch'")[0]["n"], 1)
+
     def test_needs_a_login(self):
         self.login("mohan")
         r = self.post("/role-grants", {"person_id": "vikram", "scope": "branch", "scope_id": "neha"})
