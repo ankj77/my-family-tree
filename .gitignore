@@ -17,3 +17,5 @@ admin-password.txt
 
 .venv/
 .vercel/
+.vercel
+.env*
