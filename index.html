@@ -3,10 +3,2208 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Family Tree</title>
-<meta http-equiv="refresh" content="0; url=./family-tree.html">
+<title>Family Roots</title>
+<style>:root{
+  --canvas:#F7F2E4;
+  --card:#FFFDF7;
+  --edge:#B9C6A4;
+  --rule:#DEE4CC;
+  --rail-m:#4A6FA5;
+  --rail-f:#C4708A;
+  --rail-unknown:#A89880;
+  --card-m:#EEF3FA;
+  --card-f:#FBEFF3;
+  --ink:#3A3A2E;
+  --ink-muted:#6F6A57;
+  --name-ink:#234A21;
+  --living:#4A8C4A;
+  --connector:#A8935F;
+  --bark:#8A6240;
+  --bark-trunk:#6B4A2E;
+  --leaf-1:#6F9C52;
+  --leaf-2:#8FBA6C;
+  --leaf-3:#BCD79C;
+  --leaf-spouse:#E7C4D3;
+  --hl:#C86B2A;
+  --warn:#B5432F;
+  --band:#EFE7D2;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari","Nirmala UI",sans-serif;
+  --serif:"Iowan Old Style",Georgia,"Times New Roman","Noto Serif Devanagari",serif;
+  --shadow-card:0 1px 2px rgba(70,60,30,.07),0 4px 10px rgba(70,60,30,.06);
+}
+  html,body{margin:0;height:100%;font-family:var(--font);}
+  body{display:flex;flex-direction:column;background:var(--canvas);}
+  #toolbar{flex:0 0 auto;position:relative;padding:12px 16px 0;background:var(--card);
+    border-bottom:1px solid var(--edge);box-shadow:var(--shadow-card);z-index:10;
+    box-sizing:border-box;font-size:13px;font-weight:500;color:var(--ink);}
+  #toolbar .top-row{display:flex;align-items:center;gap:10px;}
+  #toolbar .brand{flex:1 1 auto;min-width:0;}
+  #toolbar .title{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;
+    line-height:1.15;color:var(--ink);}
+  #toolbar .who{margin:2px 0 0;min-height:1.3em;font-size:13px;color:var(--ink-muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #top-actions{display:flex;gap:8px;}
+  .menu-wrap{position:relative;}
+  #avatar{width:44px;height:44px;border-radius:50%;border:2px solid var(--card);
+    box-shadow:0 0 0 1px var(--edge);background:var(--name-ink);color:#fff;cursor:pointer;
+    font-family:var(--serif);font-size:19px;font-weight:600;padding:0;}
+  #menu{position:absolute;right:0;top:52px;min-width:220px;background:var(--card);
+    border:1px solid var(--edge);border-radius:10px;box-shadow:var(--shadow-card);
+    padding:6px;z-index:40;}
+  #menu.hidden{display:none;}
+  #menu button{display:block;width:100%;min-height:44px;text-align:left;padding:8px 12px;
+    background:none;border:0;border-radius:7px;font-family:var(--font);font-size:15px;
+    color:var(--ink);cursor:pointer;}
+  #menu button:hover{background:var(--canvas);}
+  #toolbar .search-row{position:relative;max-width:680px;margin:12px auto 0;}
+  #toolbar .search-icon{position:absolute;left:14px;top:12px;width:20px;height:20px;
+    fill:none;stroke:var(--ink-muted);stroke-width:2;stroke-linecap:round;pointer-events:none;}
+  #search{width:100%;box-sizing:border-box;min-height:46px;padding:8px 16px 8px 44px;
+    border:1px solid var(--edge);border-radius:999px;background:var(--canvas);
+    font-size:16px;font-family:var(--font);color:var(--ink);}
+  #search:focus{outline:2px solid var(--hl);outline-offset:1px;background:var(--card);}
+  #toolbar .search-hint{margin:4px 0 0;text-align:center;font-size:12px;color:var(--ink-muted);}
+  #picks:not(:empty){display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;}
+  #toolbar .summary{margin:10px -16px 0;padding:8px 16px;background:var(--band);
+    border-top:1px solid var(--edge);font-size:13px;line-height:1.5;color:var(--ink);}
+  #toolbar .summary b{font-weight:700;}
+  #stage{flex:1 1 auto;position:relative;overflow:hidden;background:var(--canvas);
+    cursor:grab;touch-action:none;}
+  #stage.grabbing{cursor:grabbing;}
+  svg{width:100%;height:100%;display:block;}
+  .edge{fill:none;stroke:var(--connector);stroke-width:1.25px;}
+  .edge.branch{stroke:var(--bark);stroke-linecap:round;}
+  .edge.branch.hl{stroke:var(--hl);}
+  .edge.hl{stroke:var(--hl);stroke-width:2.5px;}
+  .toggle{fill:var(--card);stroke:var(--bark);stroke-width:2px;cursor:pointer;
+    pointer-events:none;}
+  .toggle-sign{font-size:15px;font-weight:700;fill:var(--bark);font-family:var(--font);
+    cursor:pointer;pointer-events:none;}
+  .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
+  #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:var(--card);
+    border-left:1px solid var(--edge);border-bottom:1px solid var(--edge);padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
+  #unlinked h4{margin:0 0 6px;}
+  #unlinked.empty{display:none;}
+  .card-bg{fill:var(--card);stroke:var(--edge);stroke-width:1.25px;}
+  .card-shadow{fill:var(--ink);opacity:.09;pointer-events:none;}
+  .card-hit{fill:transparent;pointer-events:all;}
+  .card-name{font-size:14px;font-weight:600;font-family:var(--serif);
+    fill:var(--name-ink);pointer-events:none;}
+  .card-meta{font-size:11px;fill:var(--ink-muted);pointer-events:none;}
+  .living-dot{fill:var(--living);pointer-events:none;}
+  .card-row{cursor:pointer;}
+  .card-row.unfilled{cursor:default;}
+  .card-row.unfilled .card-name{fill:var(--ink-muted);font-style:italic;font-weight:400;}
+  .card-row.deceased .card-rail{opacity:.7;}
+  .card-row.deceased .card-name{fill:var(--ink-muted);}
+  .card-row.uncertain .card-name{fill:var(--warn);}
+  .card.hl .card-bg{stroke:var(--hl);stroke-width:2px;}
+  .avatar{pointer-events:none;}
+  #sheet{position:absolute;right:0;top:0;bottom:0;width:320px;background:var(--card);
+    border-left:4px solid var(--rail-unknown);box-shadow:var(--shadow-card);
+    padding:16px;overflow:auto;z-index:20;box-sizing:border-box;font-size:13px;color:var(--ink);}
+  #sheet.hidden{display:none;}
+  #sheet-close{position:absolute;right:8px;top:8px;width:44px;height:44px;
+    border:0;background:none;font-size:24px;line-height:1;cursor:pointer;color:var(--ink-muted);}
+  .sheet-photo{display:block;width:96px;height:96px;border-radius:50%;
+    object-fit:cover;margin:0 auto 10px;border:1px solid var(--edge);}
+  #sheet h3{margin:0 0 2px;text-align:center;font-size:18px;font-weight:600;
+    font-family:var(--serif);color:var(--name-ink);}
+  .sheet-hi{margin:0 0 12px;text-align:center;color:var(--ink-muted);}
+  #sheet dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;}
+  #sheet dt{color:var(--ink-muted);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+  #sheet dd{margin:0;font-size:13px;color:var(--ink);}
+  .sheet-rel{margin-top:12px;padding-top:10px;border-top:1px solid var(--edge);line-height:1.9;}
+  .sheet-rel span{color:var(--ink-muted);margin-right:4px;}
+  .sheet-rel a{color:var(--rail-m);text-decoration:none;}
+  #ornament-motto,#ornament-story{position:absolute;margin:0;pointer-events:none;
+    font-family:var(--serif);font-style:italic;color:var(--name-ink);opacity:.75;z-index:4;}
+  #ornament-motto{left:16px;bottom:16px;font-size:15px;line-height:1.45;
+    background:var(--card);border:1px solid var(--edge);border-radius:8px;padding:10px 14px;}
+  #ornament-story{right:20px;bottom:20px;font-size:24px;line-height:1.3;text-align:right;}
+  @media (max-width:768px){
+    #ornament-motto{display:none;}
+    #ornament-story{font-size:16px;right:12px;bottom:12px;}
+  }
+  #controls{position:absolute;top:12px;right:12px;z-index:6;display:flex;flex-direction:column;
+    align-items:flex-end;gap:6px;cursor:default;}
+  #controls-toggle{width:44px;height:44px;border-radius:50%;border:1px solid var(--edge);
+    background:var(--card);box-shadow:var(--shadow-card);font-size:20px;cursor:pointer;color:var(--ink);}
+  #controls-body{display:none;width:220px;background:var(--card);border:1px solid var(--edge);
+    border-radius:10px;box-shadow:var(--shadow-card);padding:8px 12px;box-sizing:border-box;}
+  #controls.open #controls-body{display:block;}
+  #controls .ctl{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    min-height:44px;font-size:14px;color:var(--ink);border-bottom:1px solid var(--rule);}
+  #controls select{min-height:36px;max-width:130px;font-size:14px;font-family:var(--font);
+    border:1px solid var(--edge);border-radius:6px;background:var(--card);color:var(--ink);}
+  #controls .ctl-switch{cursor:pointer;}
+  #living-only{width:20px;height:20px;accent-color:var(--hl);cursor:pointer;}
+  #controls .zoom-buttons{display:flex;gap:4px;}
+  #controls .zoom-buttons button{min-width:40px;min-height:36px;border:1px solid var(--edge);
+    border-radius:6px;background:var(--card);font-size:15px;cursor:pointer;color:var(--ink);}
+  #expand-all{display:block;width:100%;margin-top:8px;min-height:40px;border:1px solid var(--edge);
+    border-radius:6px;background:var(--card);font-size:14px;cursor:pointer;color:var(--ink);}
+  @media (max-width:768px){
+    #sheet{right:0;left:0;top:auto;bottom:0;width:auto;max-height:60%;
+      border-left:0;border-top:1px solid var(--edge);border-radius:12px 12px 0 0;
+      box-shadow:var(--shadow-card);}
+    #toolbar{padding:10px 12px 0;}
+    #toolbar .title{font-size:22px;}
+    #toolbar .summary{margin:8px -12px 0;padding:6px 12px;font-size:12px;}
+  }
+  .poster-ground{fill:var(--connector);opacity:.22;}
+  .poster-root{fill:none;stroke:var(--bark-trunk);stroke-linecap:round;opacity:.85;}
+  .poster-trunk{fill:var(--bark-trunk);}
+  .poster-branch{fill:none;stroke:var(--bark);stroke-linecap:round;}
+  .poster-branch.hl{stroke:var(--hl);}
+  .poster-leaf{stroke:none;}
+  .parent-card .pc-name{font-family:var(--serif);font-size:14.5px;font-weight:600;
+    fill:var(--name-ink);pointer-events:none;}
+  .parent-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
+  .parent-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
+  .pc-motif{pointer-events:none;}
+  .pc-motif .petal{fill:var(--rail-f);opacity:.9;}
+  .pc-motif .petal.outer{opacity:.55;}
+  .pc-motif.female .motif-line{stroke:var(--leaf-1);}
+  .pc-motif .leaf{fill:var(--leaf-1);}
+  .pc-motif .vein{stroke:var(--card-m);stroke-width:.8px;}
+  .garland{pointer-events:none;}
+  .garland .leaf{fill:var(--leaf-1);}
+  .garland-rope{fill:none;stroke:#D9731A;stroke-width:9px;stroke-linecap:round;}
+  .curl{stroke:#B35A0E;stroke-width:.7px;}
+  .rose{fill:#B3121B;stroke:#7A0A10;stroke-width:.7px;}
+  .rose-core{fill:#D62A33;}
+  .spouse-link{stroke:var(--bark);stroke-width:2px;}
+  .spouse-card{cursor:pointer;}
+  .gap-bg{fill:transparent;stroke:var(--ink-muted);stroke-width:1.6px;stroke-dasharray:7 5;cursor:pointer;}
+  .place-hit .card-bg{stroke:#D9731A;stroke-width:2.5px;}
+  .sg-place .sg-name::before{content:'\2302  ';color:#D9731A;}
+  .sg-place.area .sg-name::before,.sg-place.city .sg-name::before{content:'\25C9  ';color:var(--rail-m);}
+  .spouse-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
+  .spouse-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
+  .motif-line{fill:none;stroke:var(--bark);stroke-width:1.4px;stroke-linecap:round;}
+  .pc-sub{font-size:11.5px;fill:var(--ink-muted);pointer-events:none;}
+  .pc-rule{stroke:var(--rule);stroke-width:1px;}
+  .pc-label{font-size:9.5px;fill:var(--ink-muted);letter-spacing:.05em;pointer-events:none;}
+  .pc-value{font-size:12.5px;fill:var(--ink);pointer-events:none;}
+  .pc-icon-bg{opacity:.28;pointer-events:none;}
+  .pc-icon-fg{opacity:.95;pointer-events:none;}
+  .pc-icon-cut{fill:var(--card);pointer-events:none;}
+  #picks{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+    padding-top:2px;}
+  #picks:empty{display:none;}
+  .pick{display:inline-flex;align-items:center;gap:4px;min-height:38px;
+    padding:2px 4px 2px 14px;border:1px solid var(--edge);border-radius:999px;
+    background:var(--canvas);font-family:var(--serif);font-size:15px;
+    color:var(--name-ink);}
+  .pick button{min-width:34px;min-height:34px;border:0;border-radius:50%;
+    background:none;font-size:18px;line-height:1;color:var(--ink-muted);cursor:pointer;}
+  .pick-place{border-color:#D9731A;}
+  .pick button:hover{background:var(--card);color:var(--warn);}
+  .pick-clear{min-height:38px;padding:0 14px;border:1px solid var(--edge);
+    border-radius:999px;background:var(--card);font-family:var(--font);
+    font-size:13px;color:var(--ink-muted);cursor:pointer;}
+  .pick-note{font-size:14px;color:var(--ink-muted);}
+  .pick-note b{font-family:var(--serif);font-size:15px;color:var(--hl);}
+  #suggest{position:fixed;z-index:30;max-height:52vh;overflow-y:auto;
+    background:var(--card);border:1px solid var(--edge);border-radius:10px;
+    box-shadow:var(--shadow-card);padding:4px;box-sizing:border-box;}
+  #suggest.hidden{display:none;}
+  .sg-row{display:block;width:100%;min-height:44px;text-align:left;cursor:pointer;
+    background:none;border:0;border-radius:7px;padding:6px 10px;font-family:var(--font);}
+  .sg-row:hover,.sg-row.on{background:var(--canvas);}
+  .sg-row:focus-visible{outline:2px solid var(--hl);}
+  .sg-name{display:block;font-family:var(--serif);font-size:14px;font-weight:600;
+    color:var(--name-ink);}
+  .sg-hint{display:block;font-size:11px;color:var(--ink-muted);}
+  .sg-more{margin:4px 10px 6px;font-size:11px;color:var(--ink-muted);}
+  #login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    background:var(--canvas);padding:16px;box-sizing:border-box;}
+  #login.hidden{display:none;}
+  #login-form{width:100%;max-width:340px;background:var(--card);border-top:4px solid var(--hl);
+    box-shadow:var(--shadow-card);padding:28px 24px;box-sizing:border-box;text-align:center;}
+  #login h1{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;color:var(--name-ink);}
+  #login .login-hi{margin:2px 0 20px;color:var(--ink-muted);font-size:15px;}
+  #login-input{width:100%;box-sizing:border-box;font-size:18px;min-height:48px;padding:8px 10px;
+    border:1px solid var(--edge);font-family:var(--font);text-align:center;letter-spacing:.08em;}
+  #login-enter{margin-top:12px;width:100%;min-height:48px;font-size:16px;cursor:pointer;
+    background:var(--hl);color:#fff;border:0;font-family:var(--font);}
+  #login-msg{min-height:1.4em;margin:14px 0 0;font-size:14px;color:var(--warn);}
+  #sheet .code-hours{display:flex;gap:8px;justify-content:center;margin:12px 0;}
+  #sheet .code-hours button{min-height:44px;padding:6px 14px;font-size:15px;cursor:pointer;}
+  #sheet .code-value{font-family:ui-monospace,Menlo,monospace;font-size:30px;letter-spacing:.12em;
+    text-align:center;margin:12px 0;color:var(--ink);user-select:all;}
+  #code-copy{display:block;margin:0 auto;min-height:44px;padding:6px 18px;cursor:pointer;}
+  #sheet .code-note{font-size:13px;color:var(--ink-muted);text-align:center;}
+  #refresh{width:44px;height:44px;border-radius:50%;border:1px solid var(--edge);
+    background:var(--card);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;
+    box-shadow:var(--shadow-card);padding:0;}
+  #refresh:hover{background:var(--canvas);}
+  #sheet .code-name{display:block;margin:12px 0 0;font-size:13px;color:var(--ink-muted);}
+  #code-name{display:block;width:100%;box-sizing:border-box;margin-top:4px;min-height:44px;
+    padding:8px 10px;font-size:16px;border:1px solid var(--edge);border-radius:6px;font-family:var(--font);}
+  #code-result[hidden]{display:none;}
+  #sheet .code-link{margin:8px 0;font-size:12px;color:var(--ink-muted);word-break:break-all;
+    text-align:center;user-select:all;}
+</style>
 </head>
 <body>
-<p>Opening the <a href="./family-tree.html">family tree</a>…</p>
+<div id="login">
+  <form id="login-form">
+    <h1>Family Roots</h1>
+    <p class="login-hi">परिवार वृक्ष</p>
+    <input id="login-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button id="login-enter" type="submit">Enter</button>
+    <p id="login-msg" role="alert"></p>
+  </form>
+</div>
+<div id="toolbar">
+  <div class="top-row">
+    <div class="brand">
+      <h1 class="title">Family Roots</h1>
+      <p id="who" class="who"></p>
+    </div>
+    <span id="top-actions">
+      <button id="refresh" type="button" aria-label="Refresh" title="Refresh">↻</button>
+    </span>
+    <div class="menu-wrap">
+      <button id="avatar" type="button" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false"></button>
+      <div id="menu" class="hidden" role="menu">
+        <button id="lang" type="button" role="menuitem">Switch language</button>
+      </div>
+    </div>
+  </div>
+  <div class="search-row">
+    <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input id="search" placeholder="Search members" autocomplete="off" aria-label="Search names or villages">
+    <p class="search-hint">Search names or villages</p>
+  </div>
+  <div id="picks"></div>
+  <p class="summary" id="summary"></p>
+</div>
+<div id="stage"><svg><g id="viewport"></g></svg>
+  <div id="controls">
+    <button id="controls-toggle" type="button" aria-label="View options" aria-expanded="false">⚙</button>
+    <div id="controls-body">
+      <label class="ctl">View <select id="view-picker" aria-label="Tree view"></select></label>
+      <label class="ctl">Show <select id="show-picker" aria-label="Who to show">
+        <option value="all">Everyone</option>
+        <option value="bloodline">Bloodline only</option>
+      </select></label>
+      <label class="ctl ctl-switch">Living only <input id="living-only" type="checkbox" role="switch"></label>
+      <div class="ctl">Zoom
+        <span class="zoom-buttons">
+          <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+          <button id="zoom-fit" type="button">Fit</button>
+          <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+        </span>
+      </div>
+      <button id="expand-all" type="button">Expand all</button>
+    </div>
+  </div>
+  <p id="ornament-motto">Generations grow,<br>roots stay forever</p>
+  <p id="ornament-story">Our Roots<br>Our Family<br>Our Story</p>
+</div>
+<div id="unlinked"></div>
+<div id="suggest" class="hidden"></div>
+<div id="sheet" class="hidden">
+  <button id="sheet-close" aria-label="Close">×</button>
+  <div id="sheet-body"></div>
+</div>
+<script id="tree-data" type="application/json">{"id": "ramkrishan", "name": "Ram Krishan", "name_hi": "राम कृष्ण", "gender": "male", "born": "1549", "life": "deceased", "died": null, "note": "root ancestor — all descend from him", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": false, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["harshay"]}], "children": [{"id": "harshay", "name": "Harshay", "name_hi": "हर्षय", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sevakram"]}], "children": [{"id": "sevakram", "name": "Sevak Ram", "name_hi": "सेवकराम", "gender": "male", "born": "1884 (Samvat 1941)", "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["lakshman", "udmi", "kannu"]}], "children": [{"id": "lakshman", "name": "Dada Lakshman", "name_hi": "दादा लक्ष्मण", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Sevak Ram", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["bhagmal", "gaurishankar"]}], "children": [{"id": "bhagmal", "name": "Dada Bhagmal", "name_hi": "दादा भागमल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "'Till 1925'; handwritten word nearby (नवरात्नी?) may be a wife — verify", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["netram", "moladhmal", "khushiram", "roodi"]}], "children": [{"id": "netram", "name": "Netram", "name_hi": "नेतराम", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Dada Bhagmal ('Till 1945')", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["chandgiram", "pooranchand", "rampyari", "mayachand", "kapoorchand"]}], "children": [{"id": "chandgiram", "name": "Chandgiram", "name_hi": "चंदगीराम", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Netram; 4 sons (Kanwarsen, Jugmandar das, Surajbhan, Ramratan)", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "chandgiram_wife", "name": "Patori", "name_hi": "पटोरी", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Kakroi", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "chandgiram_wife", "unattributed": false, "child_ids": ["kanwarsen", "jugmandardas", "surajbhan", "ramratan"]}], "children": [{"id": "kanwarsen", "name": "Kanwarsen", "name_hi": "कंवरसेन", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "parsani", "name": "Parsani Devi", "name_hi": "परसानी देवी", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "parsani", "unattributed": false, "child_ids": ["rajendra", "anil", "vijay", "pawan", "deepak"]}], "children": [{"id": "rajendra", "name": "Rajendra", "name_hi": "राजेंद्र", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sachin", "nishant_r"]}], "children": [{"id": "sachin", "name": "Sachin", "name_hi": "सचिन", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aaditya"]}], "children": [{"id": "aaditya", "name": "Aaditya", "name_hi": "आदित्य", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "nishant_r", "name": "Nishant", "name_hi": "निशांत", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kannav"]}], "children": [{"id": "kannav", "name": "Kannav", "name_hi": "कन्नव", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "anil", "name": "Anil", "name_hi": "अनिल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sunny", "rahul"]}], "children": [{"id": "sunny", "name": "Sunny", "name_hi": "सनी", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aarav"]}], "children": [{"id": "aarav", "name": "Aarav", "name_hi": "आरव", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "rahul", "name": "Rahul", "name_hi": "राहुल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "vijay", "name": "Vijay", "name_hi": "विजय", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "bimla", "name": "Bimla", "name_hi": "बिमला", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Obra", "state": "Uttar Pradesh"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "bimla", "unattributed": false, "child_ids": ["sonia", "jyoti", "ankur"]}], "children": [{"id": "sonia", "name": "Sonia", "name_hi": "सोनिया", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "gautam", "name": "Gautam", "name_hi": "गौतम", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Pathri", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "jyoti", "name": "Jyoti", "name_hi": "ज्योति", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Rohini", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "vikas_jyoti", "name": "Vikas", "name_hi": "विकास", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Rohini", "city": "Delhi"}, "origin": {"village": "Sisai", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "ankur", "name": "Ankur", "name_hi": "अंकुर", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "ridhi", "name": "Ridhi", "name_hi": "रिद्धि", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Pitampura", "city": "Delhi"}, "origin": {"village": "Bal Pabana", "district": "Karnal", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "ridhi", "unattributed": false, "child_ids": ["avyukt", "raaya"]}], "children": [{"id": "avyukt", "name": "Avyukt", "name_hi": "अव्युक्त", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "raaya", "name": "Raaya", "name_hi": "राया", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "pawan", "name": "Pawan", "name_hi": "पवन", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["abhinav"]}], "children": [{"id": "abhinav", "name": "Abhinav", "name_hi": "अभिनव", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "deepak", "name": "Deepak", "name_hi": "दीपक", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["jinendra"]}], "children": [{"id": "jinendra", "name": "Jinendra", "name_hi": "जिनेंद्र", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "jugmandardas", "name": "Jugmandar das", "name_hi": "जुगमंदर दास", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["naresh", "parveen"]}], "children": [{"id": "naresh", "name": "Naresh", "name_hi": "नरेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "kusum", "name": "Kusum", "name_hi": "कुसुम", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Singhana", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "kusum", "unattributed": false, "child_ids": ["arun", "varun", "annu"]}], "children": [{"id": "arun", "name": "Arun", "name_hi": "अरुण", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["prashan"]}], "children": [{"id": "prashan", "name": "Prashan", "name_hi": "प्रशान", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "varun", "name": "Varun", "name_hi": "वरुण", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["arham"]}], "children": [{"id": "arham", "name": "Arham", "name_hi": "अर्हम", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "annu", "name": "Annu", "name_hi": "अन्नू", "gender": "female", "born": null, "life": null, "died": null, "note": "aka Simpy", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "amit_annu", "name": "Amit", "name_hi": "अमित", "gender": "male", "born": null, "life": null, "died": null, "note": "aka Chinnu", "status": null, "photo": null, "father": "Ramesh Jain", "mother": null, "address": {}, "origin": {"village": "Dehra", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "parveen", "name": "Praveen", "name_hi": "प्रवीण", "gender": "male", "born": null, "life": null, "died": null, "note": "son of Jugmandar das", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "usha_praveen", "name": "Usha", "name_hi": "उषा", "gender": "female", "born": null, "life": null, "died": null, "note": "aka Baby", "status": null, "photo": null, "father": "Inder Sen", "mother": "Trishla (from Ganaur, Haryana)", "address": {}, "origin": {"village": "Rajakhedi", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "usha_praveen", "unattributed": false, "child_ids": ["pushkar"]}], "children": [{"id": "pushkar", "name": "Pushkar", "name_hi": "पुष्कर", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "surajbhan", "name": "Surajbhan", "name_hi": "सूरजभान", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rajesh"]}], "children": [{"id": "rajesh", "name": "Rajesh", "name_hi": "राजेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["vipul"]}], "children": [{"id": "vipul", "name": "Vipul", "name_hi": "विपुल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "ramratan", "name": "Ramratan", "name_hi": "रामरतन", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["dinesh", "mukesh_l", "vinay"]}], "children": [{"id": "dinesh", "name": "Dinesh", "name_hi": "दिनेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["abhishek"]}], "children": [{"id": "abhishek", "name": "Abhishek", "name_hi": "अभिषेक", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "mukesh_l", "name": "Mukesh", "name_hi": "मुकेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "vinay", "name": "Vinay", "name_hi": "विनय", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "pooranchand", "name": "Pooranchand", "name_hi": "पूरनचंद", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Netram", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "attro", "name": "Attro", "name_hi": "अत्तरो", "gender": "female", "born": null, "life": "deceased", "died": "30 Aug 1991", "note": "phool pravah (ashes immersion) by Ram Nivas and Jai Bhagwan", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bal Pabana", "district": "Karnal", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "attro", "unattributed": false, "child_ids": ["subhashchand", "narendra", "jaibhagvan", "jawaharlal", "gulabchand", "mahavirprasad", "ramnivas"]}], "children": [{"id": "subhashchand", "name": "Subhash Chand", "name_hi": "सुभाष चंद", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["anshul"]}], "children": [{"id": "anshul", "name": "Anshul", "name_hi": "अंशुल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "narendra", "name": "Narendra", "name_hi": "नरेंद्र", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["hardik"]}], "children": [{"id": "hardik", "name": "Hardik", "name_hi": "हार्दिक", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jaibhagvan", "name": "Jai Bhagwan", "name_hi": "जय भगवान", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["abhinandan", "surender", "pankaj"]}], "children": [{"id": "abhinandan", "name": "Abhinandan", "name_hi": "अभिनंदन", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["harsh", "anand"]}], "children": [{"id": "harsh", "name": "Harsh", "name_hi": "हर्ष", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "anand", "name": "Anand", "name_hi": "आनंद", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "surender", "name": "Surender", "name_hi": "सुरेंद्र", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "pankaj", "name": "Pankaj", "name_hi": "पंकज", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jawaharlal", "name": "Jawahar Lal", "name_hi": "जवाहर लाल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["nishant_j"]}], "children": [{"id": "nishant_j", "name": "Nishant", "name_hi": "निशांत", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aadit", "agrim"]}], "children": [{"id": "aadit", "name": "Aadit", "name_hi": "आदित", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "agrim", "name": "Agrim", "name_hi": "अग्रिम", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "gulabchand", "name": "Gulab Chand", "name_hi": "गुलाब चंद", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sreyans"]}], "children": [{"id": "sreyans", "name": "Sreyans", "name_hi": "श्रेयांस", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["shaurya"]}], "children": [{"id": "shaurya", "name": "Shaurya", "name_hi": "शौर्य", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "mahavirprasad", "name": "Mahavir Prasad", "name_hi": "महावीर प्रसाद", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rishabh"]}], "children": [{"id": "rishabh", "name": "Rishabh", "name_hi": "ऋषभ", "gender": "male", "born": null, "life": null, "died": null, "note": "son of Mahavir Prasad", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "ramnivas", "name": "Ram Nivas", "name_hi": "राम निवास", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["vikas"]}], "children": [{"id": "vikas", "name": "Vikas", "name_hi": "विकास", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sanyam"]}], "children": [{"id": "sanyam", "name": "Sanyam", "name_hi": "संयम", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}]}, {"id": "rampyari", "name": "Ram Pyari", "name_hi": "राम प्यारी", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "mayachand", "name": "Mayachand", "name_hi": "मायाचंद", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "biological son of Netram; adopted by Khushiram", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "mayachand_wife", "name": "Mayachand's wife", "name_hi": null, "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": "uncertain", "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Halalpur", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "mayachand_wife", "unattributed": false, "child_ids": ["ramesh", "mukesh_m"]}], "children": [{"id": "ramesh", "name": "Ramesh", "name_hi": "रमेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["manish"]}], "children": [{"id": "manish", "name": "Manish", "name_hi": "मनीष", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["aayush"]}], "children": [{"id": "aayush", "name": "Aayush", "name_hi": "आयुष", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "mukesh_m", "name": "Mukesh", "name_hi": "मुकेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["akshay"]}], "children": [{"id": "akshay", "name": "Akshay", "name_hi": "अक्षय", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "kapoorchand", "name": "Kapoorchand", "name_hi": "कपूरचंद", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "brother of Chandgiram (son of Netram); no son", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "moladhmal", "name": "Moladh Mal", "name_hi": "मोलाध मल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Dada Bhagmal", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ramnarayan", "ramlal", "jainarayan", "sarbati", "chalti", "bharpaai", "mamkunwar", "kesar"]}], "children": [{"id": "ramnarayan", "name": "Ram Narayan", "name_hi": "राम नारायण", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["jagdishchand", "naveen"]}], "children": [{"id": "jagdishchand", "name": "Jagdish Chand", "name_hi": "जगदीश चंद", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "jagdishchand_wife", "name": "Rashmi", "name_hi": "रश्मि", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": "Basheshar", "mother": null, "address": {}, "origin": {"village": "Pugthala", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "jagdishchand_wife", "unattributed": false, "child_ids": ["ravi"]}], "children": [{"id": "ravi", "name": "Ravi", "name_hi": "रवि", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "naveen", "name": "Naveen", "name_hi": "नवीन", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "ramlal", "name": "Ram Lal", "name_hi": "राम लाल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["sanjay", "sandeep"]}], "children": [{"id": "sanjay", "name": "Sanjay", "name_hi": "संजय", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["guddu"]}], "children": [{"id": "guddu", "name": "Guddu", "name_hi": "गुड्डू", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "sandeep", "name": "Sandeep", "name_hi": "संदीप", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jainarayan", "name": "Jai Narayan", "name_hi": "जय नारायण", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Moladh Mal", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["bhanuprakash", "satyaprakash", "jaiprakash", "shribhagwan"]}], "children": [{"id": "bhanuprakash", "name": "Bhanu Prakash", "name_hi": "भानु प्रकाश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kamal", "ankit"]}], "children": [{"id": "kamal", "name": "Kamal", "name_hi": "कमल", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["satyam"]}], "children": [{"id": "satyam", "name": "Satyam", "name_hi": "सत्यम", "gender": "male", "born": null, "life": null, "died": null, "note": "GUESS: verify parent", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "ankit", "name": "Ankit", "name_hi": "अंकित", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["tejas"]}], "children": [{"id": "tejas", "name": "Tejas", "name_hi": "तेजस", "gender": "male", "born": null, "life": null, "died": null, "note": "GUESS: verify parent", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "satyaprakash", "name": "Satya Prakash", "name_hi": "सत्य प्रकाश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ashish", "saurabh"]}], "children": [{"id": "ashish", "name": "Ashish", "name_hi": "आशीष", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "saurabh", "name": "Saurabh", "name_hi": "सौरभ", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "jaiprakash", "name": "Jai Prakash", "name_hi": "जय प्रकाश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rajiv", "sanjiv"]}], "children": [{"id": "rajiv", "name": "Rajiv", "name_hi": "राजीव", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kartik", "vinayak"]}], "children": [{"id": "kartik", "name": "Kartik", "name_hi": "कार्तिक", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "vinayak", "name": "Vinayak", "name_hi": "विनायक", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "sanjiv", "name": "Sanjiv", "name_hi": "संजीव", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["kanishka"]}], "children": [{"id": "kanishka", "name": "Kanishka", "name_hi": "कनिष्क", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "shribhagwan", "name": "Shri Bhagwan", "name_hi": "श्री भगवान", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["girish"]}], "children": [{"id": "girish", "name": "Girish", "name_hi": "गिरीश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "sarbati", "name": "Sarbati", "name_hi": "सरबती", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "chalti", "name": "Chalti", "name_hi": "चलती", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "chalti_husband", "name": "Chalti's husband", "name_hi": null, "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": "uncertain", "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Gangana", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "chalti_husband", "unattributed": false, "child_ids": ["santosh"]}], "children": [{"id": "santosh", "name": "Santosh", "name_hi": "संतोष", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Gangana", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "bharpaai", "name": "Bharpaai", "name_hi": "भरपाई", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "mamkunwar", "name": "Mam Kunwar", "name_hi": "मम कुंवर", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "kesar", "name": "Kesar", "name_hi": "केसर", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "hargolal", "name": "Har Golal", "name_hi": "हर गोलाल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "khushiram", "name": "Khushiram", "name_hi": "खुशीराम", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Dada Bhagmal; no biological son — adopted Mayachand (Netram's son)", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "roodi", "name": "Roodi", "name_hi": "रूडी", "gender": "female", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "male", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["pogarmal"]}], "children": [{"id": "pogarmal", "name": "Pogarmal", "name_hi": "पोगरमल", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Shakti Nagar", "city": "Delhi"}, "origin": {}, "origin_inherited": false, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["drkrishan"]}], "children": [{"id": "drkrishan", "name": "Dr. Krishan", "name_hi": "डॉ. कृष्ण", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {}, "origin_inherited": false, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}]}, {"id": "gaurishankar", "name": "Dada Gaurishankar", "name_hi": "दादा गौरीशंकर", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "no children", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "udmi", "name": "Udmi", "name_hi": "उदमी", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Sevak Ram (Till annotation on chart)", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["ramjilal", "richa"]}], "children": [{"id": "ramjilal", "name": "Ramjilal", "name_hi": "रामजीलाल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["mamchand"]}], "children": [{"id": "mamchand", "name": "Mamchand", "name_hi": "मामचन्द", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "richa", "name": "Richha", "name_hi": "रिच्छा", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Udmi (was read as 'Siddho' — reinterpreted per correction)", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["niyadar", "lekhram"]}], "children": [{"id": "niyadar", "name": "Niyadar", "name_hi": "नियादर", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Richha (was read as 'Nisar')", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["bhairam", "dharma", "lehrimal"]}], "children": [{"id": "bhairam", "name": "Bhairam (Bhaiyaram)", "name_hi": "भैराम (भैयाराम)", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "also called Bhaiyaram", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["omprakash_omi", "ramkumar", "angori", "kamla", "bimla_bhairam", "santosh_bhairam"]}], "children": [{"id": "omprakash_omi", "name": "Om Prakash (Omi)", "name_hi": "ओम प्रकाश (ओमी)", "gender": "male", "born": null, "life": "living", "died": null, "note": "also called Omi", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "ramkumar", "name": "Ram Kumar", "name_hi": "राम कुमार", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["vijay_ramkumar"]}], "children": [{"id": "vijay_ramkumar", "name": "Vijay", "name_hi": "विजय", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "vijay_ramkumar_wife", "name": "Vijay's wife", "name_hi": null, "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": "uncertain", "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Halalpur", "district": "Narela", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "angori", "name": "Angori", "name_hi": "अंगूरी", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "kamla", "name": "Kamla", "name_hi": "कमला", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "kamla_husband", "name": "Jai Bhagwan", "name_hi": "जय भगवान", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Rajakhedi", "district": "Panipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "bimla_bhairam", "name": "Bimla", "name_hi": "बिमला", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "santosh_bhairam", "name": "Santosh", "name_hi": "संतोष", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "dharma", "name": "Dharma", "name_hi": "धर्मा", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["labhchand", "satnarayan", "srikrishan"]}], "children": [{"id": "labhchand", "name": "Labh Chand (Labha)", "name_hi": "लाभ चंद (लाभा)", "gender": "male", "born": null, "life": "living", "died": null, "note": "also called Labha", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["mahavir", "satta", "peeno"]}], "children": [{"id": "mahavir", "name": "Mahavir", "name_hi": "महावीर", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "mahavir_wife", "name": "Lina", "name_hi": "लीना", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Kassan", "district": "Tijara", "state": "Rajasthan"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "mahavir_wife", "unattributed": false, "child_ids": ["ritvik", "chunu"]}], "children": [{"id": "ritvik", "name": "Ritvik", "name_hi": "ऋत्विक", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "chunu", "name": "Chunu", "name_hi": "चुनू", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "satta", "name": "Satta", "name_hi": "सत्ता", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "satta_husband", "name": "Satta's husband", "name_hi": null, "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": "uncertain", "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Kakroi", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "peeno", "name": "Peeno", "name_hi": "पीनो", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "peeno_husband", "name": "Sudhir", "name_hi": "सुधीर", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"state": "Uttar Pradesh"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "satnarayan", "name": "Sat Narayan", "name_hi": "सत नारायण", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "satnarayan_wife", "name": "Jain Mati", "name_hi": "जैन मती", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": "Chatar Sen", "mother": null, "address": {}, "origin": {"village": "Ridhana", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "satnarayan_wife", "unattributed": false, "child_ids": ["babita_satnarayan", "sunta_satnarayan", "beena_satnarayan", "poonam_satnarayan", "reena_satnarayan", "mukesh_satnarayan"]}], "children": [{"id": "babita_satnarayan", "name": "Babita", "name_hi": "बबीता", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "babita_satnarayan_husband", "name": "Pawan", "name_hi": "पवन", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Gandhra", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "sunta_satnarayan", "name": "Sunta", "name_hi": null, "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "sunta_satnarayan_husband", "name": "Mukesh", "name_hi": "मुकेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Mehandipur", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "beena_satnarayan", "name": "Beena", "name_hi": "बीना", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Tri Nagar", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "beena_satnarayan_husband", "name": "Sunil", "name_hi": "सुनील", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Tri Nagar", "city": "Delhi"}, "origin": {"village": "Kurana", "district": "Gohana", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "poonam_satnarayan", "name": "Poonam", "name_hi": "पूनम", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "poonam_satnarayan_husband", "name": "Vikas", "name_hi": "विकास", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Mehandipur", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "reena_satnarayan", "name": "Reena", "name_hi": "रीना", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Adarsh Nagar", "city": "Delhi"}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "reena_satnarayan_husband", "name": "Sanjay", "name_hi": "संजय", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {"locality": "Adarsh Nagar", "city": "Delhi"}, "origin": {"village": "Jattal", "district": "Panipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "mukesh_satnarayan", "name": "Mukesh", "name_hi": "मुकेश", "gender": "male", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "mukesh_satnarayan_wife", "name": "Rakhi", "name_hi": "राखी", "gender": "female", "born": null, "life": null, "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Garhi Jhajra", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "srikrishan", "name": "Sri Krishan", "name_hi": "श्री किशन", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "srikrishan_wife", "name": "Prem", "name_hi": "प्रेम", "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {}, "origin_inherited": false}], "placeholder": null, "child_groups": [{"spouse_id": "srikrishan_wife", "unattributed": false, "child_ids": ["pankaj_srikrishan", "money_srikrishan"]}], "children": [{"id": "pankaj_srikrishan", "name": "Pankaj", "name_hi": "पंकज", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [{"id": "pankaj_srikrishan_wife", "name": "Pankaj's wife", "name_hi": null, "gender": "female", "born": null, "life": "living", "died": null, "note": null, "status": "uncertain", "photo": null, "father": "Ramesh", "mother": null, "address": {}, "origin": {"village": "Kakroi", "district": "Sonipat", "state": "Haryana"}, "origin_inherited": false}], "placeholder": null, "child_groups": [], "children": []}, {"id": "money_srikrishan", "name": "Money", "name_hi": "मनी", "gender": "male", "born": null, "life": "living", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "lehrimal", "name": "Lehri Mal", "name_hi": "लहरी मल", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}, {"id": "lekhram", "name": "Lekhram", "name_hi": "लेखराम", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Richha (was read as 'Lorvaram')", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}, {"id": "kannu", "name": "Kannu", "name_hi": "कन्नू", "gender": "male", "born": null, "life": "deceased", "died": null, "note": "son of Sevak Ram", "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": "female", "child_groups": [{"spouse_id": null, "unattributed": false, "child_ids": ["rajaram", "panmeshwar"]}], "children": [{"id": "rajaram", "name": "Rajaram", "name_hi": "राजाराम", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}, {"id": "panmeshwar", "name": "Panmeshwar", "name_hi": "पनमेश्वर", "gender": "male", "born": null, "life": "deceased", "died": null, "note": null, "status": null, "photo": null, "father": null, "mother": null, "address": {}, "origin": {"village": "Bakheta", "state": "Haryana"}, "origin_inherited": true, "spouses": [], "placeholder": null, "child_groups": [], "children": []}]}]}]}]}</script>
+<script id="unlinked-data" type="application/json">[]</script>
+<script id="summary-data" type="application/json">{"total": 175, "generations": 11, "uncertain": 5, "needs_parent": 0, "male": 136, "female": 39}</script>
+<script id="auth-data" type="application/json">{"contact": "Ankur", "admin": {"salt": "0be5bfdb946ca50fd2002a5296f47d56", "iterations": 200000, "hash": "42d186b3d6d7864e468b118a99879366820af8ef5d1e41a3db510b0b8fd47e2a"}, "signing_key": "0902a92549d0252595b2f11040cd9c1be309931e0f76086a902e0387cdc98f4b"}</script>
+<script>var FT = { views: {} };
+(function () {
+  var NS="http://www.w3.org/2000/svg";
+  var tree=JSON.parse(document.getElementById('tree-data').textContent);
+  var unlinked=JSON.parse(document.getElementById('unlinked-data').textContent);
+  var summary=JSON.parse(document.getElementById('summary-data').textContent);
+  var vp=document.getElementById('viewport');
+  var stage=document.getElementById('stage');
+
+  function el(tag, attrs, parent){
+    var e=document.createElementNS(NS, tag);
+    for(var k in attrs){ e.setAttribute(k, attrs[k]); }
+    if(parent) parent.appendChild(e);
+    return e;
+  }
+
+  FT.el = el;
+
+  FT.edge = function (g, d, childId) {
+    var attrs = { 'class': 'edge', d: d };
+    if (childId) attrs['data-edge'] = childId;
+    return el('path', attrs, g);
+  };
+
+  FT.CARD_W = 250; FT.ROW_H = 52; FT.RAIL_W = 5; FT.AVATAR = 32;
+  FT.H_GAP = 40; FT.V_GAP = 100;
+
+  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, grown: {}, only: null, picks: [], selected: null, highlighted: null };
+  FT.OPEN_DEPTH = 4;
+  FT.state.depthCap = null;
+  FT.nodes = []; FT.byId = {}; FT.parentOf = {};
+
+  (function walk(n, parent) {
+    FT.nodes.push(n);
+    FT.byId[n.id] = n;
+    if (parent) FT.parentOf[n.id] = parent;
+    (n.children || []).forEach(function (c) { walk(c, n); });
+  })(tree, null);
+
+  FT.depthOf = function (id) {
+    var d = 0, c = FT.parentOf[id];
+    while (c) { d++; c = FT.parentOf[c.id]; }
+    return d;
+  };
+
+  FT.treeDepth = function () {
+    var deepest = 0;
+    FT.nodes.forEach(function (n) {
+      var d = FT.depthOf(n.id);
+      if (d > deepest) deepest = d;
+    });
+    return deepest;
+  };
+
+  FT.viewCap = function () {
+    var view = FT.views[FT.state.viewId];
+    return view && view.maxDepth !== undefined ? view.maxDepth : Infinity;
+  };
+
+  FT.revealDepth = function (d) {
+    if (FT.maxDepth() < d) FT.state.depthCap = d;
+  };
+
+  FT.hasPartner = function (n) {
+    return FT.partners(n).length > 0;
+  };
+  FT.partners = function (n) {
+    if (FT.state.bloodline) return [];
+    if (n.spouses && n.spouses.length) return n.spouses;
+    if (n.placeholder) return [{ id: null, placeholder: true, gender: n.placeholder }];
+    return [];
+  };
+  FT.hash01 = function (s) {
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return ((h >>> 0) % 10000) / 10000;
+  };
+  FT.quadAt = function (x1, y1, mx, my, x2, y2) {
+    return function (t) {
+      var u = 1 - t;
+      return { x: u * u * x1 + 2 * u * t * mx + t * t * x2,
+               y: u * u * y1 + 2 * u * t * my + t * t * y2 };
+    };
+  };
+
+  FT.cubicAt = function (x1, y1, ax, ay, bx, by, x2, y2) {
+    return function (t) {
+      var u = 1 - t;
+      return { x: u*u*u*x1 + 3*u*u*t*ax + 3*u*t*t*bx + t*t*t*x2,
+               y: u*u*u*y1 + 3*u*u*t*ay + 3*u*t*t*by + t*t*t*y2 };
+    };
+  };
+
+  FT.leaves = function (g, id, at, count, scale) {
+    var ramp = ['var(--leaf-1)', 'var(--leaf-2)', 'var(--leaf-3)'];
+    for (var k = 0; k < count; k++) {
+      var h = FT.hash01(id + 'leaf' + k);
+      var t = 0.18 + (k / count) * 0.74 + h * 0.06;
+      var p = at(t);
+      var side = k % 2 ? 1 : -1;
+      var off = (11 + h * 13) * scale;
+      var lx = p.x + side * off;
+      var ly = p.y + (h - 0.5) * 16 * scale;
+      var e = FT.el('ellipse', {
+        'class': 'poster-leaf',
+        cx: lx, cy: ly,
+        rx: (12 + h * 6) * scale, ry: (6.5 + h * 3) * scale,
+        transform: 'rotate(' + (side * (25 + h * 50) - 20) + ',' + lx + ',' + ly + ')'
+      }, g);
+      e.style.fill = ramp[(k + Math.floor(h * 3)) % ramp.length];
+    }
+  };
+
+  FT.limb = function (g, id, d, at, thickness) {
+    var p = FT.edge(g, d, id);
+    p.setAttribute('class', 'edge branch');
+    p.style.strokeWidth = thickness + 'px';
+    FT.leaves(g, id, at, 2, 0.62);
+    return p;
+  };
+
+  FT.limbWeight = function (n) {
+    return Math.max(2.2, Math.sqrt(FT.leafCount(n)) * 1.7);
+  };
+
+  FT.leafCount = function (n) {
+    var kids = FT.visibleChildren(n);
+    if (!kids.length) return 1;
+    return kids.reduce(function (sum, c) { return sum + FT.leafCount(c); }, 0);
+  };
+  FT.rows = function (n) {
+    var partners = FT.partners(n).length;
+    return 1 + partners;
+  };
+  FT.COUPLE_GAP = 44;
+  FT.spouseOf = function (n) { return FT.state.bloodline ? null : (n.spouses || [])[0] || null; };
+  FT.nodeW = function (n) {
+    return FT.spouseOf(n) ? 2 * FT.CARD_W + FT.COUPLE_GAP : FT.CARD_W;
+  };
+  FT.nodeH = function (n) {
+    var view = FT.views[FT.state.viewId];
+    if (view && view.cardStyle === 'parents') return FT.cardH(n, 2);
+    return FT.rows(n) * FT.ROW_H;
+  };
+  FT.jointX = function (n) {
+    return FT.spouseOf(n) ? FT.CARD_W + FT.COUPLE_GAP / 2 : FT.CARD_W / 2;
+  };
+  FT.jointY = function (n) { return FT.spouseOf(n) ? FT.nodeH(n) / 2 : FT.nodeH(n); };
+
+  FT.kidsAt = function (n, depth) {
+    if (depth >= FT.maxDepth() && !FT.state.grown[n.id]) return [];
+    return FT.visibleChildren(n);
+  };
+
+  FT.toggleKids = function (n, depth) {
+    if (FT.kidsAt(n, depth).length) {
+      FT.state.collapsed[n.id] = true;
+    } else {
+      FT.state.collapsed[n.id] = false;
+      FT.state.grown[n.id] = true;
+      var only = FT.state.only;
+      if (only) (n.children || []).forEach(function (c) { only[c.id] = true; });
+    }
+    FT.render();
+  };
+
+  FT.visibleChildren = function (n) {
+    if (FT.state.collapsed[n.id]) return [];
+    var kids = n.children || [];
+    var only = FT.state.only;
+    if (only) kids = kids.filter(function (c) { return only[c.id]; });
+    var living = FT.state.livingOnly;
+    if (living) kids = kids.filter(function (c) { return living[c.id]; });
+    return kids;
+  };
+
+  FT.place = function (p) {
+    var a = p.address || {};
+    return a.locality || a.city || a.state || a.country || '';
+  };
+
+  FT.metaLine = function (p) {
+    var parts = [];
+    var span = FT.lifespan(p);
+    if (span) parts.push(span);
+    var place = FT.place(p);
+    if (place) parts.push(place);
+    var village = (p.origin || {}).village;
+    if (village) parts.push('from ' + village);
+    return { text: parts.join(' · '), dot: !FT.isDeceased(p) && p.life === 'living' };
+  };
+
+  FT.isDeceased = function (p) {
+    return !!(p.died || p.life === 'deceased');
+  };
+
+  FT.lifespan = function (p) {
+    if (p.born && p.died) return p.born + '–' + p.died;
+    if (p.born && p.life === 'deceased') return p.born + '–Deceased';
+    if (p.born && p.life === 'living') return p.born + '–Living';
+    if (p.born) return 'b. ' + p.born;
+    if (p.died) return 'd. ' + p.died;
+    if (p.life === 'living') return 'Living';
+    if (p.life === 'deceased') return 'Deceased';
+    return '';
+  };
+
+  FT.label = function (p) {
+    return FT.state.lang === 'hi'
+      ? [p.name_hi || p.name || p.id]
+      : [p.name || p.name_hi || p.id];
+  };
+
+  var ADDRESS_ROWS = [
+    ['line', 'Address'], ['locality', 'Locality'], ['city', 'City'],
+    ['state', 'State'], ['country', 'Country']
+  ];
+
+  function norm(s) { return (s || '').trim().toLowerCase(); }
+
+  FT.originText = function (p) {
+    var o = p.origin || {};
+    return [o.village, o.district, o.state].filter(Boolean).join(', ');
+  };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  function personRef(id) {
+    var n = FT.byId[id];
+    var label = n ? (FT.label(n)[0]) : id;
+    return '<a href="#" data-goto="' + esc(id) + '">' + esc(label) + '</a>';
+  }
+
+  function spouseRef(s, owner) {
+    return '<a href="#" data-spouse="' + esc(s.id) + '" data-owner="' + esc(owner.id) + '">' +
+      esc(FT.label(s)[0]) + '</a>';
+  }
+
+  function sheetHtml(p, owner) {
+    var h = '';
+    if (p.photo) h += '<img class="sheet-photo" src="' + esc(p.photo) + '" alt="">';
+    if (p.name) h += '<h3>' + esc(p.name) + '</h3>';
+    if (p.name_hi) h += '<p class="sheet-hi">' + esc(p.name_hi) + '</p>';
+    var rows = '';
+    if (p.father) rows += '<dt>Father</dt><dd>' + esc(p.father) + '</dd>';
+    if (p.mother) rows += '<dt>Mother</dt><dd>' + esc(p.mother) + '</dd>';
+    if (p.born) rows += '<dt>Born</dt><dd>' + esc(p.born) + '</dd>';
+    if (p.died) rows += '<dt>Died</dt><dd>' + esc(p.died) + '</dd>';
+    if (p.life || p.died) {
+      rows += '<dt>Status</dt><dd>' +
+        (FT.isDeceased(p) ? 'Deceased' : 'Living') + '</dd>';
+    }
+    ADDRESS_ROWS.forEach(function (r) {
+      var v = (p.address || {})[r[0]];
+      if (v) rows += '<dt>' + r[1] + '</dt><dd>' + esc(v) + '</dd>';
+    });
+    var origin = FT.originText(p);
+    if (origin) {
+      rows += '<dt>Origin</dt><dd>' + esc(origin) +
+        (p.origin_inherited ? ' <em>(family line)</em>' : '') + '</dd>';
+    }
+    if (p.note) rows += '<dt>Note</dt><dd>' + esc(p.note) + '</dd>';
+    if (rows) h += '<dl>' + rows + '</dl>';
+
+    var rel = '';
+    var parent = p === owner ? FT.parentOf[owner.id] : null;
+    if (parent) {
+      var both = FT.parentsOf(owner);
+      var parentRefs = [both.father, both.mother].filter(Boolean).map(function (x) {
+        return x === parent ? personRef(x.id) : spouseRef(x, parent);
+      });
+      rel += '<div><span>Parents</span> ' + parentRefs.join(', ') + '</div>';
+    }
+    if (p !== owner) {
+      rel += '<div><span>Spouse</span> ' + personRef(owner.id) + '</div>';
+    } else if (owner.spouses && owner.spouses.length) {
+      rel += '<div><span>Spouse</span> ' +
+        owner.spouses.map(function (s) { return spouseRef(s, owner); }).join(', ') + '</div>';
+    } else if (owner.placeholder) {
+      rel += '<div><span>Spouse</span> <em>not recorded</em></div>';
+    }
+    var kids = owner.children || [];
+    if (kids.length) {
+      rel += '<div><span>Children</span> ' +
+        kids.map(function (c) { return personRef(c.id); }).join(', ') + '</div>';
+    }
+    var siblings = parent ? parent.children.filter(function (c) { return c !== owner; }) : [];
+    [['male', 'Brothers'], ['female', 'Sisters']].forEach(function (g) {
+      var group = siblings.filter(function (c) { return c.gender === g[0]; });
+      if (group.length) {
+        rel += '<div><span>' + g[1] + '</span> ' +
+          group.map(function (c) { return personRef(c.id); }).join(', ') + '</div>';
+      }
+    });
+    if (rel) h += '<div class="sheet-rel">' + rel + '</div>';
+    return h;
+  }
+
+  var sheet = document.getElementById('sheet');
+  var sheetBody = document.getElementById('sheet-body');
+
+  FT.closeSheet = function () {
+    sheet.classList.add('hidden');
+    FT.state.selected = null;
+    FT.state.highlighted = null;
+  };
+
+  FT.select = function (id, owner) {
+    var node = owner || FT.byId[id];
+    if (!node) return;
+    var person = node.id === id ? node :
+      (node.spouses || []).filter(function (s) { return s.id === id; })[0] || node;
+    FT.state.selected = id;
+    FT.state.highlighted = node.id;
+    highlight(node.id);
+    sheetBody.innerHTML = sheetHtml(person, node);
+    sheet.style.borderLeftColor = person.gender === 'female' ? 'var(--rail-f)' :
+      person.gender === 'male' ? 'var(--rail-m)' : 'var(--rail-unknown)';
+    sheet.classList.remove('hidden');
+  };
+
+  FT.lineage = function (id) {
+    var keep = {};
+    var n = FT.byId[id];
+    while (n) { keep[n.id] = true; n = FT.parentOf[n.id]; }
+    return keep;
+  };
+
+  FT.MAX_PICKS = 3;
+
+  FT.commonAncestor = function (ids) {
+    if (!ids.length) return null;
+    var common = FT.lineage(ids[0]);
+    ids.slice(1).forEach(function (id) {
+      var line = FT.lineage(id);
+      Object.keys(common).forEach(function (k) { if (!line[k]) delete common[k]; });
+    });
+    var best = null;
+    Object.keys(common).forEach(function (k) {
+      if (best === null || FT.depthOf(k) > FT.depthOf(best)) best = k;
+    });
+    return best;
+  };
+
+  FT.FOCUS_SCALE = 0.85;
+
+  FT.focus = function (id) {
+    if (FT.state.picks.indexOf(id) < 0) FT.state.picks = [id];
+    FT.showPicks();
+  };
+
+  FT.clearPicks = function () {
+    FT.state.picks = [];
+    FT.state.place = null;
+    FT.state.only = null;
+    if (FT.renderPicks) FT.renderPicks();
+  };
+
+  FT.showPicks = function () {
+    FT.state.place = null;
+    var ids = FT.state.picks.filter(function (id) { return FT.byId[id]; });
+    FT.state.picks = ids;
+    FT.renderPicks();
+    if (!ids.length) { FT.state.only = null; FT.render(); FT.fit(); return; }
+    var keep = {}, deepest = 0;
+    ids.forEach(function (id) {
+      var line = FT.lineage(id);
+      Object.keys(line).forEach(function (k) { keep[k] = true; });
+      deepest = Math.max(deepest, FT.depthOf(id));
+    });
+    FT.state.only = keep;
+    FT.state.collapsed = {};
+    FT.revealDepth(deepest + 1);
+    FT.render();
+    if (ids.length > 1) { FT.fit(); FT.closeSheet(); return; }
+    var n = FT.byId[ids[0]];
+    var r = stage.getBoundingClientRect();
+    scale = Math.max(scale, FT.FOCUS_SCALE);
+    tx = r.width / 2 - (n.x + FT.jointX(n)) * scale;
+    ty = r.height / 2 - n.y * scale;
+    apply();
+    FT.select(ids[0], n);
+  };
+
+  document.getElementById('sheet-close').addEventListener('click', FT.closeSheet);
+  sheetBody.addEventListener('click', function (e) {
+    var sp = e.target.closest('[data-spouse]');
+    if (sp) {
+      e.preventDefault();
+      var owner = FT.byId[sp.getAttribute('data-owner')];
+      if (owner) FT.select(sp.getAttribute('data-spouse'), owner);
+      return;
+    }
+    var a = e.target.closest('[data-goto]');
+    if (!a) return;
+    e.preventDefault();
+    FT.focus(a.getAttribute('data-goto'));
+  });
+
+  function fitText(t, avail) {
+    var full = t.getComputedTextLength();
+    if (full <= avail) return;
+    var s = t.textContent;
+    var keep = Math.max(1, Math.floor(s.length * avail / full) - 1);
+    t.textContent = s.slice(0, keep) + '…';
+    while (keep > 1 && t.getComputedTextLength() > avail) {
+      keep -= 1;
+      t.textContent = s.slice(0, keep) + '…';
+    }
+  }
+
+  function drawRow(parent, p, rowIndex, owner) {
+    var y = rowIndex * FT.ROW_H;
+    var unfilled = !p.id;
+    var cls = 'card-row' + (unfilled ? ' unfilled' : '') +
+      (FT.isDeceased(p) ? ' deceased' : '') +
+      (p.status === 'uncertain' ? ' uncertain' : '');
+    var g = el('g', { 'class': cls, transform: 'translate(0,' + y + ')' }, parent);
+    el('rect', {
+      'class': 'card-hit', x: 0, y: 0, width: FT.CARD_W, height: FT.ROW_H
+    }, g);
+    el('rect', {
+      'class': 'card-rail', x: 0, y: 0, width: FT.RAIL_W, height: FT.ROW_H,
+      fill: unfilled ? 'var(--rail-unknown)'
+        : (p.gender === 'female' ? 'var(--rail-f)' : 'var(--rail-m)')
+    }, g);
+    var textX = FT.RAIL_W + 12;
+    if (p.photo) {
+      var img = el('image', {
+        href: p.photo, x: textX, y: (FT.ROW_H - FT.AVATAR) / 2,
+        width: FT.AVATAR, height: FT.AVATAR,
+        preserveAspectRatio: 'xMidYMid slice',
+        'clip-path': 'inset(0 round 50%)', 'class': 'avatar'
+      }, g);
+      img.addEventListener('error', function () { g.removeChild(img); });
+      textX += FT.AVATAR + 10;
+    }
+    var placeholder = unfilled ? FT.placeholderName(owner, p.gender) : null;
+    var name = el('text', { 'class': 'card-name', x: textX, y: 21 }, g);
+    name.textContent = placeholder ? placeholder[0] : FT.label(p)[0];
+    fitText(name, FT.CARD_W - textX - 10);
+    var meta = placeholder
+      ? { text: placeholder[1] || '', dot: false }
+      : FT.metaLine(p);
+    if (meta.dot) {
+      el('circle', { 'class': 'living-dot', cx: textX + 3, cy: 34, r: 3 }, g);
+    }
+    if (meta.text) {
+      var metaX = textX + (meta.dot ? 12 : 0);
+      var m = el('text', { 'class': 'card-meta', x: metaX, y: 38 }, g);
+      m.textContent = meta.text;
+      fitText(m, FT.CARD_W - metaX - 10);
+    }
+    if (!unfilled) {
+      g.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        FT.select(p.id, owner);
+      });
+    }
+    return g;
+  }
+
+  FT.parentsOf = function (n) {
+    var p = FT.parentOf[n.id];
+    if (!p) return { father: null, mother: null };
+    var spouse = (p.spouses && p.spouses.length) ? p.spouses[0] : null;
+    if (p.gender === 'female') return { mother: p, father: spouse };
+    return { father: p, mother: spouse };
+  };
+
+  var SILHOUETTE = {
+    male: [
+      ['circle', { cx: 0, cy: -3, r: 3.7 }],
+      ['ellipse', { 'class': 'pc-icon-cut', cx: 0, cy: -2.1, rx: 2.8, ry: 2.9 }],
+      ['path', { d: 'M-6.8,8.4 C-6.8,3.8 -3.8,1.8 0,1.8 C3.8,1.8 6.8,3.8 6.8,8.4 Z' }],
+      ['path', { 'class': 'pc-icon-cut', d: 'M-1.7,1.9 L0,4.6 L1.7,1.9 Z' }]
+    ],
+    female: [
+      ['circle', { cx: 0, cy: -7.8, r: 1.9 }],
+      ['path', { d: 'M-3.9,-3 C-3.9,-7.8 3.9,-7.8 3.9,-3 L4.5,2.6 L-4.5,2.6 Z' }],
+      ['ellipse', { 'class': 'pc-icon-cut', cx: 0, cy: -2.2, rx: 2.5, ry: 2.9 }],
+      ['path', { d: 'M-6.2,8.4 C-6.2,4.8 -3.4,2.8 0,2.8 C3.4,2.8 6.2,4.8 6.2,8.4 Z' }]
+    ]
+  };
+
+  function personIcon(g, cx, cy, gender, scale) {
+    var tint = gender === 'female' ? 'var(--rail-f)' : 'var(--rail-m)';
+    var icon = el('g', {
+      transform: 'translate(' + cx + ',' + cy + ') scale(' + (scale || 1) + ')'
+    }, g);
+    var bg = el('circle', { 'class': 'pc-icon-bg', r: 9 }, icon);
+    bg.style.fill = tint;
+    SILHOUETTE[gender === 'female' ? 'female' : 'male'].forEach(function (part) {
+      var attrs = { 'class': part[1]['class'] || 'pc-icon-fg' };
+      Object.keys(part[1]).forEach(function (k) { if (k !== 'class') attrs[k] = part[1][k]; });
+      var shape = el(part[0], attrs, icon);
+      if (attrs['class'] === 'pc-icon-fg') shape.style.fill = tint;
+    });
+  }
+
+  var PETAL = 'M0,6 C-4.2,1 -3.8,-6 0,-10 C3.8,-6 4.2,1 0,6 Z';
+  var LEAF = 'M0,8 C-6.5,3 -6,-5 0,-10 C6,-5 6.5,3 0,8 Z';
+
+  function genderMotif(g, cx, cy, gender) {
+    var m = el('g', {
+      'class': 'pc-motif ' + gender, transform: 'translate(' + cx + ',' + cy + ')'
+    }, g);
+    if (gender === 'female') {
+      [-64, -32, 0, 32, 64].forEach(function (a) {
+        el('path', { 'class': Math.abs(a) > 40 ? 'petal outer' : 'petal', d: PETAL,
+          transform: 'rotate(' + a + ' 0 6)' }, m);
+      });
+      el('path', { 'class': 'motif-line', d: 'M-10,8 Q0,12 10,8' }, m);
+      return;
+    }
+    el('path', { 'class': 'motif-line', d: 'M-2,11 Q0,2 0,-4' }, m);
+    [[-38, -4, 2], [34, 5, -1]].forEach(function (l) {
+      var t = 'translate(' + l[1] + ',' + l[2] + ') rotate(' + l[0] + ') scale(0.85)';
+      el('path', { 'class': 'leaf', d: LEAF, transform: t }, m);
+      el('path', { 'class': 'vein', d: 'M0,7 L0,-8', transform: t }, m);
+    });
+  }
+
+  var ROPE = ['#F29A2E', '#E3801C', '#F7B04A'];
+
+  function rose(m, x, y, r) {
+    [[-r * 0.7, 0], [r * 0.7, 0], [0, -r * 0.6]].forEach(function (d) {
+      el('circle', { 'class': 'rose', cx: x + d[0], cy: y + d[1], r: r }, m);
+    });
+    el('circle', { 'class': 'rose-core', cx: x, cy: y - r * 0.2, r: r * 0.45 }, m);
+  }
+
+  function garland(g, top, H, knob) {
+    var W = FT.CARD_W, y0 = top + 4, side = top + H - 14, dip = top + H + 20;
+    var m = el('g', { 'class': 'garland' }, g);
+    var rope = el('path', { 'class': 'garland-rope',
+      d: 'M0,' + y0 + ' L-1,' + side + ' C-1,' + dip + ' ' + (W + 1) + ',' + dip + ' ' +
+         (W + 1) + ',' + side + ' L' + W + ',' + y0 }, m);
+    var len = rope.getTotalLength();
+    function at(f) { var p = rope.getPointAtLength(f * len); return [p.x, p.y]; }
+    var CURLS = 90;
+    for (var i = 0; i <= CURLS; i++) {
+      var p = at(i / CURLS), q = at(Math.min(1, i / CURLS + 0.005));
+      var tilt = Math.atan2(q[1] - p[1], q[0] - p[0]) * 180 / Math.PI + (i % 2 ? 35 : -35);
+      var curl = el('ellipse', { 'class': 'curl', cx: 0, cy: 0, rx: 4.2, ry: 3,
+        transform: 'translate(' + p[0] + ',' + p[1] + ') rotate(' + tilt + ') translate(0,' + (i % 2 ? -2 : 2) + ')' }, m);
+      curl.style.fill = ROPE[i % 3];
+    }
+    [0.22, 0.78].forEach(function (f) { var p = at(f); rose(m, p[0], p[1], 3.8); });
+    var low = at(0.5)[1];
+    [6, 11].forEach(function (d, i) {
+      var k = el('ellipse', { 'class': 'curl', cx: W / 2, cy: low + d, rx: 4.6, ry: 3.4 }, m);
+      k.style.fill = ROPE[i];
+    });
+    el('path', { 'class': 'leaf', d: LEAF, transform: 'translate(' + (W / 2 - 5) + ',' + (low + 17) + ') rotate(-60) scale(0.45)' }, m);
+    el('path', { 'class': 'leaf', d: LEAF, transform: 'translate(' + (W / 2 + 5) + ',' + (low + 17) + ') rotate(60) scale(0.45)' }, m);
+    rose(m, W / 2, low + 18, 3.4);
+    if (knob && Math.abs(knob.x - W / 2) < 30 && knob.y > top + H - 10) knob.y = top + H + 50;
+  }
+
+  FT.knob = function (g, n, cx, cy) {
+    var hit = el('circle', { 'class': 'toggle-hit', cx: cx, cy: cy, r: 22 }, g);
+    el('circle', { 'class': 'toggle', cx: cx, cy: cy, r: 10 }, g);
+    var sign = el('text', {
+      'class': 'toggle-sign', x: cx, y: cy + 5, 'text-anchor': 'middle'
+    }, g);
+    sign.textContent = FT.kidsAt(n, n.depth || 0).length ? '\u2212' : '+';
+    hit.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      FT.toggleKids(n, n.depth || 0);
+    });
+  };
+
+  FT.cardH = function (p, rows) {
+    return 44 + rows * 30 + (FT.metaLine(p).text ? 16 : 0);
+  };
+
+  function spouseWord(s) {
+    return s.gender === 'female' ? 'Wife' : s.gender === 'male' ? 'Husband' : 'Spouse';
+  }
+
+  function cardFace(g, p, H, rows, valueRoom) {
+    el('rect', { 'class': 'card-shadow', x: 0, y: 3, width: FT.CARD_W, height: H, rx: 10 }, g);
+    el('rect', { 'class': 'card-bg', width: FT.CARD_W, height: H, rx: 10 }, g);
+    el('rect', { 'class': 'card-hit', width: FT.CARD_W, height: H }, g);
+    var title = el('text', {
+      'class': 'pc-name', x: FT.CARD_W / 2, y: 26, 'text-anchor': 'middle'
+    }, g);
+    title.textContent = FT.label(p)[0];
+    fitText(title, FT.CARD_W - 84);
+    if (p.gender) {
+      personIcon(g, 22, 21, p.gender, 1.3);
+      genderMotif(g, FT.CARD_W - 22, 21, p.gender);
+    }
+    var meta = FT.metaLine(p);
+    var drop = 0;
+    if (meta.text) {
+      var sub = el('text', {
+        'class': 'pc-sub', x: FT.CARD_W / 2, y: 42, 'text-anchor': 'middle'
+      }, g);
+      sub.textContent = meta.text;
+      fitText(sub, FT.CARD_W - 24);
+      drop = 16;
+    }
+    el('line', {
+      'class': 'pc-rule', x1: 18, y1: 38 + drop, x2: FT.CARD_W - 18, y2: 38 + drop
+    }, g);
+    rows.forEach(function (row, i) {
+      var y = 58 + drop + i * 30;
+      personIcon(g, 32, y, row[2]);
+      var lab = el('text', { 'class': 'pc-label', x: 52, y: y - 3 }, g);
+      lab.textContent = row[0];
+      var val = el('text', { 'class': 'pc-value', x: 52, y: y + 11 }, g);
+      val.textContent = row[1] ? FT.label(row[1])[0] : '(Unknown)';
+      fitText(val, valueRoom(i));
+    });
+  }
+
+  function gapCard(g, n, H) {
+    el('rect', { 'class': 'gap-bg', width: FT.CARD_W, height: H, rx: 10 }, g);
+    var t = el('text', { 'class': 'pc-name', x: FT.CARD_W / 2, y: H / 2 - 4, 'text-anchor': 'middle' }, g);
+    t.textContent = FT.label(n)[0];
+    var sub = el('text', { 'class': 'pc-sub', x: FT.CARD_W / 2, y: H / 2 + 16, 'text-anchor': 'middle' }, g);
+    sub.textContent = 'names not yet recorded';
+    g.addEventListener('click', function () { FT.select(n.id, n); });
+  }
+
+  FT.drawParentCard = function (parent, n) {
+    var g = el('g', {
+      'class': 'card parent-card' + (n.gender ? ' ' + n.gender : ''), 'data-id': n.id,
+      transform: 'translate(' + n.x + ',' + n.y + ')'
+    }, parent);
+    var H = FT.cardH(n, 2);
+    if (n.status === 'gap') {
+      gapCard(g, n, H);
+      var gv = FT.views[FT.state.viewId];
+      var gat = gv && gv.togglePos ? gv.togglePos(n) : { x: FT.jointX(n), y: -12 };
+      if ((n.children || []).length && !FT.state.place) FT.knob(g, n, gat.x, gat.y);
+      return g;
+    }
+    var main = el('g', {}, g);
+    var pr = FT.parentsOf(n);
+    cardFace(main, n, H, [['Father', pr.father, 'male'], ['Mother', pr.mother, 'female']],
+      function () { return FT.CARD_W - 66; });
+    main.addEventListener('click', function () { FT.select(n.id, n); });
+
+    var sp = FT.spouseOf(n);
+    var spX = FT.CARD_W + FT.COUPLE_GAP;
+    if (sp) {
+      el('line', { 'class': 'spouse-link', x1: FT.CARD_W, y1: H / 2, x2: spX, y2: H / 2 }, g);
+      var sg = el('g', { 'class': 'spouse-card ' + (sp.gender || ''),
+        transform: 'translate(' + spX + ',0)' }, g);
+      cardFace(sg, sp, H, [['Father', sp.father ? { name: sp.father } : null, 'male'],
+        [spouseWord(sp) + ' of', n, n.gender]],
+        function () { return FT.CARD_W - 66; });
+      sg.addEventListener('click', function (ev) { ev.stopPropagation(); FT.select(sp.id, n); });
+    }
+
+    var hasKids = (n.children || []).length > 0 && !FT.state.place;
+    var view = FT.views[FT.state.viewId];
+    var at = view && view.togglePos ? view.togglePos(n) : { x: FT.jointX(n), y: -12 };
+    if (FT.isDeceased(n)) garland(g, 0, H, at);
+    if (sp && FT.isDeceased(sp)) {
+      var sgl = el('g', { transform: 'translate(' + spX + ',0)' }, g);
+      garland(sgl, 0, H, null);
+    }
+    if (hasKids) FT.knob(g, n, at.x, at.y);
+    return g;
+  };
+
+  FT.ROOT_ART_LEN = 350;
+  FT.ROOT_SCALE = 0.5;
+
+  FT.rootArt = function (parent, transform, groundSpin) {
+    var g = el('g', { 'class': 'root-art', transform: transform }, parent);
+    var ground = { 'class': 'poster-ground', cx: 0, cy: 24, rx: 430, ry: 52 };
+    if (groundSpin) ground.transform = groundSpin;
+    el('ellipse', ground, g);
+    [-1, 1].forEach(function (dir) {
+      for (var i = 1; i <= 4; i++) {
+        var h = FT.hash01('root' + dir + i);
+        var reach = dir * (70 + i * 62 + h * 40);
+        var drop = 120 + i * 34 + h * 40;
+        var r = el('path', {
+          'class': 'poster-root',
+          d: 'M0,-10 C' + (reach * 0.35) + ',14 ' +
+             (reach * 0.95) + ',' + (drop * 0.35) + ' ' + reach + ',' + drop
+        }, g);
+        r.style.strokeWidth = Math.max(2.5, 12 - i * 2.1) + 'px';
+      }
+    });
+    var bw = 44, tw = 13, top = -FT.ROOT_ART_LEN;
+    el('path', {
+      'class': 'poster-trunk',
+      d: 'M' + (-bw) + ',30 C' + (-bw * 0.55) + ',-90 ' +
+         (-tw * 2.6) + ',' + (top + 170) + ' ' + (-tw) + ',' + top +
+         ' L' + tw + ',' + top +
+         ' C' + (tw * 2.6) + ',' + (top + 170) + ' ' +
+         (bw * 0.55) + ',-90 ' + bw + ',30 Z'
+    }, g);
+    return g;
+  };
+
+  FT.drawNode = function (parent, n) {
+    var view = FT.views[FT.state.viewId];
+    if (view && view.cardStyle === 'parents') return FT.drawParentCard(parent, n);
+    var g = el('g', {
+      'class': 'card', 'data-id': n.id,
+      transform: 'translate(' + n.x + ',' + n.y + ')'
+    }, parent);
+    el('rect', {
+      'class': 'card-shadow', y: 3, width: FT.CARD_W, height: FT.nodeH(n), rx: 8
+    }, g);
+    el('rect', {
+      'class': 'card-bg', width: FT.CARD_W, height: FT.nodeH(n), rx: 8
+    }, g);
+    drawRow(g, n, 0, n);
+    FT.partners(n).forEach(function (p, i) { drawRow(g, p, i + 1, n); });
+    if ((n.children || []).length) {
+      var tview = FT.views[FT.state.viewId];
+      var at = tview && tview.togglePos ? tview.togglePos(n)
+        : { x: FT.jointX(n), y: FT.jointY(n) + 8 };
+      FT.knob(g, n, at.x, at.y);
+    }
+    g.addEventListener('click', function () { FT.select(n.id, n); });
+    return g;
+  };
+
+  FT.maxDepth = function () {
+    if (FT.state.depthCap !== null) return FT.state.depthCap;
+    return FT.viewCap();
+  };
+
+  FT.render = function () {
+    while (vp.firstChild) vp.removeChild(vp.firstChild);
+    var view = FT.views[FT.state.viewId] || FT.views.classic;
+    var owners = placeLayout();
+    if (owners) {
+      var grid = el('g', {}, vp);
+      owners.forEach(function (n) { FT.drawNode(grid, n); });
+      markPlace();
+      apply();
+      return;
+    }
+    view.layout(tree);
+    var edges = el('g', {}, vp);
+    var nodes = el('g', {}, vp);
+    stage.setAttribute('data-view', view.id);
+    view.drawEdges(edges, tree);
+    (function walk(n, depth) {
+      FT.drawNode(nodes, n);
+      FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
+    })(tree, 0);
+    if (FT.state.picks.length) {
+      clearHl();
+      FT.state.picks.forEach(hlPath);
+    } else if (FT.state.highlighted) highlight(FT.state.highlighted);
+    markPlace();
+    apply();
+  };
+
+  function clearHl(){
+    var hl=vp.querySelectorAll('.hl');
+    for(var i=0;i<hl.length;i++) hl[i].classList.remove('hl');
+  }
+  function highlight(id){
+    clearHl();
+    hlPath(id);
+  }
+  function hlPath(id){
+    var cur=id;
+    while(cur){
+      var node=vp.querySelector('[data-id="'+CSS.escape(cur)+'"]');
+      if(node) node.classList.add('hl');
+      var edge=vp.querySelector('.edge[data-edge="'+CSS.escape(cur)+'"]');
+      if(edge) edge.classList.add('hl');
+      cur=FT.parentOf[cur]?FT.parentOf[cur].id:null;
+    }
+  }
+
+  var tx=40, ty=20, scale=1, dragging=false, lx=0, ly=0;
+  function apply(){
+    vp.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')');
+  }
+  stage.addEventListener('mousedown',function(e){ dragging=true; lx=e.clientX; ly=e.clientY; stage.classList.add('grabbing'); });
+  window.addEventListener('mousemove',function(e){ if(!dragging) return; tx+=e.clientX-lx; ty+=e.clientY-ly; lx=e.clientX; ly=e.clientY; apply(); });
+  window.addEventListener('mouseup',function(){ dragging=false; stage.classList.remove('grabbing'); });
+  stage.addEventListener('wheel',function(e){
+    e.preventDefault();
+    var f=e.deltaY<0?1.1:1/1.1;
+    var r=stage.getBoundingClientRect();
+    var mx=e.clientX-r.left, my=e.clientY-r.top;
+    tx=mx-(mx-tx)*f; ty=my-(my-ty)*f; scale*=f; apply();
+  }, {passive:false});
+
+  // touch: one finger pans, two fingers pinch-zoom
+  function tdist(t){ var dx=t[0].clientX-t[1].clientX, dy=t[0].clientY-t[1].clientY; return Math.sqrt(dx*dx+dy*dy); }
+  var touch=null;
+  stage.addEventListener('touchstart',function(e){
+    if(e.touches.length===1){ touch={mode:'pan', x:e.touches[0].clientX, y:e.touches[0].clientY}; }
+    else if(e.touches.length===2){ touch={mode:'pinch', d:tdist(e.touches),
+      cx:(e.touches[0].clientX+e.touches[1].clientX)/2, cy:(e.touches[0].clientY+e.touches[1].clientY)/2}; }
+  }, {passive:false});
+  stage.addEventListener('touchmove',function(e){
+    if(!touch) return;
+    e.preventDefault();
+    if(touch.mode==='pan' && e.touches.length===1){
+      tx+=e.touches[0].clientX-touch.x; ty+=e.touches[0].clientY-touch.y;
+      touch.x=e.touches[0].clientX; touch.y=e.touches[0].clientY; apply();
+    } else if(touch.mode==='pinch' && e.touches.length===2){
+      var nd=tdist(e.touches); if(!touch.d){ touch.d=nd; return; }
+      var f=nd/touch.d, r=stage.getBoundingClientRect();
+      var mx=touch.cx-r.left, my=touch.cy-r.top;
+      tx=mx-(mx-tx)*f; ty=my-(my-ty)*f; scale*=f; touch.d=nd; apply();
+    }
+  }, {passive:false});
+  stage.addEventListener('touchend',function(e){ if(e.touches.length===0) touch=null; });
+
+  var VIEW_ORDER = ['classic', 'horizontal', 'poster'];
+
+  FT.placeholderName = function (owner, gender) {
+    var en = (owner.name || owner.name_hi || owner.id) +
+      (gender === 'male' ? "'s husband" : "'s wife");
+    var hi = owner.name_hi ?
+      owner.name_hi + (gender === 'male' ? ' के पति' : ' की पत्नी') : '';
+    return FT.state.lang === 'hi' ? [hi || en] : [en];
+  };
+
+  FT.collapseBelowOpenDepth = function () {
+    (function walk(n, depth) {
+      if (depth >= FT.OPEN_DEPTH && (n.children || []).length) {
+        FT.state.collapsed[n.id] = true;
+      }
+      (n.children || []).forEach(function (c) { walk(c, depth + 1); });
+    })(tree, 0);
+  };
+
+  FT.expandAll = function () {
+    FT.clearPicks();
+    FT.state.collapsed = {};
+    FT.state.depthCap = Infinity;
+    FT.render();
+    FT.fit();
+  };
+
+  FT.setView = function (id) {
+    if (!FT.views[id]) return;
+    FT.state.viewId = id;
+    FT.clearPicks();
+    FT.state.depthCap = null;
+    try { localStorage.setItem('ft-view', id); } catch (e) {}
+    document.getElementById('view-picker').value = id;
+    FT.render();
+    FT.fit();
+  };
+
+  FT.fit = function () {
+    var view = FT.views[FT.state.viewId];
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    var owners = placeLayout();
+    if (owners) {
+      owners.forEach(function (n) {
+        minX = Math.min(minX, n.x - 20); maxX = Math.max(maxX, n.x + FT.nodeW(n) + 20);
+        minY = Math.min(minY, n.y - 20); maxY = Math.max(maxY, n.y + FT.nodeH(n) + 50);
+      });
+      view = {};
+    } else (function walk(n, depth) {
+      var w = FT.nodeW(n);
+      var h = FT.nodeH(n);
+      minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
+      minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
+      FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
+    })(tree, 0);
+    if (view.extentPad) {
+      minX = Math.min(minX, view.extentPad.minX); maxX = Math.max(maxX, view.extentPad.maxX);
+      minY = Math.min(minY, view.extentPad.minY); maxY = Math.max(maxY, view.extentPad.maxY);
+    }
+    var r = stage.getBoundingClientRect();
+    var stageW = r.width > 0 ? r.width : window.innerWidth;
+    var stageH = r.height > 0 ? r.height : window.innerHeight;
+    var pad = window.innerWidth < 768 ? 14 : 40;
+    scale = Math.min(
+      (stageW - pad * 2) / Math.max(1, maxX - minX),
+      (stageH - pad * 2) / Math.max(1, maxY - minY)
+    );
+    scale = Math.min(scale, 1.2);
+    tx = pad - minX * scale + (stageW - pad * 2 - (maxX - minX) * scale) / 2;
+    ty = pad - minY * scale + (stageH - pad * 2 - (maxY - minY) * scale) / 2;
+    apply();
+  };
+
+  function populateViewPicker() {
+    var sel = document.getElementById('view-picker');
+    VIEW_ORDER.forEach(function (id) {
+      if (!FT.views[id]) return;
+      var o = document.createElement('option');
+      o.value = id;
+      o.textContent = FT.views[id].label;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', function () { FT.setView(sel.value); });
+  }
+
+
+  var RANK_PREFIX = 0, RANK_SUBSTRING = 1, RANK_SUBSEQUENCE = 2;
+
+  function subsequence(hay, needle) {
+    var i = 0;
+    for (var j = 0; j < hay.length && i < needle.length; j++) {
+      if (hay[j] === needle[i]) i++;
+    }
+    return i === needle.length;
+  }
+
+  var PLACE_HINT = { origin: 'Origin village', area: 'Present area', city: 'Present city · all areas' };
+
+  FT.placeGroups = function () {
+    var groups = {};
+    function add(kind, name, suffix, person, owner) {
+      if (!norm(name)) return;
+      var key = kind + ':' + norm(name);
+      var grp = groups[key] || (groups[key] = { key: key, kind: kind, name: name, suffix: '', members: [] });
+      if (!grp.suffix && suffix) grp.suffix = suffix;
+      grp.members.push({ person: person, owner: owner });
+    }
+    function addPerson(p, owner) {
+      var o = p.origin || {}, a = p.address || {};
+      add('origin', o.village, o.state, p, owner);
+      add('area', a.locality, a.city || a.state, p, owner);
+      add('city', a.city, a.state, p, owner);
+    }
+    FT.nodes.forEach(function (n) {
+      addPerson(n, n);
+      (n.spouses || []).forEach(function (s) { addPerson(s, n); });
+    });
+    return groups;
+  };
+
+  FT.placeMatches = function (q) {
+    var needle = norm(q);
+    if (!needle) return [];
+    var groups = FT.placeGroups();
+    return Object.keys(groups).map(function (k) { return groups[k]; })
+      .filter(function (g) { return norm(g.name).indexOf(needle) >= 0; })
+      .sort(function (a, b) {
+        return (norm(b.name).indexOf(needle) === 0) - (norm(a.name).indexOf(needle) === 0) ||
+          a.name.localeCompare(b.name) || a.kind.localeCompare(b.kind);
+      });
+  };
+
+  FT.placeLabel = function (g) {
+    return g.name + (g.suffix && norm(g.suffix) !== norm(g.name) ? ', ' + g.suffix : '');
+  };
+
+  FT.showPlace = function (key) {
+    var grp = FT.placeGroups()[key];
+    FT.state.picks = [];
+    FT.state.place = grp ? key : null;
+    FT.renderPicks();
+    FT.state.only = null;
+    FT.closeSheet();
+    FT.render();
+    FT.fit();
+  };
+
+  function placeLayout() {
+    var grp = FT.state.place && FT.placeGroups()[FT.state.place];
+    if (!grp) return null;
+    var seen = {}, owners = [];
+    grp.members.forEach(function (m) {
+      if (!seen[m.owner.id]) { seen[m.owner.id] = true; owners.push(m.owner); }
+    });
+    owners.sort(function (a, b) {
+      return FT.depthOf(a.id) - FT.depthOf(b.id) ||
+        FT.label(a)[0].localeCompare(FT.label(b)[0]);
+    });
+    var rowH = 0, area = 0;
+    owners.forEach(function (n) { rowH = Math.max(rowH, FT.nodeH(n) + 70); });
+    owners.forEach(function (n) { area += (FT.nodeW(n) + FT.H_GAP) * rowH; });
+    var r = stage.getBoundingClientRect();
+    var aspect = r.width > 0 && r.height > 0 ? r.width / r.height : 1.5;
+    var rowMax = Math.max(2 * FT.CARD_W + FT.COUPLE_GAP, Math.sqrt(area * aspect));
+    var x = 0, y = 0;
+    owners.forEach(function (n) {
+      if (x > 0 && x + FT.nodeW(n) > rowMax) { x = 0; y += rowH; }
+      n.x = x;
+      n.y = y;
+      x += FT.nodeW(n) + FT.H_GAP;
+    });
+    return owners;
+  }
+
+  function markPlace() {
+    var grp = FT.state.place && FT.placeGroups()[FT.state.place];
+    if (!grp) return;
+    grp.members.forEach(function (m) {
+      var card = vp.querySelector('[data-id="' + CSS.escape(m.owner.id) + '"]');
+      if (!card) return;
+      var face = m.person === m.owner ? card.firstChild : card.querySelector('.spouse-card');
+      if (face) face.classList.add('place-hit');
+    });
+  }
+
+  FT.searchMatches = function (q, limit) {
+    var needle = q.trim().toLowerCase();
+    if (!needle) return { list: [], total: 0 };
+    var hits = [];
+    function rankOf(fields) {
+      var best = null;
+      fields.forEach(function (f) {
+        var hay = f.toLowerCase();
+        if (!hay) return;
+        var rank = null;
+        if (hay.indexOf(needle) === 0) rank = RANK_PREFIX;
+        else if (hay.indexOf(needle) > 0) rank = RANK_SUBSTRING;
+        else if (subsequence(hay, needle)) rank = RANK_SUBSEQUENCE;
+        if (rank !== null && (best === null || rank < best)) best = rank;
+      });
+      return best;
+    }
+    FT.nodes.forEach(function (n) {
+      [n].concat(n.spouses || []).forEach(function (p) {
+        var rank = rankOf([p.name || '', p.name_hi || '']);
+        if (rank !== null) hits.push({ node: n, person: p, rank: rank, text: FT.label(p)[0] });
+        ['father', 'mother'].forEach(function (via) {
+          var named = rank === null && p[via] ? rankOf([p[via]]) : null;
+          if (named !== null) hits.push({ node: n, person: p, rank: named, text: p[via], via: via });
+        });
+      });
+    });
+    hits.sort(function (a, b) {
+      if (a.rank !== b.rank) return a.rank - b.rank;
+      return a.text.localeCompare(b.text);
+    });
+    return { list: hits.slice(0, limit || 12), total: hits.length };
+  };
+
+  var searchBox = document.getElementById('search');
+  var suggest = document.getElementById('suggest');
+  var picked = -1;
+
+  function hideSuggest() {
+    suggest.classList.add('hidden');
+    suggest.innerHTML = '';
+    picked = -1;
+  }
+
+  function placeSuggest() {
+    var r = searchBox.getBoundingClientRect();
+    suggest.style.left = r.left + 'px';
+    suggest.style.top = (r.bottom + 4) + 'px';
+    suggest.style.width = Math.max(220, r.width) + 'px';
+  }
+
+  function renderSuggest() {
+    var res = FT.searchMatches(searchBox.value);
+    var places = FT.placeMatches(searchBox.value);
+    if (!res.list.length && !places.length) { hideSuggest(); return; }
+    var html = places.map(function (g) {
+      var n = g.members.length;
+      return '<button class="sg-row sg-place ' + g.kind + '" data-place="' + esc(g.key) + '">' +
+        '<span class="sg-name">' + esc(FT.placeLabel(g)) + '</span>' +
+        '<span class="sg-hint">' + PLACE_HINT[g.kind] + ' · ' + n + (n === 1 ? ' person' : ' people') +
+        '</span></button>';
+    }).join('') + res.list.map(function (m, i) {
+      var parent = FT.parentOf[m.node.id];
+      var hint = m.via ? m.via + ' of ' + esc(FT.label(m.person)[0]) : m.person !== m.node ?
+        spouseWord(m.person).toLowerCase() + ' of ' + esc(FT.label(m.node)[0]) :
+        parent ? 'child of ' + esc(FT.label(parent)[0]) : 'root ancestor';
+      return '<button class="sg-row" data-goto="' + esc(m.node.id) + '" data-person="' + esc(m.person.id) +
+        '" data-i="' + i + '">' +
+        '<span class="sg-name">' + esc(m.text) + '</span>' +
+        '<span class="sg-hint">' + hint + '</span></button>';
+    }).join('');
+    if (res.total > res.list.length) {
+      html += '<p class="sg-more">' + (res.total - res.list.length) + ' more…</p>';
+    }
+    suggest.innerHTML = html;
+    placeSuggest();
+    suggest.classList.remove('hidden');
+    picked = -1;
+  }
+
+  function mark() {
+    var rows = suggest.querySelectorAll('.sg-row');
+    for (var i = 0; i < rows.length; i++) {
+      rows[i].classList.toggle('on', i === picked);
+    }
+    if (picked >= 0 && rows[picked]) rows[picked].scrollIntoView({ block: 'nearest' });
+  }
+
+  var picksBar = document.getElementById('picks');
+  var pickNote = '';
+
+  FT.renderPicks = function () {
+    var ids = FT.state.picks;
+    var grp = FT.state.place && FT.placeGroups()[FT.state.place];
+    if (grp) {
+      picksBar.innerHTML = '<span class="pick pick-place">' + esc(FT.placeLabel(grp)) +
+        ' · ' + grp.members.length + (grp.members.length === 1 ? ' person' : ' people') +
+        '<button class="pick-clear-x" aria-label="Remove">×</button></span>';
+      return;
+    }
+    var html = ids.map(function (id) {
+      return '<span class="pick">' + esc(FT.label(FT.byId[id])[0]) +
+        '<button data-drop="' + esc(id) + '" aria-label="Remove">×</button></span>';
+    }).join('');
+    if (ids.length > 1) {
+      var a = FT.commonAncestor(ids);
+      html += '<span class="pick-note">Common father: <b>' +
+        (a ? esc(FT.label(FT.byId[a])[0]) : '—') + '</b></span>';
+    }
+    if (pickNote) html += '<span class="pick-note">' + esc(pickNote) + '</span>';
+    if (ids.length) html += '<button class="pick-clear">Clear</button>';
+    picksBar.innerHTML = html;
+  };
+
+  picksBar.addEventListener('click', function (e) {
+    var drop = e.target.closest('[data-drop]');
+    if (drop) {
+      var id = drop.getAttribute('data-drop');
+      FT.state.picks = FT.state.picks.filter(function (p) { return p !== id; });
+      pickNote = '';
+      FT.showPicks();
+      return;
+    }
+    if (e.target.closest('.pick-clear-x')) {
+      FT.showPlace(null);
+      return;
+    }
+    if (e.target.closest('.pick-clear')) {
+      pickNote = '';
+      FT.state.picks = [];
+      FT.showPicks();
+    }
+  });
+
+  function choose(row) {
+    var v = row.getAttribute('data-place');
+    if (!v) { go(row.getAttribute('data-goto'), row.getAttribute('data-person')); return; }
+    hideSuggest();
+    searchBox.value = '';
+    searchBox.blur();
+    pickNote = '';
+    FT.showPlace(v);
+  }
+
+  function go(id, personId) {
+    hideSuggest();
+    searchBox.value = '';
+    searchBox.blur();
+    if (FT.state.picks.indexOf(id) < 0) {
+      if (FT.state.picks.length >= FT.MAX_PICKS) {
+        pickNote = 'Up to ' + FT.MAX_PICKS + ' people — remove one first.';
+        FT.renderPicks();
+        return;
+      }
+      FT.state.picks = FT.state.picks.concat([id]);
+    }
+    pickNote = '';
+    FT.showPicks();
+    if (personId && personId !== id) FT.select(personId, FT.byId[id]);
+  }
+
+  searchBox.addEventListener('input', renderSuggest);
+  searchBox.addEventListener('focus', function () {
+    if (searchBox.value.trim()) renderSuggest();
+  });
+
+  searchBox.addEventListener('keydown', function (e) {
+    var rows = suggest.querySelectorAll('.sg-row');
+    if (e.key === 'ArrowDown' && rows.length) {
+      e.preventDefault(); picked = (picked + 1) % rows.length; mark(); return;
+    }
+    if (e.key === 'ArrowUp' && rows.length) {
+      e.preventDefault(); picked = (picked <= 0 ? rows.length : picked) - 1; mark(); return;
+    }
+    if (e.key === 'Escape') { hideSuggest(); return; }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (picked >= 0 && rows[picked]) { choose(rows[picked]); return; }
+      if (rows.length) choose(rows[0]);
+    }
+  });
+
+  suggest.addEventListener('click', function (e) {
+    var row = e.target.closest('.sg-row');
+    if (row) choose(row);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (e.target !== searchBox && !suggest.contains(e.target)) hideSuggest();
+  });
+
+  window.addEventListener('resize', function () {
+    if (!suggest.classList.contains('hidden')) placeSuggest();
+  });
+
+  var LANG_OTHER = { en: 'hi', hi: 'en' };
+  var LANG_LABEL = { en: 'EN', hi: 'हिं' };
+  var langBtn = document.getElementById('lang');
+
+  function markLang() {
+    var next = LANG_OTHER[FT.state.lang];
+    langBtn.textContent = 'Switch language (' + LANG_LABEL[next] + ')';
+    langBtn.title = 'Show names in ' + (next === 'hi' ? 'Hindi' : 'English');
+  }
+
+  FT.cycleLang = function () {
+    FT.state.lang = LANG_OTHER[FT.state.lang];
+    try { localStorage.setItem('ft-lang', FT.state.lang); } catch (e) {}
+    markLang();
+    FT.render();
+  };
+
+  langBtn.addEventListener('click', FT.cycleLang);
+  markLang();
+
+  document.getElementById('expand-all').addEventListener('click', FT.expandAll);
+  document.getElementById('refresh').addEventListener('click', function () { location.reload(); });
+
+  FT.zoomBy = function (f) {
+    var r = stage.getBoundingClientRect();
+    var mx = r.width / 2, my = r.height / 2;
+    tx = mx - (mx - tx) * f; ty = my - (my - ty) * f; scale *= f; apply();
+  };
+  document.getElementById('zoom-in').addEventListener('click', function () { FT.zoomBy(1.25); });
+  document.getElementById('zoom-out').addEventListener('click', function () { FT.zoomBy(1 / 1.25); });
+  document.getElementById('zoom-fit').addEventListener('click', function () { FT.fit(); });
+
+  FT.setBloodline = function (on) {
+    FT.state.bloodline = on;
+    FT.render();
+    FT.fit();
+  };
+  document.getElementById('show-picker').addEventListener('change', function (e) {
+    FT.setBloodline(e.target.value === 'bloodline');
+  });
+
+  FT.setLivingOnly = function (on) {
+    FT.clearPicks();
+    FT.state.collapsed = {};
+    if (on) {
+      FT.state.livingOnly = FT.filters.livingKeep(tree);
+      FT.state.depthCap = Infinity;
+    } else {
+      FT.state.livingOnly = null;
+      FT.state.depthCap = null;
+      FT.collapseBelowOpenDepth();
+    }
+    FT.render();
+    FT.fit();
+  };
+  document.getElementById('living-only').addEventListener('change', function (e) {
+    FT.setLivingOnly(e.target.checked);
+  });
+
+  var controls = document.getElementById('controls');
+  var controlsToggle = document.getElementById('controls-toggle');
+  function setControlsOpen(open) {
+    controls.classList.toggle('open', open);
+    controlsToggle.setAttribute('aria-expanded', String(open));
+  }
+  controlsToggle.addEventListener('click', function () {
+    setControlsOpen(!controls.classList.contains('open'));
+  });
+  ['mousedown', 'touchstart', 'wheel'].forEach(function (type) {
+    controls.addEventListener(type, function (e) { e.stopPropagation(); }, { passive: true });
+  });
+  setControlsOpen(window.innerWidth > 768);
+
+  var avatar = document.getElementById('avatar');
+  var menu = document.getElementById('menu');
+  function setMenuOpen(open) {
+    menu.classList.toggle('hidden', !open);
+    avatar.setAttribute('aria-expanded', String(open));
+  }
+  avatar.addEventListener('click', function (e) {
+    e.stopPropagation();
+    setMenuOpen(menu.classList.contains('hidden'));
+  });
+  menu.addEventListener('click', function () { setMenuOpen(false); });
+  document.addEventListener('click', function (e) {
+    if (!menu.contains(e.target) && e.target !== avatar) setMenuOpen(false);
+  });
+
+  document.getElementById('summary').innerHTML =
+    '<b>Tree Overview:</b> ' + [
+      summary.total + ' People', summary.male + ' Male', summary.female + ' Female',
+      summary.generations + ' Generations', summary.uncertain + ' Uncertain names',
+      summary.needs_parent + ' Unlinked'
+    ].join(' • ');
+  searchBox.placeholder = 'Search all ' + summary.total + ' members…';
+
+  var up=document.getElementById('unlinked');
+  if(unlinked.length){
+    var html='<h4>Unlinked — to place</h4>';
+    unlinked.forEach(function(p){
+      html+='<div>• '+esc(p.name||p.name_hi||p.id)+(p.note?' <em>('+esc(p.note)+')</em>':'')+'</div>';
+    });
+    up.innerHTML=html;
+  } else {
+    up.className='empty';
+  }
+
+  FT.init = function () {
+    populateViewPicker();
+    FT.collapseBelowOpenDepth();
+    var savedLang = null;
+    try { savedLang = localStorage.getItem('ft-lang'); } catch (e) {}
+    if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;
+    markLang();
+    var saved = null;
+    try { saved = localStorage.getItem('ft-view'); } catch (e) {}
+    var preferred = saved && FT.views[saved]
+      ? saved
+      : (window.innerWidth < 768 ? 'horizontal' : 'classic');
+    FT.setView(preferred);
+  };
+})();
+
+FT.views.classic = {
+  id: 'classic',
+  label: 'Classic (top-down)',
+  nodeShape: 'box',
+  cardStyle: 'parents',
+  togglePos: function (n) { return { x: FT.jointX(n), y: FT.jointY(n) + 8 }; },
+  layout: function (root) {
+    var rowHeight = [];
+    (function measure(n, depth) {
+      rowHeight[depth] = Math.max(rowHeight[depth] || 0, FT.nodeH(n));
+      FT.visibleChildren(n).forEach(function (c) { measure(c, depth + 1); });
+    })(root, 0);
+    var rowTop = [0];
+    for (var d = 0; d < rowHeight.length; d++) {
+      rowTop[d + 1] = rowTop[d] + rowHeight[d] + FT.V_GAP;
+    }
+    var cursor = 0;
+    function shiftRight(n, dx) {
+      n.x += dx;
+      FT.visibleChildren(n).forEach(function (c) { shiftRight(c, dx); });
+    }
+    (function place(n, depth) {
+      n.depth = depth;
+      n.y = rowTop[depth];
+      var kids = FT.visibleChildren(n);
+      var start = cursor;
+      if (!kids.length) {
+        n.x = cursor + FT.H_GAP / 2;
+        cursor += FT.nodeW(n) + FT.H_GAP;
+        return;
+      }
+      kids.forEach(function (c) { place(c, depth + 1); });
+      var first = kids[0], last = kids[kids.length - 1];
+      var mid = (first.x + FT.jointX(first) + last.x + FT.jointX(last)) / 2;
+      n.x = mid - FT.jointX(n);
+      var room = start + FT.H_GAP / 2 - n.x;
+      if (room > 0) {
+        kids.forEach(function (c) { shiftRight(c, room); });
+        n.x += room;
+      }
+      cursor = Math.max(cursor, n.x + FT.nodeW(n) + FT.H_GAP / 2);
+    })(root, 0);
+    var cx = root.x + FT.jointX(root);
+    this.extentPad = {
+      minX: cx - 280, maxX: cx + 280,
+      minY: root.y - FT.ROOT_SCALE * (FT.ROOT_ART_LEN + 320), maxY: root.y
+    };
+  },
+  drawEdges: function (g, root) {
+    var s = FT.ROOT_SCALE;
+    FT.rootArt(g, 'translate(' + (root.x + FT.jointX(root)) + ',' +
+      (root.y - s * FT.ROOT_ART_LEN) + ') scale(' + s + ',' + (-s) + ')');
+    (function walk(n) {
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) return;
+      var x1 = n.x + FT.jointX(n), y1 = n.y + FT.jointY(n);
+      kids.forEach(function (c) {
+        var x2 = c.x + FT.jointX(c), y2 = c.y;
+        var sway = (FT.hash01(c.id) - 0.5) * 30;
+        var ay = y1 + (y2 - y1) * 0.45, by = y2 - (y2 - y1) * 0.35;
+        var ax = x1 + sway, bx = x2 - sway;
+        FT.limb(g, c.id,
+          'M' + x1 + ',' + y1 + ' C' + ax + ',' + ay + ' ' + bx + ',' + by +
+          ' ' + x2 + ',' + y2,
+          FT.cubicAt(x1, y1, ax, ay, bx, by, x2, y2),
+          FT.limbWeight(c));
+        walk(c);
+      });
+    })(root);
+  }
+};
+
+FT.views.horizontal = {
+  id: 'horizontal',
+  label: 'Left to right',
+  nodeShape: 'box',
+  cardStyle: 'parents',
+  togglePos: function (n) { return { x: FT.nodeW(n) + 12, y: FT.jointY(n) - 2 }; },
+  layout: function (root) {
+    var cursor = 0;
+    var colW = [];
+    (function measure(n, depth) {
+      colW[depth] = Math.max(colW[depth] || 0, FT.nodeW(n));
+      FT.visibleChildren(n).forEach(function (c) { measure(c, depth + 1); });
+    })(root, 0);
+    var colX = [0];
+    for (var d = 0; d < colW.length; d++) colX[d + 1] = colX[d] + colW[d] + 90;
+    function shiftDown(n, dy) {
+      n.y += dy;
+      FT.visibleChildren(n).forEach(function (c) { shiftDown(c, dy); });
+    }
+    (function place(n, depth) {
+      n.depth = depth;
+      n.x = colX[depth];
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) {
+        n.y = cursor;
+        cursor += FT.nodeH(n) + 48;
+        return;
+      }
+      var subtreeTop = cursor;
+      kids.forEach(function (c) { place(c, depth + 1); });
+      var first = kids[0], last = kids[kids.length - 1];
+      n.y = (first.y + FT.jointY(first) + last.y + FT.jointY(last)) / 2 - FT.jointY(n);
+      var dy = 0;
+      if (n.y < subtreeTop) {
+        dy = subtreeTop - n.y;
+        kids.forEach(function (c) { shiftDown(c, dy); });
+        n.y = subtreeTop;
+      }
+      cursor = Math.max(cursor + dy, n.y + FT.nodeH(n) + 48);
+    })(root, 0);
+    var cy = root.y + FT.jointY(root);
+    this.extentPad = {
+      minX: root.x - FT.ROOT_SCALE * (FT.ROOT_ART_LEN + 460), maxX: root.x,
+      minY: cy - FT.ROOT_SCALE * 280, maxY: cy + FT.ROOT_SCALE * 280
+    };
+  },
+  drawEdges: function (g, root) {
+    var s = FT.ROOT_SCALE;
+    FT.rootArt(g, 'translate(' + (root.x - s * FT.ROOT_ART_LEN) + ',' +
+      (root.y + FT.jointY(root)) + ') rotate(90) scale(' + s + ')',
+      'rotate(-90,0,24)');
+    (function walk(n) {
+      var kids = FT.visibleChildren(n);
+      if (!kids.length) return;
+      var x1 = n.x + FT.nodeW(n), y1 = n.y + FT.jointY(n);
+      kids.forEach(function (c) {
+        var x2 = c.x, y2 = c.y + FT.jointY(c);
+        var sway = (FT.hash01(c.id) - 0.5) * 30;
+        var ax = x1 + (x2 - x1) * 0.45, bx = x2 - (x2 - x1) * 0.35;
+        var ay = y1 + sway, by = y2 - sway;
+        FT.limb(g, c.id,
+          'M' + x1 + ',' + y1 + ' C' + ax + ',' + ay + ' ' + bx + ',' + by +
+          ' ' + x2 + ',' + y2,
+          FT.cubicAt(x1, y1, ax, ay, bx, by, x2, y2),
+          FT.limbWeight(c));
+        walk(c);
+      });
+    })(root);
+  }
+};
+
+FT.views.poster = {
+  id: 'poster',
+  label: 'Tree (organic)',
+  nodeShape: 'box',
+  cardStyle: 'parents',
+  maxDepth: 4,
+  extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },
+  rowTop: function (depth) {
+    return depth === 0 ? 210 : -470 - (depth - 1) * 360;
+  },
+  layout: function (root) {
+    var view = this;
+    var cursor = 0;
+    function shiftRight(n, depth, dx) {
+      n.x += dx;
+      FT.kidsAt(n, depth).forEach(function (c) { shiftRight(c, depth + 1, dx); });
+    }
+    (function place(n, depth) {
+      n.depth = depth;
+      n.y = view.rowTop(depth);
+      var kids = FT.kidsAt(n, depth);
+      var start = cursor;
+      if (!kids.length) {
+        n.x = cursor;
+        cursor += FT.nodeW(n) + FT.H_GAP;
+        return;
+      }
+      kids.forEach(function (c) { place(c, depth + 1); });
+      var first = kids[0], last = kids[kids.length - 1];
+      n.x = (first.x + FT.jointX(first) + last.x + FT.jointX(last)) / 2 - FT.jointX(n);
+      if (n.x < start) {
+        kids.forEach(function (c) { shiftRight(c, depth + 1, start - n.x); });
+        n.x = start;
+      }
+      cursor = Math.max(cursor, n.x + FT.nodeW(n) + FT.H_GAP);
+    })(root, 0);
+    this.cx = root.x + FT.jointX(root);
+    this.extentPad = {
+      minX: -140,
+      maxX: cursor + 140,
+      minY: -80,
+      maxY: 360
+    };
+  },
+  drawEdges: function (g, root) {
+    var cx = this.cx;
+    var GROUND = 70;
+    var TRUNK_TOP = GROUND - FT.ROOT_ART_LEN;
+    var view = this;
+
+    FT.rootArt(g, 'translate(' + cx + ',' + GROUND + ')');
+
+    function branch(x1, y1, x2, y2, weight, id) {
+      var bow = (x2 - x1) * 0.42 + (FT.hash01(id) - 0.5) * 70;
+      var mx = x1 + bow;
+      var my = y1 + (y2 - y1) * 0.62;
+      var p = FT.edge(g, 'M' + x1 + ',' + y1 + ' Q' + mx + ',' + my + ' ' + x2 + ',' + y2, id);
+      p.setAttribute('class', 'edge poster-branch');
+      p.style.strokeWidth = weight + 'px';
+      view.leaves(g, x1, y1, mx, my, x2, y2, id);
+    }
+
+    (function walk(n, depth) {
+      FT.kidsAt(n, depth).forEach(function (c) {
+        var x1 = depth === 0 ? cx : n.x + FT.jointX(n);
+        var y1 = depth === 0 ? TRUNK_TOP + 10 : n.y;
+        var thickness = depth === 0 ? 2.4 : 1.7;
+        branch(x1, y1, c.x + FT.jointX(c), c.y + FT.nodeH(c),
+          Math.max(depth === 0 ? 6 : 3.5, Math.sqrt(FT.leafCount(c)) * thickness), c.id);
+        walk(c, depth + 1);
+      });
+    })(root, 0);
+  },
+  leaves: function (g, x1, y1, mx, my, x2, y2, id) {
+    FT.leaves(g, id, FT.quadAt(x1, y1, mx, my, x2, y2), 7, 1);
+  }
+};
+
+(function (filters) {
+  function isLiving(p) {
+    return p.life === 'living' && !p.died;
+  }
+
+  filters.livingKeep = function (tree) {
+    var keep = {};
+    (function walk(n) {
+      var reached = isLiving(n) || (n.spouses || []).some(isLiving);
+      (n.children || []).forEach(function (c) {
+        if (walk(c)) reached = true;
+      });
+      if (reached) keep[n.id] = true;
+      return reached;
+    })(tree);
+    return keep;
+  };
+})(typeof FT !== 'undefined' ? (FT.filters = {}) : module.exports);
+
+(function (auth) {
+  var ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+  var EPOCH = Date.UTC(2026, 0, 1);
+  var STEP_MS = 10 * 60 * 1000;
+  var HOUR_MS = 60 * 60 * 1000;
+  var FIRST_USE_MS = 24 * HOUR_MS;
+  var SIG_SPACE = 1048576;
+
+  function hexBytes(hex) {
+    var out = new Uint8Array(hex.length / 2);
+    for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+    return out;
+  }
+
+  function bytesHex(buffer) {
+    return Array.prototype.map.call(new Uint8Array(buffer), function (b) {
+      return ('0' + b.toString(16)).slice(-2);
+    }).join('');
+  }
+
+  function signature(keyHex, data) {
+    return crypto.subtle.importKey('raw', hexBytes(keyHex), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+      .then(function (key) {
+        return crypto.subtle.sign('HMAC', key, new Uint8Array([(data >> 16) & 255, (data >> 8) & 255, data & 255]));
+      })
+      .then(function (buffer) {
+        var b = new Uint8Array(buffer);
+        return (b[0] << 12) | (b[1] << 4) | (b[2] >> 4);
+      });
+  }
+
+  function toText(value) {
+    var s = '';
+    for (var i = 0; i < 8; i++) {
+      s = ALPHABET.charAt(value % 32) + s;
+      value = Math.floor(value / 32);
+    }
+    return s.slice(0, 4) + '-' + s.slice(4);
+  }
+
+  function toValue(code) {
+    var value = 0;
+    for (var i = 0; i < 8; i++) value = value * 32 + ALPHABET.indexOf(code.charAt(i));
+    return value;
+  }
+
+  auth.HOUR_MS = HOUR_MS;
+
+  auth.normalize = function (input) {
+    var s = String(input).toUpperCase().replace(/[\s-]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
+    if (s.length !== 8) return null;
+    for (var i = 0; i < 8; i++) if (ALPHABET.indexOf(s.charAt(i)) < 0) return null;
+    return s;
+  };
+
+  auth.makeCode = function (keyHex, nowMs, hours) {
+    var step = Math.floor((nowMs - EPOCH) / STEP_MS);
+    var data = step * 2 + (hours === 2 ? 1 : 0);
+    return signature(keyHex, data).then(function (sig) {
+      return toText(data * SIG_SPACE + sig);
+    });
+  };
+
+  auth.readCode = function (keyHex, input, nowMs) {
+    var code = auth.normalize(input);
+    if (!code) return Promise.resolve({ status: 'bad' });
+    var value = toValue(code);
+    var data = Math.floor(value / SIG_SPACE);
+    return signature(keyHex, data).then(function (expected) {
+      if (expected !== value % SIG_SPACE) return { status: 'bad' };
+      var issued = EPOCH + Math.floor(data / 2) * STEP_MS;
+      if (nowMs - issued >= FIRST_USE_MS) return { status: 'expired' };
+      return { status: 'ok', code: code, hours: data % 2 ? 2 : 1 };
+    });
+  };
+
+  auth.hashPassword = function (password, saltHex, iterations) {
+    return crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits'])
+      .then(function (key) {
+        return crypto.subtle.deriveBits(
+          { name: 'PBKDF2', salt: hexBytes(saltHex), iterations: iterations, hash: 'SHA-256' }, key, 256);
+      })
+      .then(bytesHex);
+  };
+
+  auth.decide = function (config, input, nowMs, usedCodes) {
+    if (!config || !String(input).trim()) return Promise.resolve({ error: 'wrong' });
+    var admin = config.admin;
+    return auth.hashPassword(input, admin.salt, admin.iterations).then(function (hash) {
+      if (hash === admin.hash) return { kind: 'admin' };
+      return auth.readCode(config.signing_key, input, nowMs).then(function (r) {
+        if (r.status === 'bad') return { error: 'wrong' };
+        if (r.status === 'expired') return { error: 'expired' };
+        if (usedCodes.indexOf(r.code) >= 0) return { error: 'used' };
+        return { kind: 'code', code: r.code, expires: nowMs + r.hours * HOUR_MS };
+      });
+    });
+  };
+
+  var MAX_NAME = 30;
+
+  function cleanName(name) {
+    return String(name || '').trim().slice(0, MAX_NAME);
+  }
+
+  auth.shareLink = function (base, code, name) {
+    var link = base + '#code=' + String(code).replace('-', '');
+    var clean = cleanName(name);
+    return clean ? link + '&name=' + encodeURIComponent(clean) : link;
+  };
+
+  auth.readLink = function (hash) {
+    var params = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+    var code = params.get('code');
+    if (!code) return null;
+    return { code: code, name: cleanName(params.get('name')) };
+  };
+
+  auth.sessionState = function (session, nowMs) {
+    if (!session) return 'none';
+    if (session.kind === 'admin') return 'admin';
+    if (session.kind === 'code' && typeof session.expires === 'number') {
+      return nowMs < session.expires ? 'active' : 'over';
+    }
+    return 'none';
+  };
+
+  var TEXT = {
+    en: {
+      placeholder: 'Enter your code or password',
+      enter: 'Enter',
+      wrong: "That code isn't right. Check it and try again.",
+      expired: 'This code has expired. Ask {c} for a new one.',
+      over: 'Your time is over. Ask {c} for a new code.',
+      nocrypto: 'This browser cannot check codes here. Open the family tree website link instead.',
+      who: '{n} · {m} min left',
+      admin: 'Admin',
+      guest: 'Guest',
+      logout: 'Log out'
+    },
+    hi: {
+      placeholder: 'अपना कोड या पासवर्ड डालें',
+      enter: 'खोलें',
+      wrong: 'यह कोड सही नहीं है। जाँचकर फिर से डालें।',
+      expired: 'इस कोड का समय निकल गया है। {c} से नया कोड माँगें।',
+      over: 'आपका समय पूरा हो गया। {c} से नया कोड माँगें।',
+      nocrypto: 'यह ब्राउज़र यहाँ कोड नहीं जाँच सकता। परिवार वृक्ष की वेबसाइट का लिंक खोलें।',
+      who: '{n} · {m} मिनट बाकी',
+      admin: 'एडमिन',
+      guest: 'अतिथि',
+      logout: 'लॉग आउट'
+    }
+  };
+  var text = TEXT.en;
+
+  function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function save(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+  function drop(key) { try { localStorage.removeItem(key); } catch (e) {} }
+  function loadJson(key) { try { return JSON.parse(load(key)); } catch (e) { return null; } }
+
+  function button(label, onClick) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function selectText(node) {
+    var range = document.createRange();
+    range.selectNodeContents(node);
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  function showCodePanel(config) {
+    var sheet = document.getElementById('sheet');
+    var body = document.getElementById('sheet-body');
+    body.innerHTML =
+      '<h3>New code</h3>' +
+      '<label class="code-name">Who is it for?' +
+      '<input id="code-name" maxlength="30" autocomplete="off" placeholder="Name, e.g. Sunita"></label>' +
+      '<div class="code-hours">' +
+      '<button type="button" data-hours="1">1 hour</button>' +
+      '<button type="button" data-hours="2">2 hours</button>' +
+      '</div>' +
+      '<div id="code-result" hidden>' +
+      '<p class="code-value" id="code-value"></p>' +
+      '<button type="button" id="code-copy">Copy link</button>' +
+      '<p class="code-link" id="code-link"></p>' +
+      '<p class="code-note" id="code-note"></p>' +
+      '</div>';
+    sheet.style.borderLeftColor = 'var(--hl)';
+    sheet.classList.remove('hidden');
+    var nameInput = document.getElementById('code-name');
+    var result = document.getElementById('code-result');
+    var value = document.getElementById('code-value');
+    var copy = document.getElementById('code-copy');
+    var linkText = document.getElementById('code-link');
+    var note = document.getElementById('code-note');
+    Array.prototype.forEach.call(body.querySelectorAll('[data-hours]'), function (b) {
+      b.addEventListener('click', function () {
+        var hours = Number(b.getAttribute('data-hours'));
+        var name = nameInput.value.trim();
+        auth.makeCode(config.signing_key, Date.now(), hours).then(function (code) {
+          value.textContent = code;
+          linkText.textContent = auth.shareLink(location.origin + location.pathname, code, name);
+          copy.textContent = 'Copy link';
+          note.textContent = (name ? 'For ' + name + '. ' : '') + 'Use within 24 hours. Lasts ' +
+            (hours === 1 ? '1 hour' : '2 hours') + ' from when they log in.';
+          result.hidden = false;
+        });
+      });
+    });
+    copy.addEventListener('click', function () {
+      var write = navigator.clipboard ? navigator.clipboard.writeText(linkText.textContent) : Promise.reject();
+      write.then(function () { copy.textContent = 'Copied'; }, function () { selectText(linkText); });
+    });
+    nameInput.focus();
+  }
+
+  function whoName(session) {
+    if (session.kind === 'admin') return text.admin;
+    return session.name || text.guest;
+  }
+
+  function showWho(session, label) {
+    document.getElementById('who').textContent = label;
+    document.getElementById('avatar').textContent = whoName(session).charAt(0).toUpperCase();
+  }
+
+  function adminControls(config) {
+    var newCode = button('New code', function () { showCodePanel(config); });
+    newCode.id = 'new-code';
+    newCode.setAttribute('role', 'menuitem');
+    document.getElementById('menu').appendChild(newCode);
+  }
+
+  function logOutItem() {
+    var logOut = button(text.logout, function () { drop('ft-session'); location.reload(); });
+    logOut.id = 'log-out';
+    logOut.setAttribute('role', 'menuitem');
+    document.getElementById('menu').appendChild(logOut);
+  }
+
+  function watch(session) {
+    function tick() {
+      var left = session.expires - Date.now();
+      if (left <= 0) { location.reload(); return; }
+      showWho(session, text.who.replace('{n}', whoName(session)).replace('{m}', Math.ceil(left / 60000)));
+    }
+    tick();
+    setInterval(tick, 30000);
+    document.addEventListener('visibilitychange', tick);
+  }
+
+  auth.start = function (onUnlock) {
+    var config = JSON.parse(document.getElementById('auth-data').textContent);
+    var contact = (config && config.contact) || 'the admin';
+    text = TEXT[load('ft-lang') === 'hi' ? 'hi' : 'en'];
+    var box = document.getElementById('login');
+    var input = document.getElementById('login-input');
+    var msg = document.getElementById('login-msg');
+    input.placeholder = text.placeholder;
+    input.setAttribute('aria-label', text.placeholder);
+    document.getElementById('login-enter').textContent = text.enter;
+
+    function say(key) { msg.textContent = text[key].replace('{c}', contact); }
+
+    function unlock(session) {
+      box.classList.add('hidden');
+      onUnlock();
+      if (session.kind === 'admin') {
+        adminControls(config);
+        showWho(session, text.admin);
+      } else {
+        watch(session);
+      }
+      logOutItem();
+    }
+
+    var link = auth.readLink(location.hash);
+    if (link) history.replaceState(null, '', location.pathname + location.search);
+
+    var saved = loadJson('ft-session');
+    var state = auth.sessionState(saved, Date.now());
+    if (state === 'admin' || state === 'active') { unlock(saved); return; }
+    if (state === 'over') { drop('ft-session'); say('over'); }
+    input.focus();
+
+    var checking = false;
+
+    function attempt(value, name) {
+      if (checking) return;
+      checking = true;
+      msg.textContent = '';
+      var used = loadJson('ft-used-codes') || [];
+      Promise.resolve()
+        .then(function () { return auth.decide(config, value, Date.now(), used); })
+        .then(function (r) {
+          checking = false;
+          if (r.error) { say(r.error === 'used' ? 'over' : r.error); return; }
+          var session = r.kind === 'admin' ? { kind: 'admin' } :
+            { kind: 'code', expires: r.expires, name: name };
+          if (r.code) save('ft-used-codes', JSON.stringify(used.concat([r.code])));
+          save('ft-session', JSON.stringify(session));
+          input.value = '';
+          unlock(session);
+        })
+        .catch(function () { checking = false; say('nocrypto'); });
+    }
+
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      attempt(input.value, '');
+    });
+
+    if (link) attempt(link.code, link.name);
+  };
+})(typeof FT !== 'undefined' ? (FT.auth = {}) : module.exports);
+
+FT.auth.start(FT.init);</script>
 </body>
 </html>

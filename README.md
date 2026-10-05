@@ -1,7 +1,8 @@
 # Family Tree
 
 The tree data lives in `family-tree.yaml` (the source of truth). The interactive
-viewer `family-tree.html` is generated from it.
+viewer is generated from it into `index.html` (the site root) and an identical
+`family-tree.html` (so old links keep working).
 
 ## Rebuild after editing
 

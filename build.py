@@ -9,7 +9,7 @@ from family_tree.tree import build_tree
 from family_tree.render import render_html
 
 DATA = "family-tree.yaml"
-OUT = "family-tree.html"
+OUTS = ("index.html", "family-tree.html")
 PHOTOS = "photos"
 AUTH = "auth.json"
 
@@ -55,10 +55,12 @@ def main() -> int:
     inherit_origins(people)
 
     root, unlinked, summary = build_tree(people)
-    with open(OUT, "w", encoding="utf-8") as f:
-        f.write(render_html(root, unlinked, summary, auth))
+    html = render_html(root, unlinked, summary, auth)
+    for out in OUTS:
+        with open(out, "w", encoding="utf-8") as f:
+            f.write(html)
 
-    print("Wrote %s" % OUT)
+    print("Wrote %s" % " and ".join(OUTS))
     print(
         "People: %d (male %d, female %d) | Generations: %d | Uncertain: %d | Needs-parent: %d"
         % (summary.total, summary.male, summary.female, summary.generations,
