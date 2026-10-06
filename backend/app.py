@@ -506,6 +506,7 @@ def list_accounts():
     return jsonify([
         {"person_id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"),
          "family_id": graph.home_family(pid), "username": names.get(pid),
+         "relation": views.relation_text(graph, pid),
          "can_manage": access.can_manage_account(pid)}
         for pid, row in graph.people.items()
         if (row.get("life") == "living" or pid in names) and access.is_admin_over(pid)

@@ -10,7 +10,7 @@
   };
   var CHOICES = {
     gender: [['', '—'], ['male', 'Male'], ['female', 'Female']],
-    life: [['', '—'], ['living', 'Living'], ['deceased', 'Deceased']],
+    life: [['living', 'Living'], ['deceased', 'Deceased']],
     status: [['', '—'], ['uncertain', 'Name uncertain'], ['needs-parent', 'Parent not known'], ['gap', 'Unknown generation']]
   };
   var NEW_CHILD = ['name', 'name_hi', 'gender', 'born', 'life'];

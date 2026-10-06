@@ -270,6 +270,7 @@
   #main input,#main select{min-height:40px;font-size:15px;padding:6px 8px;border:1px solid var(--edge);
     font-family:var(--font);}
   #main .admin-form button{min-height:44px;cursor:pointer;}
+  #main .relation{color:var(--ink-muted);}
   #acct-search{width:100%;box-sizing:border-box;margin-bottom:10px;}
   .secret{background:var(--band);padding:12px;margin:0 0 12px;}
   .secret-value{font-family:ui-monospace,Menlo,monospace;font-size:16px;}
@@ -558,8 +559,9 @@
                 (own ? '' : ' <button type="button" data-reset="' + id + '">Reset password</button> ' +
                   '<button type="button" data-remove="' + id + '">Remove login</button>')
               : '<button type="button" data-create="' + id + '">Create login</button>';
-            var key = [a.name, a.name_hi, a.username].filter(Boolean).join(' ').toLowerCase();
-            return '<tr data-search="' + esc(key) + '"><td>' + esc(a.name || a.name_hi) + '</td><td>' +
+            var key = [a.name, a.name_hi, a.relation, a.username].filter(Boolean).join(' ').toLowerCase();
+            return '<tr data-search="' + esc(key) + '"><td>' + esc(a.name || a.name_hi) +
+              (a.relation ? ' <span class="relation">(' + esc(a.relation) + ')</span>' : '') + '</td><td>' +
               esc(familyName(a.family_id)) + '</td><td class="uname">' + esc(a.username || '—') + '</td><td>' + buttons + '</td></tr>';
           }));
       });

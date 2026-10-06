@@ -23,7 +23,7 @@ CREATE TABLE people (
   name VARCHAR(200) NULL,
   name_hi VARCHAR(200) NULL,
   gender ENUM('male','female') NULL,
-  life ENUM('living','deceased') NULL,
+  life ENUM('living','deceased') NOT NULL DEFAULT 'living',
   born VARCHAR(100) NULL,
   died VARCHAR(100) NULL,
   status ENUM('uncertain','needs-parent','gap') NULL,

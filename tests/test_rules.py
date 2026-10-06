@@ -86,6 +86,12 @@ class TestDeleteBlocker(unittest.TestCase):
 
 
 class TestCleanFields(unittest.TestCase):
+    def test_life_cannot_be_blank(self):
+        with self.assertRaisesRegex(RuleError, "life must be living or deceased"):
+            clean_fields({"life": ""}, EDIT_FIELDS)
+        with self.assertRaisesRegex(RuleError, "life must be living or deceased"):
+            clean_fields({"life": None}, EDIT_FIELDS)
+
     def test_strips_and_blanks_become_null(self):
         self.assertEqual(clean_fields({"name": "  Amit ", "born": "  "}, EDIT_FIELDS),
                          {"name": "Amit", "born": None})

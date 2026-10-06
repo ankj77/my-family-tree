@@ -22,7 +22,7 @@ def rows_from_yaml(path: str) -> dict:
             "name": p.name,
             "name_hi": p.name_hi,
             "gender": p.gender,
-            "life": p.life,
+            "life": p.life or "living",
             "born": p.born,
             "died": p.died,
             "status": p.status,

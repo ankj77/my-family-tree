@@ -37,6 +37,8 @@ def clean_fields(data: dict, allowed) -> dict:
         if isinstance(value, str):
             value = value.strip() or None
         if value is None:
+            if key == "life":
+                raise RuleError("life must be living or deceased")
             out[key] = None
             continue
         if key in TEXT_FIELDS:

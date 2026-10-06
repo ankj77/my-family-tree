@@ -3,7 +3,7 @@ from family_tree.graph import PERSON_COLUMNS, Graph
 
 def person(pid, **fields):
     row = {column: None for column in PERSON_COLUMNS}
-    row.update(id=pid, name=pid.title())
+    row.update(id=pid, name=pid.title(), life="living")
     row.update(fields)
     return row
 

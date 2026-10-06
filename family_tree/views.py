@@ -83,6 +83,20 @@ def family_people(graph: Graph, family_id: str) -> List[Person]:
     return people
 
 
+def relation_text(graph: Graph, pid: str) -> str:
+    row = graph.people[pid]
+    child_of = {"male": "s/o", "female": "d/o"}.get(row.get("gender"), "c/o")
+    for id_key, name_key in (("father_id", "father_name"), ("mother_id", "mother_name")):
+        parent = _parent_text(graph, row, id_key, name_key)
+        if parent:
+            return "%s %s" % (child_of, parent)
+    spouse = graph.spouse.get(pid)
+    if spouse:
+        married_to = {"male": "h/o", "female": "w/o"}.get(row.get("gender"), "spouse of")
+        return "%s %s" % (married_to, display(graph.people[spouse]))
+    return ""
+
+
 def family_links(graph: Graph, pid: str) -> List[dict]:
     links = []
     own = graph.people[pid].get("family_id")

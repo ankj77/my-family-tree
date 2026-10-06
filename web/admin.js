@@ -80,8 +80,9 @@
                 (own ? '' : ' <button type="button" data-reset="' + id + '">Reset password</button> ' +
                   '<button type="button" data-remove="' + id + '">Remove login</button>')
               : '<button type="button" data-create="' + id + '">Create login</button>';
-            var key = [a.name, a.name_hi, a.username].filter(Boolean).join(' ').toLowerCase();
-            return '<tr data-search="' + esc(key) + '"><td>' + esc(a.name || a.name_hi) + '</td><td>' +
+            var key = [a.name, a.name_hi, a.relation, a.username].filter(Boolean).join(' ').toLowerCase();
+            return '<tr data-search="' + esc(key) + '"><td>' + esc(a.name || a.name_hi) +
+              (a.relation ? ' <span class="relation">(' + esc(a.relation) + ')</span>' : '') + '</td><td>' +
               esc(familyName(a.family_id)) + '</td><td class="uname">' + esc(a.username || '—') + '</td><td>' + buttons + '</td></tr>';
           }));
       });

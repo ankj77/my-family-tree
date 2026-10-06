@@ -4,7 +4,9 @@ from tests.apicase import ORIGIN, ApiCase
 class TestAccounts(ApiCase):
     def test_list_in_scope(self):
         self.login("bash")
-        ids = {a["person_id"] for a in self.get("/accounts").get_json()}
+        listed = self.get("/accounts").get_json()
+        self.assertEqual(next(a for a in listed if a["person_id"] == "rashmi")["relation"], "d/o Bash")
+        ids = {a["person_id"] for a in listed}
         self.assertEqual(ids, {"bash", "rashmi"})
         self.post("/logout")
         self.login("amit")

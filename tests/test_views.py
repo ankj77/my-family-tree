@@ -6,7 +6,7 @@ from family_tree.importer import rows_from_yaml
 from family_tree.model import inherit_origins, load_people
 from family_tree.render import _node_json, _person_json, summary_json
 from family_tree.tree import build_tree
-from family_tree.views import family_json, family_links, origin_of
+from family_tree.views import family_json, family_links, origin_of, relation_text
 from tests.sample import sample_graph
 
 YAML = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "family-tree.yaml")
@@ -53,6 +53,13 @@ class TestSampleViews(unittest.TestCase):
         self.assertEqual(origin_of(self.g, "vikram"), ({}, False))
         self.assertEqual(origin_of(self.g, "bash"), ({"village": "Pugthala", "state": "Haryana"}, True))
 
+    def test_relation_text(self):
+        self.assertEqual(relation_text(self.g, "amit"), "s/o Jagdish")
+        self.assertEqual(relation_text(self.g, "neha"), "d/o Jagdish")
+        self.assertEqual(relation_text(self.g, "sita"), "d/o Hari")
+        self.assertEqual(relation_text(self.g, "vikram"), "h/o Neha")
+        self.assertEqual(relation_text(self.g, "ram"), "")
+
     def test_family_links(self):
         self.assertEqual(family_links(self.g, "rashmi"), [
             {"text": "Born in Pugthala family", "family_id": "pugthala"},
@@ -69,6 +76,8 @@ class TestSameTreeAsToday(unittest.TestCase):
     def test_api_tree_matches_the_static_build(self):
         people = load_people(YAML)
         inherit_origins(people)
+        for p in people:
+            p.life = p.life or "living"
         root, unlinked, summary = build_tree(people)
         rows = rows_from_yaml(YAML)
         graph = Graph(rows["people"], rows["marriages"], rows["families"], rows["villages"])
