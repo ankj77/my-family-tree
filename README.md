@@ -33,7 +33,7 @@ is not running.
 ## Deploy
 
 - Pages: `.venv/bin/python build.py`, commit, push to `main`.
-- API: `vercel deploy --prod` (env: `DATABASE_URL`, `ALLOWED_ORIGIN`, `COOKIE_DOMAIN`).
+- API: `vercel deploy --prod --force` (`--force` skips the build cache, which can serve old code) (env: `DATABASE_URL`, `ALLOWED_ORIGIN`, `COOKIE_DOMAIN`).
 - Check: `.venv/bin/python db/smoke.py https://api.jainparivar.online <username> <password>`.
 
 API runs on Vercel in Singapore (sin1) next to TiDB Cloud in Singapore (ap-southeast-1).
