@@ -1,43 +1,55 @@
-# Family Tree
+# Family Roots
 
-The tree data lives in `family-tree.yaml` (the source of truth). The interactive
-viewer is generated from it into `index.html` (the site root) and an identical
-`family-tree.html` (so old links keep working).
+The site is in two parts:
 
-## Rebuild after editing
+- **Pages** (`index.html`, `admin.html`) on GitHub Pages at https://jainparivar.online, built by
+  `build.py` from `web/`.
+- **API** (`backend/`, entry `api/index.py`) on Vercel at https://api.jainparivar.online, with the
+  data in a TiDB (MySQL) database.
 
-```bash
-python3 build.py
-open family-tree.html
-```
+Everything about people (names, links, logins, roles) lives in the database and is changed on the
+website. `family-tree.yaml` was imported once on 2026-10-06 and is no longer what the site shows.
 
-## Login
+## Run locally
 
-The page asks for a code or the admin password before showing the tree.
+    brew services start mysql
+    /opt/homebrew/bin/python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
+    mysql -u root -e "CREATE DATABASE family_tree_dev CHARACTER SET utf8mb4"
+    DATABASE_URL=mysql://root@localhost/family_tree_dev .venv/bin/python db/import_yaml.py --admin ankur --create-schema
+    ./db/serve_local.sh
 
-**First time (and whenever you want to change the admin password):**
+Then open http://localhost:8000.
 
-```bash
-python3 build.py --set-admin-password
-python3 build.py
-```
+If Homebrew MySQL won't start because its data folder is from an older MySQL, run a separate server with an empty data folder: `mysqld --initialize-insecure --datadir=/tmp/ft-mysql && mysqld --datadir=/tmp/ft-mysql --port=3306 --socket=/tmp/mysql.sock --bind-address=127.0.0.1 --mysqlx=OFF &`.
 
-This writes `auth.json` (a hash of the password, never the password itself) and
-rebuilds. `build.py` refuses to run without `auth.json`.
+## Tests
 
-**Giving someone access:** log in with the admin password, press **New code**, pick
-**1 hour** or **2 hours**, and send them the code. They must use it within 24 hours;
-their time starts when they log in. When it runs out they see "Your time is over"
-and need a new code.
+    .venv/bin/python -W error -m unittest -q
+    for f in tests/*_check.js; do node "$f"; done
 
-**Cancelling every code already sent:** delete the `signing_key` line from
-`auth.json`, then run `python3 build.py --set-admin-password` and `python3 build.py`.
+Database tests use a throwaway `family_tree_test` database on the local MySQL and skip if MySQL
+is not running.
 
-**What this does not do:** the repo is public, so the data can still be read on
-GitHub or in the page source. This keeps casual visitors out; it is not security.
-A forwarded code works once on each device it is entered on, within its 24 hours.
+## Deploy
 
-Opening `family-tree.html` straight from disk works in Chrome. Safari has not been checked; if it says the browser can't check codes, run `python3 -m http.server` and open http://localhost:8000/family-tree.html instead.
+- Pages: `.venv/bin/python build.py`, commit, push to `main`.
+- API: `vercel deploy --prod` (env: `DATABASE_URL`, `ALLOWED_ORIGIN`, `COOKIE_DOMAIN`).
+- Check: `.venv/bin/python db/smoke.py https://api.jainparivar.online <username> <password>`.
+
+API runs on Vercel in Singapore (sin1) next to TiDB Cloud in Singapore (ap-southeast-1).
+
+## Logins and roles
+
+- Admins create logins on the Admin page. The password is shown once; send it by WhatsApp.
+- Global admin: everything. Village admin: every family in their village. Branch rep: one person
+  and everyone below them; their deletes wait for an admin.
+- Anyone can change their own password from the account menu. Admins can reset passwords for
+  people in their area, never for someone with a higher role.
+- Admins cannot reset their own password from the Admin page; use Change password in the account menu.
+
+## The YAML file (history)
+
+The sections below describe `family-tree.yaml`, which the database was imported from.
 
 ## Adding a person
 
