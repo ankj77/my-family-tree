@@ -33,6 +33,7 @@ class TestRenderIndex(unittest.TestCase):
     def test_login_form_has_username_and_password(self):
         self.assertIn('id="login-user"', self.html)
         self.assertIn('id="login-pass"', self.html)
+        self.assertIn('id="login-show" type="button"', self.html)
 
 
 class TestAssetInlining(unittest.TestCase):

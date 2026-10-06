@@ -72,8 +72,22 @@
     document.getElementById('login-user').focus();
   }
 
+  api.togglePassword = function (input, button) {
+    var reveal = input.type === 'password';
+    input.type = reveal ? 'text' : 'password';
+    button.textContent = reveal ? 'Hide' : 'Show';
+    button.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+    button.setAttribute('aria-pressed', reveal ? 'true' : 'false');
+  };
+
   function wireLogin() {
     var form = document.getElementById('login-form');
+    var pass = document.getElementById('login-pass');
+    var show = document.getElementById('login-show');
+    show.addEventListener('click', function () {
+      api.togglePassword(pass, show);
+      pass.focus();
+    });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var msg = document.getElementById('login-msg');

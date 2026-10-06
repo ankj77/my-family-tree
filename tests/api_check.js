@@ -12,6 +12,19 @@ assert.strictEqual(api.pickFamily(null, null, 'bakheta', villages), 'bakheta');
 assert.strictEqual(api.pickFamily(null, null, null, villages), 'bakheta');
 assert.strictEqual(api.pickFamily(null, null, null, []), null);
 
+var attrs = {};
+var input = { type: 'password' };
+var button = { textContent: 'Show', setAttribute: function (k, v) { attrs[k] = v; } };
+api.togglePassword(input, button);
+assert.strictEqual(input.type, 'text');
+assert.strictEqual(button.textContent, 'Hide');
+assert.strictEqual(attrs['aria-pressed'], 'true');
+assert.strictEqual(attrs['aria-label'], 'Hide password');
+api.togglePassword(input, button);
+assert.strictEqual(input.type, 'password');
+assert.strictEqual(button.textContent, 'Show');
+assert.strictEqual(attrs['aria-pressed'], 'false');
+
 assert.strictEqual(api.urlFor('bakheta'), '?family=bakheta');
 assert.strictEqual(api.urlFor('bal pabana', 'a&b'), '?family=bal%20pabana&person=a%26b');
 

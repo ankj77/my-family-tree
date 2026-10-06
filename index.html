@@ -225,6 +225,10 @@
   #login .login-hi{margin:2px 0 20px;color:var(--ink-muted);font-size:15px;}
   #login-form input{display:block;width:100%;box-sizing:border-box;font-size:17px;min-height:48px;
     padding:8px 10px;margin-top:10px;border:1px solid var(--edge);font-family:var(--font);}
+  #login-form .pass-wrap{position:relative;margin-top:10px;}
+  #login-form .pass-wrap input{margin-top:0;padding-right:72px;}
+  #login-show{position:absolute;right:2px;top:2px;bottom:2px;min-width:64px;border:0;background:transparent;
+    color:var(--hl);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);}
   #family-picker{margin-top:4px;min-height:36px;font-size:14px;font-family:var(--font);
     border:1px solid var(--edge);background:var(--card);color:var(--ink);max-width:100%;}
   #sheet .edit-form{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
@@ -255,7 +259,10 @@
     <h1>Family Roots</h1>
     <p class="login-hi">परिवार वृक्ष</p>
     <input id="login-user" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Username" aria-label="Username">
-    <input id="login-pass" name="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+    <div class="pass-wrap">
+      <input id="login-pass" name="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+      <button id="login-show" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+    </div>
     <button id="login-enter" type="submit">Log in</button>
     <p id="login-msg" role="alert"></p>
   </form>
@@ -1790,8 +1797,22 @@ FT.views.poster = {
     document.getElementById('login-user').focus();
   }
 
+  api.togglePassword = function (input, button) {
+    var reveal = input.type === 'password';
+    input.type = reveal ? 'text' : 'password';
+    button.textContent = reveal ? 'Hide' : 'Show';
+    button.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+    button.setAttribute('aria-pressed', reveal ? 'true' : 'false');
+  };
+
   function wireLogin() {
     var form = document.getElementById('login-form');
+    var pass = document.getElementById('login-pass');
+    var show = document.getElementById('login-show');
+    show.addEventListener('click', function () {
+      api.togglePassword(pass, show);
+      pass.focus();
+    });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var msg = document.getElementById('login-msg');

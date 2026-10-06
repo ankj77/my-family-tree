@@ -12,7 +12,10 @@
     <h1>Family Roots</h1>
     <p class="login-hi">परिवार वृक्ष</p>
     <input id="login-user" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Username" aria-label="Username">
-    <input id="login-pass" name="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+    <div class="pass-wrap">
+      <input id="login-pass" name="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+      <button id="login-show" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+    </div>
     <button id="login-enter" type="submit">Log in</button>
     <p id="login-msg" role="alert"></p>
   </form>
