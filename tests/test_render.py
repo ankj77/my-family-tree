@@ -48,11 +48,6 @@ class TestAssetInlining(unittest.TestCase):
         self.assertNotIn("\nexport ", html)
 
 
-class TestClassicView(unittest.TestCase):
-    def test_classic_view_is_registered(self):
-        self.assertIn("FT.views.classic", _payload_html())
-
-
 class TestDetailSheet(unittest.TestCase):
     def test_sheet_markup_is_present(self):
         html = _payload_html()
@@ -60,18 +55,15 @@ class TestDetailSheet(unittest.TestCase):
         self.assertIn("FT.closeSheet", html)
 
 
-class TestHorizontalView(unittest.TestCase):
-    def test_horizontal_view_is_registered(self):
-        self.assertIn("FT.views.horizontal", _payload_html())
 
-
-class TestViewPicker(unittest.TestCase):
-    def test_picker_and_all_three_labels_present(self):
+class TestOrganicOnly(unittest.TestCase):
+    def test_only_the_organic_view_ships(self):
         html = _payload_html()
-        self.assertIn('id="view-picker"', html)
-        self.assertIn("Classic (top-down)", html)
-        self.assertIn("Left to right", html)
-        self.assertIn("Tree (organic)", html)
+        self.assertIn("FT.views.poster", html)
+        self.assertNotIn("FT.views.classic", html)
+        self.assertNotIn("FT.views.horizontal", html)
+        self.assertNotIn('id="view-picker"', html)
+        self.assertIn("FT.setView('poster');", html)
 
 
 class TestReadableDefaultDepth(unittest.TestCase):
@@ -158,7 +150,7 @@ class TestPosterView(unittest.TestCase):
 class TestPosterParentCards(unittest.TestCase):
     def test_every_view_declares_the_parents_card_style(self):
         html = _payload_html()
-        self.assertEqual(3, html.count("cardStyle: 'parents'"))
+        self.assertEqual(1, html.count("cardStyle: 'parents'"))
         self.assertIn("FT.drawParentCard", html)
 
     def test_the_card_carries_dates_and_place_when_recorded(self):
@@ -181,10 +173,10 @@ class TestPosterParentCards(unittest.TestCase):
         self.assertIn("2 * FT.CARD_W + FT.COUPLE_GAP", html)
         self.assertIn("'spouse-link'", html)
 
-    def test_the_root_art_is_shared_by_all_three_views(self):
+    def test_the_root_art_is_drawn_by_the_view(self):
         html = _payload_html()
         self.assertIn("FT.rootArt = function (parent, transform, groundSpin)", html)
-        self.assertEqual(3, html.count("FT.rootArt(g,"))
+        self.assertEqual(1, html.count("FT.rootArt(g,"))
 
 
 class TestPlaceholderHindiIsConditional(unittest.TestCase):
@@ -297,13 +289,12 @@ class TestFocusIsolatesTheLine(unittest.TestCase):
 
 
 class TestOrganicBranches(unittest.TestCase):
-    def test_the_flat_views_draw_curved_branches_with_leaves(self):
+    def test_the_tree_draws_curved_branches_with_leaves(self):
         html = _payload_html()
-        self.assertIn("FT.limb = function", html)
-        self.assertIn(".edge.branch{stroke:var(--bark)", html)
-        for view in ("classic", "horizontal"):
-            self.assertIn("FT.limb(g, c.id,", html)
-        self.assertNotIn("var busY = jy + FT.V_GAP / 2;", html)
+        self.assertIn(".poster-branch{fill:none;stroke:var(--bark)", html)
+        self.assertIn("p.setAttribute('class', 'edge poster-branch');", html)
+        self.assertIn("FT.leaves(g, id, FT.quadAt(x1, y1, mx, my, x2, y2), 7, 1);", html)
+        self.assertNotIn("FT.limb = function", html)
 
     def test_the_toggle_reads_plus_or_minus(self):
         html = _payload_html()
@@ -424,7 +415,7 @@ class TestHeaderAndControls(unittest.TestCase):
 
     def test_floating_controls_are_in_the_page(self):
         html = _payload_html()
-        for element_id in ("controls", "controls-toggle", "view-picker", "show-picker", "living-only",
+        for element_id in ("controls", "controls-toggle", "show-picker", "living-only",
                            "zoom-out", "zoom-fit", "zoom-in", "expand-all"):
             self.assertIn('id="%s"' % element_id, html)
         self.assertIn("FT.filters.livingKeep", html)

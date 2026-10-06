@@ -25,7 +25,7 @@ FT.boot = function (data) {
   FT.CARD_W = 250; FT.ROW_H = 52; FT.RAIL_W = 5; FT.AVATAR = 32;
   FT.H_GAP = 40; FT.V_GAP = 100;
 
-  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, grown: {}, only: null, picks: [], selected: null, highlighted: null };
+  FT.state = { lang: 'en', viewId: 'poster', collapsed: {}, grown: {}, only: null, picks: [], selected: null, highlighted: null };
   FT.OPEN_DEPTH = 4;
   FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
@@ -112,18 +112,6 @@ FT.boot = function (data) {
       }, g);
       e.style.fill = ramp[(k + Math.floor(h * 3)) % ramp.length];
     }
-  };
-
-  FT.limb = function (g, id, d, at, thickness) {
-    var p = FT.edge(g, d, id);
-    p.setAttribute('class', 'edge branch');
-    p.style.strokeWidth = thickness + 'px';
-    FT.leaves(g, id, at, 2, 0.62);
-    return p;
-  };
-
-  FT.limbWeight = function (n) {
-    return Math.max(2.2, Math.sqrt(FT.leafCount(n)) * 1.7);
   };
 
   FT.leafCount = function (n) {
@@ -751,7 +739,7 @@ FT.boot = function (data) {
 
   FT.render = function () {
     while (vp.firstChild) vp.removeChild(vp.firstChild);
-    var view = FT.views[FT.state.viewId] || FT.views.classic;
+    var view = FT.views[FT.state.viewId] || FT.views.poster;
     var owners = placeLayout();
     if (owners) {
       var grid = el('g', {}, vp);
@@ -834,7 +822,6 @@ FT.boot = function (data) {
   }, {passive:false});
   stage.addEventListener('touchend',function(e){ if(e.touches.length===0) touch=null; });
 
-  var VIEW_ORDER = ['classic', 'horizontal', 'poster'];
 
   FT.placeholderName = function (owner, gender) {
     var en = (owner.name || owner.name_hi || owner.id) +
@@ -866,8 +853,6 @@ FT.boot = function (data) {
     FT.state.viewId = id;
     FT.clearPicks();
     FT.state.depthCap = null;
-    try { localStorage.setItem('ft-view', id); } catch (e) {}
-    document.getElementById('view-picker').value = id;
     FT.render();
     FT.fit();
   };
@@ -907,17 +892,6 @@ FT.boot = function (data) {
     apply();
   };
 
-  function populateViewPicker() {
-    var sel = document.getElementById('view-picker');
-    VIEW_ORDER.forEach(function (id) {
-      if (!FT.views[id]) return;
-      var o = document.createElement('option');
-      o.value = id;
-      o.textContent = FT.views[id].label;
-      sel.appendChild(o);
-    });
-    sel.addEventListener('change', function () { FT.setView(sel.value); });
-  }
 
 
   var RANK_PREFIX = 0, RANK_SUBSTRING = 1, RANK_SUBSEQUENCE = 2;
@@ -1322,17 +1296,11 @@ FT.boot = function (data) {
   }
 
   FT.init = function () {
-    populateViewPicker();
     FT.collapseBelowOpenDepth();
     var savedLang = null;
     try { savedLang = localStorage.getItem('ft-lang'); } catch (e) {}
     if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;
     markLang();
-    var saved = null;
-    try { saved = localStorage.getItem('ft-view'); } catch (e) {}
-    var preferred = saved && FT.views[saved]
-      ? saved
-      : (window.innerWidth < 768 ? 'horizontal' : 'classic');
-    FT.setView(preferred);
+    FT.setView('poster');
   };
 };

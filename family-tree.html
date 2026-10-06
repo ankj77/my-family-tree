@@ -73,8 +73,6 @@
   #stage.grabbing{cursor:grabbing;}
   svg{width:100%;height:100%;display:block;}
   .edge{fill:none;stroke:var(--connector);stroke-width:1.25px;}
-  .edge.branch{stroke:var(--bark);stroke-linecap:round;}
-  .edge.branch.hl{stroke:var(--hl);}
   .edge.hl{stroke:var(--hl);stroke-width:2.5px;}
   .toggle{fill:var(--card);stroke:var(--bark);stroke-width:2px;cursor:pointer;
     pointer-events:none;}
@@ -290,7 +288,6 @@
   <div id="controls">
     <button id="controls-toggle" type="button" aria-label="View options" aria-expanded="false">⚙</button>
     <div id="controls-body">
-      <label class="ctl">View <select id="view-picker" aria-label="Tree view"></select></label>
       <label class="ctl">Show <select id="show-picker" aria-label="Who to show">
         <option value="all">Everyone</option>
         <option value="bloodline">Bloodline only</option>
@@ -342,7 +339,7 @@ FT.boot = function (data) {
   FT.CARD_W = 250; FT.ROW_H = 52; FT.RAIL_W = 5; FT.AVATAR = 32;
   FT.H_GAP = 40; FT.V_GAP = 100;
 
-  FT.state = { lang: 'en', viewId: 'classic', collapsed: {}, grown: {}, only: null, picks: [], selected: null, highlighted: null };
+  FT.state = { lang: 'en', viewId: 'poster', collapsed: {}, grown: {}, only: null, picks: [], selected: null, highlighted: null };
   FT.OPEN_DEPTH = 4;
   FT.state.depthCap = null;
   FT.nodes = []; FT.byId = {}; FT.parentOf = {};
@@ -429,18 +426,6 @@ FT.boot = function (data) {
       }, g);
       e.style.fill = ramp[(k + Math.floor(h * 3)) % ramp.length];
     }
-  };
-
-  FT.limb = function (g, id, d, at, thickness) {
-    var p = FT.edge(g, d, id);
-    p.setAttribute('class', 'edge branch');
-    p.style.strokeWidth = thickness + 'px';
-    FT.leaves(g, id, at, 2, 0.62);
-    return p;
-  };
-
-  FT.limbWeight = function (n) {
-    return Math.max(2.2, Math.sqrt(FT.leafCount(n)) * 1.7);
   };
 
   FT.leafCount = function (n) {
@@ -1068,7 +1053,7 @@ FT.boot = function (data) {
 
   FT.render = function () {
     while (vp.firstChild) vp.removeChild(vp.firstChild);
-    var view = FT.views[FT.state.viewId] || FT.views.classic;
+    var view = FT.views[FT.state.viewId] || FT.views.poster;
     var owners = placeLayout();
     if (owners) {
       var grid = el('g', {}, vp);
@@ -1151,7 +1136,6 @@ FT.boot = function (data) {
   }, {passive:false});
   stage.addEventListener('touchend',function(e){ if(e.touches.length===0) touch=null; });
 
-  var VIEW_ORDER = ['classic', 'horizontal', 'poster'];
 
   FT.placeholderName = function (owner, gender) {
     var en = (owner.name || owner.name_hi || owner.id) +
@@ -1183,8 +1167,6 @@ FT.boot = function (data) {
     FT.state.viewId = id;
     FT.clearPicks();
     FT.state.depthCap = null;
-    try { localStorage.setItem('ft-view', id); } catch (e) {}
-    document.getElementById('view-picker').value = id;
     FT.render();
     FT.fit();
   };
@@ -1224,17 +1206,6 @@ FT.boot = function (data) {
     apply();
   };
 
-  function populateViewPicker() {
-    var sel = document.getElementById('view-picker');
-    VIEW_ORDER.forEach(function (id) {
-      if (!FT.views[id]) return;
-      var o = document.createElement('option');
-      o.value = id;
-      o.textContent = FT.views[id].label;
-      sel.appendChild(o);
-    });
-    sel.addEventListener('change', function () { FT.setView(sel.value); });
-  }
 
 
   var RANK_PREFIX = 0, RANK_SUBSTRING = 1, RANK_SUBSEQUENCE = 2;
@@ -1639,162 +1610,13 @@ FT.boot = function (data) {
   }
 
   FT.init = function () {
-    populateViewPicker();
     FT.collapseBelowOpenDepth();
     var savedLang = null;
     try { savedLang = localStorage.getItem('ft-lang'); } catch (e) {}
     if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;
     markLang();
-    var saved = null;
-    try { saved = localStorage.getItem('ft-view'); } catch (e) {}
-    var preferred = saved && FT.views[saved]
-      ? saved
-      : (window.innerWidth < 768 ? 'horizontal' : 'classic');
-    FT.setView(preferred);
+    FT.setView('poster');
   };
-};
-
-FT.views.classic = {
-  id: 'classic',
-  label: 'Classic (top-down)',
-  nodeShape: 'box',
-  cardStyle: 'parents',
-  togglePos: function (n) { return { x: FT.jointX(n), y: FT.jointY(n) + 8 }; },
-  layout: function (root) {
-    var rowHeight = [];
-    (function measure(n, depth) {
-      rowHeight[depth] = Math.max(rowHeight[depth] || 0, FT.nodeH(n));
-      FT.visibleChildren(n).forEach(function (c) { measure(c, depth + 1); });
-    })(root, 0);
-    var rowTop = [0];
-    for (var d = 0; d < rowHeight.length; d++) {
-      rowTop[d + 1] = rowTop[d] + rowHeight[d] + FT.V_GAP;
-    }
-    var cursor = 0;
-    function shiftRight(n, dx) {
-      n.x += dx;
-      FT.visibleChildren(n).forEach(function (c) { shiftRight(c, dx); });
-    }
-    (function place(n, depth) {
-      n.depth = depth;
-      n.y = rowTop[depth];
-      var kids = FT.visibleChildren(n);
-      var start = cursor;
-      if (!kids.length) {
-        n.x = cursor + FT.H_GAP / 2;
-        cursor += FT.nodeW(n) + FT.H_GAP;
-        return;
-      }
-      kids.forEach(function (c) { place(c, depth + 1); });
-      var first = kids[0], last = kids[kids.length - 1];
-      var mid = (first.x + FT.jointX(first) + last.x + FT.jointX(last)) / 2;
-      n.x = mid - FT.jointX(n);
-      var room = start + FT.H_GAP / 2 - n.x;
-      if (room > 0) {
-        kids.forEach(function (c) { shiftRight(c, room); });
-        n.x += room;
-      }
-      cursor = Math.max(cursor, n.x + FT.nodeW(n) + FT.H_GAP / 2);
-    })(root, 0);
-    var cx = root.x + FT.jointX(root);
-    this.extentPad = {
-      minX: cx - 280, maxX: cx + 280,
-      minY: root.y - FT.ROOT_SCALE * (FT.ROOT_ART_LEN + 320), maxY: root.y
-    };
-  },
-  drawEdges: function (g, root) {
-    var s = FT.ROOT_SCALE;
-    FT.rootArt(g, 'translate(' + (root.x + FT.jointX(root)) + ',' +
-      (root.y - s * FT.ROOT_ART_LEN) + ') scale(' + s + ',' + (-s) + ')');
-    (function walk(n) {
-      var kids = FT.visibleChildren(n);
-      if (!kids.length) return;
-      var x1 = n.x + FT.jointX(n), y1 = n.y + FT.jointY(n);
-      kids.forEach(function (c) {
-        var x2 = c.x + FT.jointX(c), y2 = c.y;
-        var sway = (FT.hash01(c.id) - 0.5) * 30;
-        var ay = y1 + (y2 - y1) * 0.45, by = y2 - (y2 - y1) * 0.35;
-        var ax = x1 + sway, bx = x2 - sway;
-        FT.limb(g, c.id,
-          'M' + x1 + ',' + y1 + ' C' + ax + ',' + ay + ' ' + bx + ',' + by +
-          ' ' + x2 + ',' + y2,
-          FT.cubicAt(x1, y1, ax, ay, bx, by, x2, y2),
-          FT.limbWeight(c));
-        walk(c);
-      });
-    })(root);
-  }
-};
-
-FT.views.horizontal = {
-  id: 'horizontal',
-  label: 'Left to right',
-  nodeShape: 'box',
-  cardStyle: 'parents',
-  togglePos: function (n) { return { x: FT.nodeW(n) + 12, y: FT.jointY(n) - 2 }; },
-  layout: function (root) {
-    var cursor = 0;
-    var colW = [];
-    (function measure(n, depth) {
-      colW[depth] = Math.max(colW[depth] || 0, FT.nodeW(n));
-      FT.visibleChildren(n).forEach(function (c) { measure(c, depth + 1); });
-    })(root, 0);
-    var colX = [0];
-    for (var d = 0; d < colW.length; d++) colX[d + 1] = colX[d] + colW[d] + 90;
-    function shiftDown(n, dy) {
-      n.y += dy;
-      FT.visibleChildren(n).forEach(function (c) { shiftDown(c, dy); });
-    }
-    (function place(n, depth) {
-      n.depth = depth;
-      n.x = colX[depth];
-      var kids = FT.visibleChildren(n);
-      if (!kids.length) {
-        n.y = cursor;
-        cursor += FT.nodeH(n) + 48;
-        return;
-      }
-      var subtreeTop = cursor;
-      kids.forEach(function (c) { place(c, depth + 1); });
-      var first = kids[0], last = kids[kids.length - 1];
-      n.y = (first.y + FT.jointY(first) + last.y + FT.jointY(last)) / 2 - FT.jointY(n);
-      var dy = 0;
-      if (n.y < subtreeTop) {
-        dy = subtreeTop - n.y;
-        kids.forEach(function (c) { shiftDown(c, dy); });
-        n.y = subtreeTop;
-      }
-      cursor = Math.max(cursor + dy, n.y + FT.nodeH(n) + 48);
-    })(root, 0);
-    var cy = root.y + FT.jointY(root);
-    this.extentPad = {
-      minX: root.x - FT.ROOT_SCALE * (FT.ROOT_ART_LEN + 460), maxX: root.x,
-      minY: cy - FT.ROOT_SCALE * 280, maxY: cy + FT.ROOT_SCALE * 280
-    };
-  },
-  drawEdges: function (g, root) {
-    var s = FT.ROOT_SCALE;
-    FT.rootArt(g, 'translate(' + (root.x - s * FT.ROOT_ART_LEN) + ',' +
-      (root.y + FT.jointY(root)) + ') rotate(90) scale(' + s + ')',
-      'rotate(-90,0,24)');
-    (function walk(n) {
-      var kids = FT.visibleChildren(n);
-      if (!kids.length) return;
-      var x1 = n.x + FT.nodeW(n), y1 = n.y + FT.jointY(n);
-      kids.forEach(function (c) {
-        var x2 = c.x, y2 = c.y + FT.jointY(c);
-        var sway = (FT.hash01(c.id) - 0.5) * 30;
-        var ax = x1 + (x2 - x1) * 0.45, bx = x2 - (x2 - x1) * 0.35;
-        var ay = y1 + sway, by = y2 - sway;
-        FT.limb(g, c.id,
-          'M' + x1 + ',' + y1 + ' C' + ax + ',' + ay + ' ' + bx + ',' + by +
-          ' ' + x2 + ',' + y2,
-          FT.cubicAt(x1, y1, ax, ay, bx, by, x2, y2),
-          FT.limbWeight(c));
-        walk(c);
-      });
-    })(root);
-  }
 };
 
 FT.views.poster = {
