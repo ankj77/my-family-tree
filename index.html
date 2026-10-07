@@ -1927,13 +1927,12 @@ FT.views.poster = {
     life: [['living', 'Living'], ['deceased', 'Deceased']],
     status: [['', '—'], ['uncertain', 'Name uncertain'], ['needs-parent', 'Parent not known'], ['gap', 'Unknown generation']]
   };
-  var NEW_CHILD = ['name', 'name_hi', 'gender', 'born', 'life'];
-  var NEW_SPOUSE = ['name', 'name_hi', 'gender', 'born', 'life', 'family_id', 'father_name', 'mother_name',
-    'origin_village', 'origin_district', 'origin_state'];
   var EDIT_MOVE = ['father_id', 'mother_id', 'family_id'];
   var EDIT_ALL = ['name', 'name_hi', 'gender', 'life', 'born', 'died', 'status', 'sort_order',
     'address_line', 'address_locality', 'address_city', 'address_state', 'address_country',
     'origin_village', 'origin_district', 'origin_state', 'father_name', 'mother_name', 'note'];
+  var NEW_CHILD = EDIT_ALL.filter(function (n) { return n !== 'father_name' && n !== 'mother_name'; });
+  var NEW_SPOUSE = EDIT_ALL.concat(['family_id']);
 
   edit.editNames = function (canMove) {
     return canMove ? EDIT_ALL.concat(EDIT_MOVE) : EDIT_ALL.slice();
