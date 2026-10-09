@@ -200,7 +200,7 @@
           .then(function (r) { api.reloadAt(r.id); });
       }, back);
     } else if (kind === 'father') {
-      openForm(body, formHtml('Add the father of ' + nameOf(person), NEW_FATHER, { life: 'deceased' },
+      openForm(body, formHtml('Add the father of ' + nameOf(person), NEW_FATHER, { life: 'living' },
         { origin_village_id: edit.villageOptions(api.villages || []) }, 'Add'), function (values) {
         return api.call('POST', path + '/father', values).then(function (r) {
           location.assign(location.pathname + api.urlFor(r.family_id, person.id));
