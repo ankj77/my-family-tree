@@ -39,7 +39,7 @@ class TestRenderIndex(unittest.TestCase):
 class TestAssetInlining(unittest.TestCase):
     def test_css_and_js_are_inlined_not_linked(self):
         html = _payload_html()
-        self.assertNotIn("<link", html)
+        self.assertNotIn("stylesheet", html)
         self.assertNotIn("<script src=", html)
         self.assertIn('id="login"', html)
 

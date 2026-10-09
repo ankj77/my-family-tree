@@ -240,6 +240,11 @@
   #sheet .sheet-links a{color:var(--hl);}
   #login-enter{margin-top:12px;width:100%;min-height:48px;font-size:16px;cursor:pointer;
     background:var(--hl);color:#fff;border:0;font-family:var(--font);}
+  .install-app{min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--edge);
+    background:var(--card);color:var(--name-ink);font-size:14px;font-weight:600;cursor:pointer;
+    font-family:var(--font);box-shadow:var(--shadow-card);}
+  #login .install-app{margin-top:12px;width:100%;}
+  .install-app.hidden{display:none;}
   #login-msg{min-height:1.4em;margin:14px 0 0;font-size:14px;color:var(--warn);}
   #refresh{width:44px;height:44px;border-radius:50%;border:1px solid var(--edge);
     background:var(--card);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;

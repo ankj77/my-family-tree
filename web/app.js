@@ -1211,6 +1211,26 @@ FT.boot = function (data) {
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
   document.getElementById('refresh').addEventListener('click', function () { location.reload(); });
 
+  var installPrompt = null;
+  var installButtons = document.querySelectorAll('.install-app');
+  function showInstall(show) {
+    Array.prototype.forEach.call(installButtons, function (b) { b.classList.toggle('hidden', !show); });
+  }
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    installPrompt = e;
+    showInstall(true);
+  });
+  window.addEventListener('appinstalled', function () { installPrompt = null; showInstall(false); });
+  Array.prototype.forEach.call(installButtons, function (b) {
+    b.addEventListener('click', function () {
+      if (!installPrompt) return;
+      installPrompt.prompt();
+      installPrompt.userChoice.then(function () { installPrompt = null; showInstall(false); });
+    });
+  });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
   FT.zoomBy = function (f) {
     var r = stage.getBoundingClientRect();
     var mx = r.width / 2, my = r.height / 2;

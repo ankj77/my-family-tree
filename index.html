@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Family Roots</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F7F2E4">
+<link rel="icon" href="web/icons/icon-192.png">
+<link rel="apple-touch-icon" href="web/icons/apple-touch-icon.png">
 <style>:root{
   --canvas:#F7F2E4;
   --card:#FFFDF7;
@@ -246,6 +250,11 @@
   #sheet .sheet-links a{color:var(--hl);}
   #login-enter{margin-top:12px;width:100%;min-height:48px;font-size:16px;cursor:pointer;
     background:var(--hl);color:#fff;border:0;font-family:var(--font);}
+  .install-app{min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--edge);
+    background:var(--card);color:var(--name-ink);font-size:14px;font-weight:600;cursor:pointer;
+    font-family:var(--font);box-shadow:var(--shadow-card);}
+  #login .install-app{margin-top:12px;width:100%;}
+  .install-app.hidden{display:none;}
   #login-msg{min-height:1.4em;margin:14px 0 0;font-size:14px;color:var(--warn);}
   #refresh{width:44px;height:44px;border-radius:50%;border:1px solid var(--edge);
     background:var(--card);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;
@@ -264,6 +273,7 @@
       <button id="login-show" type="button" aria-label="Show password" aria-pressed="false">Show</button>
     </div>
     <button id="login-enter" type="submit">Log in</button>
+    <button class="install-app hidden" type="button">Install app on this phone</button>
     <p id="login-msg" role="alert"></p>
   </form>
 </div>
@@ -274,6 +284,7 @@
       <p id="who" class="who"></p>
     </div>
     <span id="top-actions">
+      <button class="install-app hidden" type="button">Install app</button>
       <button id="refresh" type="button" aria-label="Refresh" title="Refresh">↻</button>
     </span>
     <div class="menu-wrap">
@@ -1531,6 +1542,26 @@ FT.boot = function (data) {
 
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
   document.getElementById('refresh').addEventListener('click', function () { location.reload(); });
+
+  var installPrompt = null;
+  var installButtons = document.querySelectorAll('.install-app');
+  function showInstall(show) {
+    Array.prototype.forEach.call(installButtons, function (b) { b.classList.toggle('hidden', !show); });
+  }
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    installPrompt = e;
+    showInstall(true);
+  });
+  window.addEventListener('appinstalled', function () { installPrompt = null; showInstall(false); });
+  Array.prototype.forEach.call(installButtons, function (b) {
+    b.addEventListener('click', function () {
+      if (!installPrompt) return;
+      installPrompt.prompt();
+      installPrompt.userChoice.then(function () { installPrompt = null; showInstall(false); });
+    });
+  });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
   FT.zoomBy = function (f) {
     var r = stage.getBoundingClientRect();

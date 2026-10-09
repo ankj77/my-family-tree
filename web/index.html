@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Family Roots</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F7F2E4">
+<link rel="icon" href="web/icons/icon-192.png">
+<link rel="apple-touch-icon" href="web/icons/apple-touch-icon.png">
 <style>/*__CSS__*/</style>
 </head>
 <body>
@@ -17,6 +21,7 @@
       <button id="login-show" type="button" aria-label="Show password" aria-pressed="false">Show</button>
     </div>
     <button id="login-enter" type="submit">Log in</button>
+    <button class="install-app hidden" type="button">Install app on this phone</button>
     <p id="login-msg" role="alert"></p>
   </form>
 </div>
@@ -27,6 +32,7 @@
       <p id="who" class="who"></p>
     </div>
     <span id="top-actions">
+      <button class="install-app hidden" type="button">Install app</button>
       <button id="refresh" type="button" aria-label="Refresh" title="Refresh">↻</button>
     </span>
     <div class="menu-wrap">
