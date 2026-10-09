@@ -244,6 +244,7 @@ def person_extras(graph, access, pending, pid):
         "family_id": row.get("family_id"),
         "can_edit": can_edit,
         "can_move": access.is_admin_over(pid),
+        "can_add_father": can_edit and not row.get("father_id") and graph.tree_parent(pid) is None,
         "can_delete": mode if mode and not blocker else False,
         "delete_reason": blocker,
         "delete_pending": pid in pending,
@@ -350,6 +351,41 @@ def create_person():
     log(cur, actor, pid, "create", None, fields)
     commit_checked(cur)
     return jsonify(id=pid), 201
+
+
+@app.post("/people/<pid>/father")
+def add_father(pid):
+    actor, graph, access = context()
+    if pid not in graph.people:
+        raise ApiError(404, "No such person")
+    if not access.can_edit(pid):
+        raise ApiError(403, "You cannot edit %s" % name_of(graph, pid))
+    child = graph.people[pid]
+    if child.get("father_id"):
+        raise RuleError("%s already has a father" % name_of(graph, pid))
+    if graph.tree_parent(pid) is not None:
+        raise RuleError("%s is linked through the mother; add the father as her husband" % name_of(graph, pid))
+    fields = clean_person_fields(graph, body(), rules.EDIT_FIELDS)
+    cur = conn().cursor()
+    family_id = child.get("family_id")
+    if family_id is None:
+        village_id = child.get("origin_village_id")
+        if village_id is None:
+            raise RuleError("Set the home village of %s first; the new family needs a village" % name_of(graph, pid))
+        name = graph.villages[village_id]["name"]
+        family_id = naming.slug(name, set(graph.families), fallback="family")
+        db.insert_rows(cur, "families", [{"id": family_id, "village_id": village_id, "name": name}])
+        log(cur, actor, None, "family_create", None, {"family": family_id, "name": name, "village": village_id})
+    father = naming.slug(fields.get("name") or fields.get("name_hi") or "", set(graph.people))
+    fields.update(id=father, gender="male", family_id=family_id, status=child.get("status"), updated_by=actor)
+    db.insert_rows(cur, "people", [fields])
+    log(cur, actor, father, "create", None, fields)
+    change = {"father_id": father, "family_id": family_id, "status": None}
+    cur.execute("UPDATE people SET father_id=%s, family_id=%s, status=%s, updated_by=%s WHERE id=%s",
+                (father, family_id, None, actor, pid))
+    log(cur, actor, pid, "update", {k: child.get(k) for k in change}, change)
+    commit_checked(cur)
+    return jsonify(id=father, family_id=family_id), 201
 
 
 @app.patch("/people/<pid>")

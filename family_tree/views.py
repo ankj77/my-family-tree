@@ -66,13 +66,27 @@ def _person(graph: Graph, pid: str, relation, relation_id, as_spouse: bool) -> P
     )
 
 
-def family_people(graph: Graph, family_id: str) -> List[Person]:
+def _placed(graph: Graph, family_id: str) -> dict:
     members = [pid for pid, row in graph.people.items() if row.get("family_id") == family_id]
+    placed = {pid: graph.tree_parent(pid) for pid in members}
+    stack = list(members)
+    while stack:
+        parent = stack.pop()
+        for kid in graph.children_of(parent):
+            if kid not in placed:
+                placed[kid] = parent
+                stack.append(kid)
+    return placed
+
+
+def family_people(graph: Graph, family_id: str) -> List[Person]:
+    placed = _placed(graph, family_id)
+    members = [pid for pid in graph.people if pid in placed]
     member_set = set(members)
     root = graph.roots[family_id]
     people = []
     for pid in members:
-        parent = graph.tree_parent(pid)
+        parent = placed[pid]
         relation = None
         if parent is not None:
             relation = "father" if graph.people[pid].get("father_id") == parent else "mother"

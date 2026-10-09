@@ -1934,6 +1934,7 @@ FT.views.poster = {
     'origin_village_id', 'father_name', 'mother_name', 'note'];
   var NEW_CHILD = EDIT_ALL.filter(function (n) { return n !== 'father_name' && n !== 'mother_name'; });
   var NEW_SPOUSE = EDIT_ALL.concat(['family_id']);
+  var NEW_FATHER = EDIT_ALL.filter(function (n) { return n !== 'gender'; });
 
   edit.editNames = function (canMove) {
     return canMove ? EDIT_ALL.concat(EDIT_MOVE) : EDIT_ALL.slice();
@@ -1952,6 +1953,7 @@ FT.views.poster = {
       out.push('edit', 'child');
       if (!hasSpouse) out.push('spouse');
     }
+    if (p.can_add_father) out.push('father');
     if (p.delete_pending) out.push('pending');
     else if (p.can_delete === 'direct') out.push('delete');
     else if (p.can_delete === 'request') out.push('request');
@@ -2100,6 +2102,13 @@ FT.views.poster = {
         return api.call('POST', '/people', Object.assign({ as: 'spouse', spouse_id: person.id }, values))
           .then(function (r) { api.reloadAt(r.id); });
       }, back);
+    } else if (kind === 'father') {
+      openForm(body, formHtml('Add the father of ' + nameOf(person), NEW_FATHER, { life: 'deceased' },
+        { origin_village_id: edit.villageOptions(api.villages || []) }, 'Add'), function (values) {
+        return api.call('POST', path + '/father', values).then(function (r) {
+          location.assign(location.pathname + api.urlFor(r.family_id, person.id));
+        });
+      }, back);
     } else if (kind === 'delete' || kind === 'request') {
       var stay = person === node ? (FT.parentOf[node.id] || {}).id : node.id;
       var text = kind === 'delete' ? 'Delete ' + nameOf(person) + '? This cannot be undone.'
@@ -2119,7 +2128,7 @@ FT.views.poster = {
       return '<button type="button" disabled title="' + esc(person.delete_reason) + '">Delete</button>' +
         '<p class="sheet-why">' + esc(person.delete_reason) + '</p>';
     }
-    var labels = { edit: 'Edit', child: 'Add child', spouse: spouseLabel(person), 'delete': 'Delete', request: 'Request delete' };
+    var labels = { edit: 'Edit', child: 'Add child', spouse: spouseLabel(person), father: 'Add father', 'delete': 'Delete', request: 'Request delete' };
     return '<button type="button" data-act="' + kind + '">' + esc(labels[kind]) + '</button>';
   }
 

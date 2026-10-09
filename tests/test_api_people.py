@@ -118,6 +118,37 @@ class TestAdding(ApiCase):
 
 
 class TestEditing(ApiCase):
+    def test_add_father_of_married_in_husband_starts_a_tree_in_his_village(self):
+        self.login("jagdish")
+        kid = self.post("/people", {"as": "child", "parent_id": "neha", "name": "Kiran"}).get_json()["id"]
+        self.assertEqual(self.post("/people/vikram/father", {"name": "Dev"}).status_code, 409)
+        self.patch("/people/vikram", {"origin_village_id": "kakroi"})
+        r = self.post("/people/vikram/father", {"name": "Dev"})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        self.assertEqual(r.get_json()["family_id"], "kakroi")
+        tree = self.get("/families/kakroi/tree").get_json()["tree"]
+        self.assertEqual(tree["name"], "Dev")
+        self.assertEqual([c["id"] for c in tree["children"]], ["vikram"])
+        self.assertEqual([s["id"] for s in tree["children"][0]["spouses"]], ["neha"])
+        self.assertEqual([c["id"] for c in tree["children"][0]["children"]], [kid])
+        bakheta = self.get("/families/bakheta/tree").get_json()["tree"]
+        self.assertIsNotNone(find(bakheta, kid))
+        self.assertEqual(self.post("/people/vikram/father", {"name": "Again"}).status_code, 409)
+
+    def test_add_father_above_root_makes_him_root(self):
+        self.login("mohan")
+        r = self.post("/people/ram/father", {"name": "Dada"})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        self.assertEqual(self.get("/families/bakheta/tree").get_json()["tree"]["name"], "Dada")
+
+    def test_add_father_refused_when_linked_through_mother(self):
+        self.login("mohan")
+        kid = self.post("/people", {"as": "child", "parent_id": "neha", "name": "Kiran"}).get_json()["id"]
+        self.assertEqual(self.patch("/people/%s" % kid, {"father_id": None}).status_code, 200)
+        r = self.post("/people/%s/father" % kid, {"name": "X"})
+        self.assertEqual(r.status_code, 409)
+        self.assertIn("through the mother", r.get_json()["error"])
+
     def test_edit_and_log(self):
         self.login("jagdish")
         r = self.patch("/people/amit", {"born": "1990", "address_city": "Delhi"})
