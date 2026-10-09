@@ -610,6 +610,12 @@ def temporary_minutes(data):
     return minutes
 
 
+def temp_status(row):
+    if row["temp_minutes"]:
+        return {"unused_minutes": row["temp_minutes"]}
+    return {"ends": row["expires_at"].isoformat()}
+
+
 def unused_deadline():
     return now() + timedelta(hours=UNUSED_TEMP_LOGIN_HOURS)
 
@@ -631,9 +637,7 @@ def list_guests():
     _, _, access = context()
     require_global(access)
     cur.execute("SELECT username, expires_at, temp_minutes FROM guest_logins ORDER BY expires_at")
-    return jsonify([{"username": r["username"], "unused_minutes": r["temp_minutes"],
-                     "minutes_left": max(1, -(-int((r["expires_at"] - now()).total_seconds()) // 60))}
-                    for r in cur.fetchall()])
+    return jsonify([dict(temp_status(r), username=r["username"]) for r in cur.fetchall()])
 
 
 @app.post("/guests")
@@ -698,11 +702,11 @@ def list_accounts():
     _, graph, access = context()
     require_admin(access)
     names = usernames(cur)
-    cur.execute("SELECT person_id FROM accounts WHERE expires_at IS NOT NULL")
-    temporary = {r["person_id"] for r in cur.fetchall()}
+    cur.execute("SELECT person_id, expires_at, temp_minutes FROM accounts WHERE expires_at IS NOT NULL")
+    temporary = {r["person_id"]: temp_status(r) for r in cur.fetchall()}
     return jsonify([
         {"person_id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"),
-         "family_id": graph.home_family(pid), "username": names.get(pid), "temporary": pid in temporary,
+         "family_id": graph.home_family(pid), "username": names.get(pid), "temporary": temporary.get(pid),
          "relation": views.relation_text(graph, pid),
          "can_manage": access.can_manage_account(pid)}
         for pid, row in graph.people.items()

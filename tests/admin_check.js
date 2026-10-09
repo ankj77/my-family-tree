@@ -19,4 +19,8 @@ assert.deepStrictEqual(admin.tempLogin('neha', { username: 'guest1', password: '
 assert.deepStrictEqual(admin.guestLogin({ username: '', password: '', minutes: '5' }), { minutes: 5 });
 assert.strictEqual(admin.logPath('', 'logins'), '/change-log?limit=100&kind=logins');
 assert.strictEqual(admin.localTime('2026-10-09T10:53:00').length, 16);
+var t0 = Date.UTC(2026, 9, 9, 10, 0, 0);
+assert.strictEqual(admin.timeLeft('2026-10-09T10:04:32', t0), '4:32 left');
+assert.strictEqual(admin.timeLeft('2026-10-09T10:00:05', t0), '0:05 left');
+assert.strictEqual(admin.timeLeft('2026-10-09T09:59:00', t0), 'Ended');
 console.log('admin_check ok');

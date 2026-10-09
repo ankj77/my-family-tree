@@ -586,6 +586,25 @@
 
   var ACTIONS = { login: 'Logged in', logout: 'Logged out' };
 
+  admin.timeLeft = function (ends, nowMs) {
+    var seconds = Math.floor((new Date(ends + 'Z').getTime() - nowMs) / 1000);
+    if (seconds <= 0) return 'Ended';
+    var s = seconds % 60;
+    return Math.floor(seconds / 60) + ':' + (s < 10 ? '0' : '') + s + ' left';
+  };
+
+  function timer(status) {
+    if (!status) return '';
+    if (status.unused_minutes) return 'Not used yet: ' + status.unused_minutes + ' min after first login';
+    return '<span data-ends="' + esc(status.ends) + '">' + esc(admin.timeLeft(status.ends, Date.now())) + '</span>';
+  }
+
+  function tick() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ends]'), function (el) {
+      el.textContent = admin.timeLeft(el.getAttribute('data-ends'), Date.now());
+    });
+  }
+
   function api() { return FT.api; }
   function say(text) { document.getElementById('admin-msg').textContent = text; }
   function label(p) { return p ? (p.name || p.name_hi || p.id) : ''; }
@@ -651,7 +670,8 @@
             return '<tr data-search="' + esc(key) + '"><td>' + esc(a.name || a.name_hi) +
               (a.relation ? ' <span class="relation">(' + esc(a.relation) + ')</span>' : '') + '</td><td>' +
               esc(familyName(a.family_id)) + '</td><td class="uname">' + esc(a.username || '—') +
-              (a.temporary ? ' <span class="relation">(temporary)</span>' : '') + '</td><td>' + buttons + '</td></tr>';
+              (a.temporary ? ' <span class="relation">(temporary · ' + timer(a.temporary) + ')</span>' : '') +
+              '</td><td>' + buttons + '</td></tr>';
           }));
       });
     },
@@ -820,8 +840,7 @@
   function guestSection(guests) {
     if (!guests) return '';
     var rows = guests.length ? table(['Guest username', 'Time left', ''], guests.map(function (g) {
-      var left = g.unused_minutes ? 'Not used yet (' + g.unused_minutes + ' min after first login)' : g.minutes_left + ' min';
-      return '<tr><td>' + esc(g.username) + '</td><td>' + esc(left) + '</td><td>' +
+      return '<tr><td>' + esc(g.username) + '</td><td>' + timer(g) + '</td><td>' +
         '<button type="button" data-guest-remove="' + esc(g.username) + '">Remove</button></td></tr>';
     })) : '<p>No guest logins right now.</p>';
     return '<h3>Guest logins</h3><p class="relation">For people outside the family, e.g. a demo. ' +
@@ -913,6 +932,7 @@
     main = document.getElementById('main');
     main.addEventListener('click', onClick);
     main.addEventListener('submit', onSubmit);
+    setInterval(tick, 1000);
     api().call('GET', '/me').then(function (me) {
       state.me = me;
       if (!me.is_admin) { main.innerHTML = '<p>Only admins can open this page.</p>'; return null; }
