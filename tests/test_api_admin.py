@@ -176,6 +176,17 @@ class TestVillagesAndFamilies(ApiCase):
 
 
 class TestChangeLog(ApiCase):
+    def test_logins_and_logouts_are_logged_and_filtered(self):
+        self.login("amit")
+        self.post("/logout")
+        self.login("mohan")
+        logins = self.get("/change-log?kind=logins&person_id=amit").get_json()
+        self.assertEqual([e["action"] for e in logins], ["logout", "login"])
+        self.assertEqual(logins[0]["actor_id"], "amit")
+        self.patch("/people/amit", {"born": "1991"})
+        changes = self.get("/change-log?kind=changes&person_id=amit").get_json()
+        self.assertEqual([e["action"] for e in changes], ["update"])
+
     def test_admin_reads_log(self):
         self.login("mohan")
         self.patch("/people/amit", {"born": "1991"})

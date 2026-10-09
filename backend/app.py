@@ -219,6 +219,10 @@ def login():
     ends = min(now() + timedelta(days=SESSION_DAYS), account["expires_at"] or datetime.max)
     cur.execute("INSERT INTO %s (token_hash, %s, expires_at) VALUES (%%s, %%s, %%s)" % (sessions, key),
                 (auth.token_hash(token), who, ends))
+    if table == "accounts":
+        log(cur, who, who, "login")
+    else:
+        log(cur, GUEST_PREFIX + who, None, "login")
     conn().commit()
     response = jsonify(me_json(who) if table == "accounts" else guest_me_json(GUEST_PREFIX + who))
     _set_cookie(response, token, int((ends - now()).total_seconds()))
@@ -230,6 +234,14 @@ def logout():
     token = request.cookies.get(SESSION_COOKIE)
     if token:
         cur = conn().cursor()
+        cur.execute("SELECT person_id FROM sessions WHERE token_hash=%s", (auth.token_hash(token),))
+        row = cur.fetchone()
+        cur.execute("SELECT username FROM guest_sessions WHERE token_hash=%s", (auth.token_hash(token),))
+        guest = cur.fetchone()
+        if row:
+            log(cur, row["person_id"], row["person_id"], "logout")
+        elif guest:
+            log(cur, GUEST_PREFIX + guest["username"], None, "logout")
         cur.execute("DELETE FROM sessions WHERE token_hash=%s", (auth.token_hash(token),))
         cur.execute("DELETE FROM guest_sessions WHERE token_hash=%s", (auth.token_hash(token),))
         conn().commit()
@@ -917,12 +929,17 @@ def change_log():
     except ValueError:
         raise ApiError(400, "limit must be a number")
     person_id = request.args.get("person_id")
+    kind = request.args.get("kind")
     cur = conn().cursor()
     sql = "SELECT id, at, actor_id, person_id, action, before_json, after_json FROM change_log"
-    args = []
+    where, args = [], []
     if person_id:
-        sql += " WHERE person_id=%s"
+        where.append("person_id=%s")
         args.append(person_id)
+    if kind in ("logins", "changes"):
+        where.append("action %s IN ('login', 'logout')" % ("" if kind == "logins" else "NOT"))
+    if where:
+        sql += " WHERE " + " AND ".join(where)
     sql += " ORDER BY at DESC, id DESC LIMIT %d OFFSET %%s" % CHANGE_LOG_BATCH
     out = []
     offset = 0

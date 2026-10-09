@@ -17,4 +17,6 @@ assert.deepStrictEqual(admin.tempLogin('neha', { username: '', password: '', min
 assert.deepStrictEqual(admin.tempLogin('neha', { username: 'guest1', password: '123456', minutes: '15' }),
   { person_id: 'neha', temporary: true, minutes: 15, username: 'guest1', password: '123456' });
 assert.deepStrictEqual(admin.guestLogin({ username: '', password: '', minutes: '5' }), { minutes: 5 });
+assert.strictEqual(admin.logPath('', 'logins'), '/change-log?limit=100&kind=logins');
+assert.strictEqual(admin.localTime('2026-10-09T10:53:00').length, 16);
 console.log('admin_check ok');

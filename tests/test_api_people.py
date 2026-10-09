@@ -198,7 +198,7 @@ class TestEditing(ApiCase):
         r = self.patch("/people/amit", {"name": "", "name_hi": None})
         self.assertEqual(r.status_code, 409)
         self.assertEqual(self.query("SELECT name FROM people WHERE id='amit'")[0]["name"], "Amit")
-        self.assertEqual(self.query("SELECT COUNT(*) AS n FROM change_log")[0]["n"], 0)
+        self.assertEqual(self.query("SELECT COUNT(*) AS n FROM change_log WHERE action NOT IN ('login', 'logout')")[0]["n"], 0)
 
     def test_too_long_is_409(self):
         self.login("jagdish")

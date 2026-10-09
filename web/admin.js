@@ -26,14 +26,26 @@
     return where ? v.name + ' — ' + where : v.name;
   };
 
-  admin.logPath = function (personId) {
-    return '/change-log?limit=100' + (personId ? '&person_id=' + encodeURIComponent(personId) : '');
+  admin.logPath = function (personId, kind) {
+    return '/change-log?limit=100' + (personId ? '&person_id=' + encodeURIComponent(personId) : '') +
+      (kind ? '&kind=' + encodeURIComponent(kind) : '');
   };
+
+  admin.localTime = function (at) {
+    var d = new Date(at + 'Z');
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  };
+
+  var ACTIONS = { login: 'Logged in', logout: 'Logged out' };
 
   function api() { return FT.api; }
   function say(text) { document.getElementById('admin-msg').textContent = text; }
   function label(p) { return p ? (p.name || p.name_hi || p.id) : ''; }
-  function personName(id) { return label(state.byId[id]) || id; }
+  function personName(id) {
+    if (id && id.indexOf('guest:') === 0) return 'Guest ' + id.slice(6);
+    return label(state.byId[id]) || id;
+  }
 
   function familyName(id) {
     var name = '';
@@ -138,15 +150,19 @@
       return Promise.resolve(html);
     },
     log: function () {
-      return api().call('GET', admin.logPath(state.logPerson)).then(function (list) {
+      return api().call('GET', admin.logPath(state.logPerson, state.logKind)).then(function (list) {
         var options = [['', 'Everyone']].concat(state.people.map(function (p) { return [p.id, label(p)]; }));
         var filter = '<label>Person<select id="log-person">' + options.map(function (o) {
           return '<option value="' + esc(o[0]) + '"' + (o[0] === (state.logPerson || '') ? ' selected' : '') + '>' +
             esc(o[1]) + '</option>';
         }).join('') + '</select></label>';
+        var kinds = [['', 'Everything'], ['logins', 'Logins & logouts'], ['changes', 'Changes only']];
+        filter += '<label>What<select id="log-kind">' + kinds.map(function (o) {
+          return '<option value="' + o[0] + '"' + (o[0] === (state.logKind || '') ? ' selected' : '') + '>' + o[1] + '</option>';
+        }).join('') + '</select></label>';
         return filter + table(['When', 'Who', 'Person', 'What', 'Details'], list.map(function (e) {
-          return '<tr><td>' + esc(e.at.replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(personName(e.actor_id)) +
-            '</td><td>' + esc(e.person_id ? personName(e.person_id) : '') + '</td><td>' + esc(e.action) +
+          return '<tr><td>' + esc(admin.localTime(e.at)) + '</td><td>' + esc(personName(e.actor_id)) +
+            '</td><td>' + esc(e.person_id ? personName(e.person_id) : '') + '</td><td>' + esc(ACTIONS[e.action] || e.action) +
             '</td><td>' + esc(admin.describe(e)) + '</td></tr>';
         }));
       });
@@ -175,6 +191,13 @@
       if (logPerson) {
         logPerson.addEventListener('change', function () {
           state.logPerson = logPerson.value;
+          open('log');
+        });
+      }
+      var logKind = document.getElementById('log-kind');
+      if (logKind) {
+        logKind.addEventListener('change', function () {
+          state.logKind = logKind.value;
           open('log');
         });
       }
