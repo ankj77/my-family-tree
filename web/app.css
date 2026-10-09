@@ -34,7 +34,8 @@
   #toolbar .top-row{display:flex;align-items:center;gap:10px;}
   #toolbar .brand{flex:1 1 auto;min-width:0;}
   #toolbar .title{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;
-    line-height:1.15;color:var(--ink);}
+    line-height:1.15;color:#7A1F1F;display:flex;align-items:center;gap:8px;}
+  .brand-logo{width:44px;height:44px;flex:0 0 auto;mix-blend-mode:multiply;}
   #toolbar .who{margin:2px 0 0;min-height:1.3em;font-size:13px;color:var(--ink-muted);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   #top-actions{display:flex;gap:8px;}
@@ -215,6 +216,7 @@
   #login.hidden{display:none;}
   #login-form{width:100%;max-width:340px;background:var(--card);border-top:4px solid var(--hl);
     box-shadow:var(--shadow-card);padding:28px 24px;box-sizing:border-box;text-align:center;}
+  .login-logo{display:block;width:200px;max-width:70%;margin:-8px auto 4px;mix-blend-mode:multiply;}
   #login h1{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;color:var(--name-ink);}
   #login .login-hi{margin:2px 0 20px;color:var(--ink-muted);font-size:15px;}
   #login-form input{display:block;width:100%;box-sizing:border-box;font-size:17px;min-height:48px;

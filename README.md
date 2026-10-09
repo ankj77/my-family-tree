@@ -1,4 +1,4 @@
-# Family Roots
+# Jain Parivar Online
 
 The site is in two parts:
 

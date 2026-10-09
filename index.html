@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Family Roots</title>
+<title>Jain Parivar Online</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#F7F2E4">
 <link rel="icon" href="web/icons/icon-192.png">
@@ -44,7 +44,8 @@
   #toolbar .top-row{display:flex;align-items:center;gap:10px;}
   #toolbar .brand{flex:1 1 auto;min-width:0;}
   #toolbar .title{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;
-    line-height:1.15;color:var(--ink);}
+    line-height:1.15;color:#7A1F1F;display:flex;align-items:center;gap:8px;}
+  .brand-logo{width:44px;height:44px;flex:0 0 auto;mix-blend-mode:multiply;}
   #toolbar .who{margin:2px 0 0;min-height:1.3em;font-size:13px;color:var(--ink-muted);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   #top-actions{display:flex;gap:8px;}
@@ -225,6 +226,7 @@
   #login.hidden{display:none;}
   #login-form{width:100%;max-width:340px;background:var(--card);border-top:4px solid var(--hl);
     box-shadow:var(--shadow-card);padding:28px 24px;box-sizing:border-box;text-align:center;}
+  .login-logo{display:block;width:200px;max-width:70%;margin:-8px auto 4px;mix-blend-mode:multiply;}
   #login h1{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;color:var(--name-ink);}
   #login .login-hi{margin:2px 0 20px;color:var(--ink-muted);font-size:15px;}
   #login-form input{display:block;width:100%;box-sizing:border-box;font-size:17px;min-height:48px;
@@ -273,7 +275,8 @@
 <body>
 <div id="login" class="hidden">
   <form id="login-form">
-    <h1>Family Roots</h1>
+    <img class="login-logo" src="web/icons/logo.png" alt="">
+    <h1>Jain Parivar Online</h1>
     <p class="login-hi">परिवार वृक्ष</p>
     <input id="login-user" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Username" aria-label="Username">
     <div class="pass-wrap">
@@ -288,7 +291,7 @@
 <div id="toolbar">
   <div class="top-row">
     <div class="brand">
-      <h1 class="title">Family Roots</h1>
+      <h1 class="title"><img class="brand-logo" src="web/icons/emblem.png" alt="">Jain Parivar Online</h1>
       <p id="who" class="who"></p>
     </div>
     <span id="top-actions">

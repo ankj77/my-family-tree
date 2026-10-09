@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Family Roots Admin</title>
+<title>Jain Parivar Online · Admin</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#F7F2E4">
 <link rel="icon" href="web/icons/icon-192.png">
@@ -13,7 +13,8 @@
   body{display:block;overflow:auto;}
   #admin{max-width:960px;margin:0 auto;padding:16px;box-sizing:border-box;color:var(--ink);}
   #admin a{color:var(--hl);}
-  #admin h1{font-family:var(--serif);font-size:26px;margin:8px 0 12px;}
+  #admin h1{font-family:var(--serif);font-size:26px;margin:8px 0 12px;color:#7A1F1F;
+    display:flex;align-items:center;gap:8px;}
   #tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
   #tabs button{min-height:44px;padding:6px 14px;font-size:14px;cursor:pointer;border:1px solid var(--edge);
     background:var(--card);font-family:var(--font);}
@@ -38,7 +39,7 @@
 <body>
 <div id="admin">
   <p><a href="./">← Back to the tree</a></p>
-  <h1>Admin</h1>
+  <h1><img class="brand-logo" src="web/icons/emblem.png" alt="">Jain Parivar Online · Admin</h1>
   <nav id="tabs" aria-label="Admin sections"></nav>
   <div id="secret" class="secret" hidden></div>
   <p id="admin-msg" role="alert"></p>

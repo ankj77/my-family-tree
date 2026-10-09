@@ -195,7 +195,7 @@
       '<p class="secret-value">Username: <b>' + esc(r.username) + '</b><br>Password: <b>' + esc(r.password) + '</b></p>' +
       '<button type="button" id="secret-copy">Copy</button>';
     document.getElementById('secret-copy').addEventListener('click', function () {
-      var textValue = 'Family Roots login\nhttps://jainparivar.online\nUsername: ' + r.username + '\nPassword: ' + r.password;
+      var textValue = 'Jain Parivar Online login\nhttps://jainparivar.online\nUsername: ' + r.username + '\nPassword: ' + r.password;
       if (navigator.clipboard) navigator.clipboard.writeText(textValue);
       this.textContent = 'Copied';
     });
