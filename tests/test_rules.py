@@ -52,11 +52,17 @@ class TestCheck(unittest.TestCase):
             rows["people"].append(person("stray", family_id="bakheta", status="needs-parent"))
         check(graph_with(change))
 
-    def test_root_must_not_have_parent_in_family(self):
+    def test_root_is_the_eldest_and_moves_up_when_an_ancestor_is_linked(self):
         def change(rows):
-            rows["families"][0]["root_person_id"] = "jagdish"
-        with self.assertRaises(RuleError):
-            check(graph_with(change))
+            rows["people"].append(person("dada", family_id="bakheta", status="needs-parent"))
+        self.assertEqual(graph_with(change).roots["bakheta"], "ram")
+
+        def linked(rows):
+            change(rows)
+            rows["people"][0]["father_id"] = "dada"
+        graph = graph_with(linked)
+        self.assertEqual(graph.roots["bakheta"], "dada")
+        check(graph)
 
     def test_login_only_for_living(self):
         rows = sample_rows()

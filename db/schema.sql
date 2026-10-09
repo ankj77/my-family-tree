@@ -9,7 +9,6 @@ CREATE TABLE families (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   village_id VARCHAR(64) NOT NULL,
   name VARCHAR(200) NOT NULL,
-  root_person_id VARCHAR(64) NULL,
   CONSTRAINT fk_family_village FOREIGN KEY (village_id) REFERENCES villages(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
@@ -43,8 +42,6 @@ CREATE TABLE people (
   CONSTRAINT fk_person_father FOREIGN KEY (father_id) REFERENCES people(id) ON DELETE RESTRICT,
   CONSTRAINT fk_person_mother FOREIGN KEY (mother_id) REFERENCES people(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-
-ALTER TABLE families ADD CONSTRAINT fk_family_root FOREIGN KEY (root_person_id) REFERENCES people(id);
 
 CREATE TABLE marriages (
   husband_id VARCHAR(64) NOT NULL,

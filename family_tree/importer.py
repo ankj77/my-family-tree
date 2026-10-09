@@ -3,7 +3,7 @@ from family_tree.model import SPOUSE_RELATIONS, load_people
 from family_tree.validate import validate
 
 VILLAGE = {"id": "bakheta", "name": "Bakheta", "district": None, "state": "Haryana"}
-FAMILY = {"id": "bakheta", "village_id": "bakheta", "name": "Bakheta", "root_person_id": "ramkrishan"}
+FAMILY = {"id": "bakheta", "village_id": "bakheta", "name": "Bakheta"}
 
 
 def origin_village_ids(origins, villages):

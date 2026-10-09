@@ -58,7 +58,7 @@ def wipe(cur):
 
 def import_rows(cur, rows):
     insert_rows(cur, "villages", rows["villages"])
-    insert_rows(cur, "families", [dict(f, root_person_id=None) for f in rows["families"]])
+    insert_rows(cur, "families", rows["families"])
     for index, row in enumerate(rows["people"]):
         plain = dict(row, father_id=None, mother_id=None,
                      created_at=IMPORT_START + timedelta(microseconds=index))
@@ -68,9 +68,6 @@ def import_rows(cur, rows):
             cur.execute("UPDATE people SET father_id=%s, mother_id=%s WHERE id=%s",
                         (row["father_id"], row["mother_id"], row["id"]))
     insert_rows(cur, "marriages", [{"husband_id": h, "wife_id": w} for h, w in rows["marriages"]])
-    for family in rows["families"]:
-        cur.execute("UPDATE families SET root_person_id=%s WHERE id=%s",
-                    (family["root_person_id"], family["id"]))
 
 
 def load_graph(cur):
@@ -78,7 +75,7 @@ def load_graph(cur):
     people = cur.fetchall()
     cur.execute("SELECT husband_id, wife_id FROM marriages")
     marriages = [(r["husband_id"], r["wife_id"]) for r in cur.fetchall()]
-    cur.execute("SELECT id, village_id, name, root_person_id FROM families ORDER BY name, id")
+    cur.execute("SELECT id, village_id, name FROM families ORDER BY name, id")
     families = cur.fetchall()
     cur.execute("SELECT id, name, district, state FROM villages ORDER BY name, id")
     villages = cur.fetchall()

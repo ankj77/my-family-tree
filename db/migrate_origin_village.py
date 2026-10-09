@@ -46,7 +46,7 @@ def link(cur):
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Turn the origin text columns into a link to villages.")
     parser.add_argument("--drop-old", action="store_true",
-                        help="after the new API is live: drop origin_village, origin_district, origin_state")
+                        help="after the new API is live: drop the origin text columns and families.root_person_id")
     args = parser.parse_args(argv)
     cur = db.connect().cursor()
     have = columns(cur)
@@ -54,7 +54,12 @@ def main(argv=None) -> int:
         for column in OLD_COLUMNS:
             if column in have:
                 cur.execute("ALTER TABLE people DROP COLUMN %s" % column)
-        print("dropped the old origin columns")
+        cur.execute("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() "
+                    "AND TABLE_NAME = 'families' AND COLUMN_NAME = 'root_person_id'")
+        if cur.fetchone():
+            cur.execute("ALTER TABLE families DROP FOREIGN KEY fk_family_root")
+            cur.execute("ALTER TABLE families DROP COLUMN root_person_id")
+        print("dropped the old origin columns and families.root_person_id")
     elif "origin_village_id" in have:
         print("already migrated")
     else:

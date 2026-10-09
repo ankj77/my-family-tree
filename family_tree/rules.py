@@ -105,14 +105,7 @@ def check(graph: Graph) -> None:
                 % (display(people[husband]), display(people[wife]))
             )
     for family_id, family in graph.families.items():
-        root = family.get("root_person_id")
-        if root is None:
-            continue
-        if root not in people or people[root].get("family_id") != family_id:
-            raise RuleError("The root of the %s family must belong to it" % family["name"])
-        if graph.tree_parent(root) is not None:
-            raise RuleError("%s is the root of the %s family and cannot have a parent in it"
-                            % (display(people[root]), family["name"]))
+        root = graph.roots[family_id]
         for pid, row in people.items():
             if (row.get("family_id") == family_id and pid != root
                     and graph.tree_parent(pid) is None and row.get("status") != "needs-parent"):
@@ -125,8 +118,8 @@ def check(graph: Graph) -> None:
 
 def delete_blocker(graph: Graph, pid: str) -> Optional[str]:
     person = graph.people[pid]
-    for family in graph.families.values():
-        if family.get("root_person_id") == pid:
+    for family_id, family in graph.families.items():
+        if graph.roots[family_id] == pid:
             return "%s is the root of the %s family and cannot be deleted" % (display(person), family["name"])
     kids = graph.children_of(pid)
     if kids:

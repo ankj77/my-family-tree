@@ -24,7 +24,7 @@ def origin_of(graph: Graph, pid: str, seen=None) -> Tuple[dict, bool]:
         found, _ = origin_of(graph, father, seen)
         return found, bool(found)
     family = graph.families.get(row.get("family_id"))
-    if family and family.get("root_person_id") == pid:
+    if family and graph.roots[row["family_id"]] == pid:
         return village_place(graph.villages[family["village_id"]]), True
     return {}, False
 
@@ -69,13 +69,17 @@ def _person(graph: Graph, pid: str, relation, relation_id, as_spouse: bool) -> P
 def family_people(graph: Graph, family_id: str) -> List[Person]:
     members = [pid for pid, row in graph.people.items() if row.get("family_id") == family_id]
     member_set = set(members)
+    root = graph.roots[family_id]
     people = []
     for pid in members:
         parent = graph.tree_parent(pid)
         relation = None
         if parent is not None:
             relation = "father" if graph.people[pid].get("father_id") == parent else "mother"
-        people.append(_person(graph, pid, relation, parent, False))
+        person = _person(graph, pid, relation, parent, False)
+        if parent is None:
+            person.status = None if pid == root else "needs-parent"
+        people.append(person)
     wives = {wife for _, wife in graph.marriages}
     for pid in members:
         spouse = graph.spouse.get(pid)

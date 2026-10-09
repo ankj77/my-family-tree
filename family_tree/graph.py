@@ -25,6 +25,15 @@ class Graph:
             parent = self.tree_parent(pid)
             if parent is not None:
                 self.kids[parent].append(pid)
+        self.roots = {fid: self._eldest(fid) for fid in self.families}
+
+    def generations(self, pid: str) -> int:
+        return 1 + max((self.generations(k) for k in self.kids[pid]), default=0)
+
+    def _eldest(self, family_id: str) -> Optional[str]:
+        tops = [pid for pid, row in self.people.items()
+                if row.get("family_id") == family_id and self.tree_parent(pid) is None]
+        return max(tops, key=self.generations, default=None)
 
     def tree_parent(self, pid: str) -> Optional[str]:
         person = self.people[pid]

@@ -17,7 +17,8 @@ class TestImporter(unittest.TestCase):
         self.assertEqual(len(self.rows["people"]), 175)
         self.assertEqual(len(self.rows["marriages"]), 28)
         self.assertEqual(self.rows["villages"][0]["id"], "bakheta")
-        self.assertEqual(self.rows["families"][0]["root_person_id"], "ramkrishan")
+        graph = Graph(self.rows["people"], self.rows["marriages"], self.rows["families"], self.rows["villages"])
+        self.assertEqual(graph.roots["bakheta"], "ramkrishan")
 
     def test_rows_have_every_column(self):
         for row in self.rows["people"]:

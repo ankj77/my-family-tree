@@ -16,8 +16,8 @@ def sample_rows():
             {"id": "kakroi", "name": "Kakroi", "district": None, "state": None},
         ],
         "families": [
-            {"id": "bakheta", "village_id": "bakheta", "name": "Bakheta", "root_person_id": "ram"},
-            {"id": "pugthala", "village_id": "pugthala", "name": "Pugthala", "root_person_id": "bash"},
+            {"id": "bakheta", "village_id": "bakheta", "name": "Bakheta"},
+            {"id": "pugthala", "village_id": "pugthala", "name": "Pugthala"},
         ],
         "people": [
             person("ram", family_id="bakheta", gender="male", life="deceased", origin_village_id="bakheta"),

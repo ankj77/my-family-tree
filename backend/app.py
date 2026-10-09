@@ -266,8 +266,8 @@ def list_villages():
     out = []
     for village in graph.villages.values():
         families = [
-            {"id": f["id"], "name": f["name"], "root_person_id": f["root_person_id"],
-             "root_name": name_of(graph, f["root_person_id"])}
+            {"id": f["id"], "name": f["name"], "root_person_id": graph.roots[f["id"]],
+             "root_name": name_of(graph, graph.roots[f["id"]])}
             for f in graph.families.values() if f["village_id"] == village["id"]
         ]
         out.append(dict(village, families=families))
@@ -706,9 +706,8 @@ def create_family():
     fid = naming.slug(name, set(graph.families), fallback="family")
     pid = naming.slug(root_fields.get("name") or root_fields.get("name_hi") or "", set(graph.people))
     cur = conn().cursor()
-    db.insert_rows(cur, "families", [{"id": fid, "village_id": village_id, "name": name, "root_person_id": None}])
+    db.insert_rows(cur, "families", [{"id": fid, "village_id": village_id, "name": name}])
     db.insert_rows(cur, "people", [dict(root_fields, id=pid, family_id=fid, updated_by=actor)])
-    cur.execute("UPDATE families SET root_person_id=%s WHERE id=%s", (pid, fid))
     log(cur, actor, pid, "family_create", None, {"family": fid, "name": name, "village": village_id})
     commit_checked(cur)
     return jsonify(id=fid, root_person_id=pid), 201

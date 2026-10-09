@@ -24,7 +24,7 @@ class TestDb(DbCase):
         graph, grants = self.load(rows)
         self.assertEqual(graph.people, {r["id"]: r for r in rows["people"]})
         self.assertEqual(set(graph.marriages), set(rows["marriages"]))
-        self.assertEqual(graph.families["bakheta"]["root_person_id"], "ram")
+        self.assertEqual(graph.roots, {"bakheta": "ram", "pugthala": "bash"})
         self.assertEqual(list(graph.people), [r["id"] for r in rows["people"]])
         self.assertEqual(grants, [])
 
