@@ -238,3 +238,56 @@ class TestFinalFixes(ApiCase):
         entries = self.get("/change-log?limit=2").get_json()
         self.assertEqual(len(entries), 2)
         self.assertTrue(all(e["person_id"] == "bash" for e in entries))
+
+
+class TestGuests(ApiCase):
+    def make(self, data=None):
+        self.login("mohan")
+        r = self.post("/guests", data or {"minutes": 10})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        self.post("/logout")
+        return r.get_json()
+
+    def test_guest_sees_tree_without_addresses_and_cannot_change_anything(self):
+        self.query("UPDATE people SET address_city='Delhi', note='private' WHERE id='amit'")
+        made = self.make({"username": "demo1", "password": "135790", "minutes": 15})
+        self.assertEqual(made, {"username": "demo1", "password": "135790", "minutes": 15})
+        r = self.post("/login", {"username": "demo1", "password": "135790"})
+        self.assertEqual(r.status_code, 200, r.get_json())
+        self.assertTrue(r.get_json()["guest"])
+        self.assertTrue(self.get("/me").get_json()["guest"])
+        tree = self.get("/families/bakheta/tree").get_json()["tree"]
+        self.assertNotIn("Delhi", str(tree))
+        self.assertNotIn("private", str(tree))
+        self.assertEqual(self.post("/people", {"as": "child", "parent_id": "amit", "name": "X"}).status_code, 403)
+        self.assertEqual(self.patch("/people/amit", {"born": "1990"}).status_code, 403)
+        self.assertEqual(self.delete("/people/neha").status_code, 403)
+        self.assertEqual(self.post("/villages", {"name": "Fake"}).status_code, 403)
+        self.assertEqual(self.post("/me/password", {"old": "135790", "new": "111111"}).status_code, 403)
+        self.assertEqual(self.get("/accounts").status_code, 403)
+        self.assertEqual(self.get("/guests").status_code, 403)
+
+    def test_guest_login_expires_and_can_be_removed(self):
+        made = self.make()
+        self.assertTrue(made["username"].startswith("guest"))
+        self.assertEqual(len(made["password"]), 6)
+        self.assertEqual(self.post("/login", made).status_code, 200)
+        self.query("UPDATE guest_logins SET expires_at = UTC_TIMESTAMP() - INTERVAL 1 MINUTE")
+        self.query("UPDATE guest_sessions SET expires_at = UTC_TIMESTAMP() - INTERVAL 1 MINUTE")
+        self.assertEqual(self.get("/me").status_code, 401)
+        self.assertEqual(self.post("/login", made).status_code, 401)
+        second = self.make({"minutes": 5})
+        self.login("mohan")
+        self.assertEqual([g["username"] for g in self.get("/guests").get_json()], [second["username"]])
+        self.assertEqual(self.delete("/guests/" + second["username"]).status_code, 200)
+        self.assertEqual(self.get("/guests").get_json(), [])
+
+    def test_only_global_admin_and_names_do_not_clash(self):
+        self.login("bash")
+        self.assertEqual(self.post("/guests", {"minutes": 5}).status_code, 403)
+        self.post("/logout")
+        self.login("mohan")
+        self.assertEqual(self.post("/guests", {"username": "amit", "minutes": 5}).status_code, 409)
+        self.assertEqual(self.post("/guests", {"minutes": 20}).status_code, 409)
+        self.assertEqual(self.post("/guests", {"username": "demo2", "minutes": 5}).status_code, 201)
+        self.assertEqual(self.post("/accounts", {"person_id": "neha", "username": "demo2"}).status_code, 409)

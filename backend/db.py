@@ -11,7 +11,7 @@ from family_tree.graph import PERSON_COLUMNS, Graph
 
 SCHEMA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "db", "schema.sql")
 LOCAL_HOSTS = ("localhost", "127.0.0.1")
-WIPE_ORDER = ("change_log", "delete_requests", "sessions", "role_grants", "accounts",
+WIPE_ORDER = ("guest_sessions", "guest_logins", "change_log", "delete_requests", "sessions", "role_grants", "accounts",
               "marriages", "people", "families", "villages")
 IMPORT_START = datetime(2026, 1, 1)
 

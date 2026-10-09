@@ -82,6 +82,23 @@ CREATE TABLE sessions (
   CONSTRAINT fk_session_account FOREIGN KEY (person_id) REFERENCES accounts(person_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
+CREATE TABLE guest_logins (
+  username VARCHAR(64) NOT NULL PRIMARY KEY,
+  password_hash VARCHAR(200) NOT NULL,
+  failed_logins INT NOT NULL DEFAULT 0,
+  locked_until DATETIME NULL,
+  expires_at DATETIME NOT NULL,
+  created_by VARCHAR(64) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE guest_sessions (
+  token_hash CHAR(64) NOT NULL PRIMARY KEY,
+  username VARCHAR(64) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  CONSTRAINT fk_guest_session FOREIGN KEY (username) REFERENCES guest_logins(username) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
 CREATE TABLE delete_requests (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   person_id VARCHAR(64) NOT NULL,

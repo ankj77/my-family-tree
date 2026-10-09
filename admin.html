@@ -355,6 +355,7 @@
   };
 
   api.roleText = function (me) {
+    if (me.guest) return 'Guest (view only)';
     if (me.is_global) return 'Global admin';
     var scopes = me.roles.map(function (r) { return r.scope; });
     if (scopes.indexOf('village') >= 0) return 'Village admin';
@@ -504,7 +505,7 @@
     var name = me.name || me.name_hi || me.username;
     document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
     document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
-    menuItem('Change password', passwordSheet);
+    if (!me.guest) menuItem('Change password', passwordSheet);
     if (me.is_admin) menuItem('Admin', function () { location.assign('admin.html'); });
     menuItem('Log out', function () {
       api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
@@ -620,8 +621,10 @@
       });
     },
     accounts: function () {
-      return api().call('GET', '/accounts').then(function (list) {
-        return '<input id="acct-search" placeholder="Search living people" aria-label="Search living people">' +
+      var guests = state.me.is_global ? api().call('GET', '/guests') : Promise.resolve(null);
+      return Promise.all([api().call('GET', '/accounts'), guests]).then(function (r) {
+        var list = r[0];
+        return guestSection(r[1]) + '<h3>Family members</h3><input id="acct-search" placeholder="Search living people" aria-label="Search living people">' +
           table(['Person', 'Family', 'Username', ''], list.map(function (a) {
             var id = esc(a.person_id);
             var own = a.person_id === state.me.id;
@@ -777,23 +780,45 @@
     cell.querySelector('input').focus();
   }
 
-  function startTemp(button, id) {
-    var cell = button.closest('td');
-    cell.innerHTML = '<form data-form="temp" data-id="' + esc(id) + '" class="temp-form">' +
-      '<input name="username" autocomplete="off" placeholder="Username (optional)" aria-label="Username">' +
+  function tempFields() {
+    return '<input name="username" autocomplete="off" placeholder="Username (optional)" aria-label="Username">' +
       '<input name="password" autocomplete="off" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" ' +
       'placeholder="6-digit password (optional)" aria-label="Password">' +
       '<select name="minutes" aria-label="Lasts for">' + [5, 10, 15].map(function (m) {
         return '<option value="' + m + '">' + m + ' minutes</option>';
-      }).join('') + '</select>' +
+      }).join('') + '</select>';
+  }
+
+  function guestSection(guests) {
+    if (!guests) return '';
+    var rows = guests.length ? table(['Guest username', 'Time left', ''], guests.map(function (g) {
+      return '<tr><td>' + esc(g.username) + '</td><td>' + esc(g.minutes_left) + ' min</td><td>' +
+        '<button type="button" data-guest-remove="' + esc(g.username) + '">Remove</button></td></tr>';
+    })) : '<p>No guest logins right now.</p>';
+    return '<h3>Guest logins</h3><p class="relation">For people outside the family, e.g. a demo. ' +
+      'Guests can look at the trees but cannot change anything, and do not see addresses or notes.</p>' +
+      rows + '<form data-form="guest" class="temp-form">' + tempFields() +
+      '<button type="submit">Create guest login</button></form>';
+  }
+
+  admin.guestLogin = function (v) {
+    var out = { minutes: Number(v.minutes) };
+    if (v.username) out.username = v.username;
+    if (v.password) out.password = v.password;
+    return out;
+  };
+
+  function startTemp(button, id) {
+    var cell = button.closest('td');
+    cell.innerHTML = '<form data-form="temp" data-id="' + esc(id) + '" class="temp-form">' + tempFields() +
       '<button type="submit">Create</button> <button type="button" data-cancel>Cancel</button></form>';
     cell.querySelector('input').focus();
   }
 
   admin.tempLogin = function (id, v) {
-    var out = { person_id: id, temporary: true, minutes: Number(v.minutes) };
-    if (v.username) out.username = v.username;
-    if (v.password) out.password = v.password;
+    var out = admin.guestLogin(v);
+    out.person_id = id;
+    out.temporary = true;
     return out;
   };
 
@@ -811,6 +836,7 @@
     else if ((id = b.getAttribute('data-reset'))) done(api().call('POST', '/accounts/' + encodeURIComponent(id) + '/password', {}), showSecret, b);
     else if ((id = b.getAttribute('data-temp'))) startTemp(b, id);
     else if (b.hasAttribute('data-cancel')) open(state.tab);
+    else if ((id = b.getAttribute('data-guest-remove')) && armed(b)) done(api().call('DELETE', '/guests/' + encodeURIComponent(id)), null, b);
     else if ((id = b.getAttribute('data-remove')) && armed(b)) done(api().call('DELETE', '/accounts/' + encodeURIComponent(id)), null, b);
     else if ((id = b.getAttribute('data-revoke')) && armed(b)) done(api().call('DELETE', '/role-grants/' + id), null, b);
   }
@@ -823,6 +849,10 @@
     Array.prototype.forEach.call(form.elements, function (el) { if (el.name) v[el.name] = el.value.trim(); });
     var kind = form.getAttribute('data-form');
     var request;
+    if (kind === 'guest') {
+      done(api().call('POST', '/guests', admin.guestLogin(v)), showSecret, form.querySelector('button[type=submit]'));
+      return;
+    }
     if (kind === 'temp') {
       done(api().call('POST', '/accounts', admin.tempLogin(form.getAttribute('data-id'), v)), showSecret,
         form.querySelector('button[type=submit]'));

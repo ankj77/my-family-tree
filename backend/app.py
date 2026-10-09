@@ -20,6 +20,7 @@ TEMP_LOGIN_MINUTES = (5, 10, 15)
 CHANGE_LOG_BATCH = 500
 CHANGE_LOG_SCAN_MAX = 5000
 WRITE_METHODS = ("POST", "PATCH", "DELETE")
+GUEST_PREFIX = "guest:"
 DUMMY_HASH = "pbkdf2_sha256$200000$d8e709509b359ebae9b0587035ee4238$5b559c05ce4a45f434d9532f086df0e8e7943db549b71005cdf351362ed4bb4f"
 
 app = Flask(__name__)
@@ -129,9 +130,23 @@ def current_person():
     cur.execute("SELECT person_id FROM sessions WHERE token_hash=%s AND expires_at > %s",
                 (auth.token_hash(token), now()))
     row = cur.fetchone()
+    if row is not None:
+        return row["person_id"]
+    cur.execute("SELECT username FROM guest_sessions WHERE token_hash=%s AND expires_at > %s",
+                (auth.token_hash(token), now()))
+    row = cur.fetchone()
     if row is None:
         raise ApiError(401, "Please log in")
-    return row["person_id"]
+    return GUEST_PREFIX + row["username"]
+
+
+def is_guest(actor):
+    return actor.startswith(GUEST_PREFIX)
+
+
+def guest_me_json(actor):
+    return {"id": None, "name": "Guest", "name_hi": None, "username": actor[len(GUEST_PREFIX):], "roles": [],
+            "is_admin": False, "is_global": False, "home_family": None, "guest": True}
 
 
 def context():
@@ -173,31 +188,39 @@ def login():
     password = str(data.get("password") or "")
     cur = conn().cursor()
     purge_expired_accounts(cur)
-    cur.execute("SELECT person_id, password_hash, failed_logins, locked_until, expires_at FROM accounts WHERE username=%s",
-                (username,))
+    purge_expired_guests(cur)
+    table, key, sessions = "accounts", "person_id", "sessions"
+    cur.execute("SELECT person_id AS who, password_hash, failed_logins, locked_until, expires_at "
+                "FROM accounts WHERE username=%s", (username,))
     account = cur.fetchone()
+    if account is None:
+        table, key, sessions = "guest_logins", "username", "guest_sessions"
+        cur.execute("SELECT username AS who, password_hash, failed_logins, locked_until, expires_at "
+                    "FROM guest_logins WHERE username=%s", (username,))
+        account = cur.fetchone()
     if account is None:
         auth.check_hash(password, DUMMY_HASH)
         raise ApiError(401, "Wrong username or password")
     if account["locked_until"] and account["locked_until"] > now():
         raise ApiError(429, "Too many wrong passwords. Try again in %d minutes." % LOCK_MINUTES)
-    pid = account["person_id"]
+    who = account["who"]
     if not auth.check_hash(password, account["password_hash"]):
-        cur.execute("UPDATE accounts SET failed_logins = failed_logins + 1 WHERE person_id=%s", (pid,))
-        cur.execute("SELECT failed_logins FROM accounts WHERE person_id=%s", (pid,))
+        cur.execute("UPDATE %s SET failed_logins = failed_logins + 1 WHERE %s=%%s" % (table, key), (who,))
+        cur.execute("SELECT failed_logins FROM %s WHERE %s=%%s" % (table, key), (who,))
         if cur.fetchone()["failed_logins"] >= LOCK_AFTER:
-            cur.execute("UPDATE accounts SET locked_until=%s, failed_logins=0 WHERE person_id=%s",
-                        (now() + timedelta(minutes=LOCK_MINUTES), pid))
+            cur.execute("UPDATE %s SET locked_until=%%s, failed_logins=0 WHERE %s=%%s" % (table, key),
+                        (now() + timedelta(minutes=LOCK_MINUTES), who))
         conn().commit()
         raise ApiError(401, "Wrong username or password")
     token = auth.new_token()
-    cur.execute("UPDATE accounts SET failed_logins=0, locked_until=NULL WHERE person_id=%s", (pid,))
+    cur.execute("UPDATE %s SET failed_logins=0, locked_until=NULL WHERE %s=%%s" % (table, key), (who,))
     cur.execute("DELETE FROM sessions WHERE expires_at < %s", (now(),))
+    cur.execute("DELETE FROM guest_sessions WHERE expires_at < %s", (now(),))
     ends = min(now() + timedelta(days=SESSION_DAYS), account["expires_at"] or datetime.max)
-    cur.execute("INSERT INTO sessions (token_hash, person_id, expires_at) VALUES (%s, %s, %s)",
-                (auth.token_hash(token), pid, ends))
+    cur.execute("INSERT INTO %s (token_hash, %s, expires_at) VALUES (%%s, %%s, %%s)" % (sessions, key),
+                (auth.token_hash(token), who, ends))
     conn().commit()
-    response = jsonify(me_json(pid))
+    response = jsonify(me_json(who) if table == "accounts" else guest_me_json(GUEST_PREFIX + who))
     _set_cookie(response, token, int((ends - now()).total_seconds()))
     return response
 
@@ -208,6 +231,7 @@ def logout():
     if token:
         cur = conn().cursor()
         cur.execute("DELETE FROM sessions WHERE token_hash=%s", (auth.token_hash(token),))
+        cur.execute("DELETE FROM guest_sessions WHERE token_hash=%s", (auth.token_hash(token),))
         conn().commit()
     response = jsonify(status="logged out")
     _set_cookie(response, "", 0)
@@ -216,12 +240,15 @@ def logout():
 
 @app.get("/me")
 def me():
-    return jsonify(me_json(current_person()))
+    actor = current_person()
+    return jsonify(guest_me_json(actor) if is_guest(actor) else me_json(actor))
 
 
 @app.post("/me/password")
 def change_password():
     actor = current_person()
+    if is_guest(actor):
+        raise ApiError(403, "A guest login cannot change its password")
     data = body()
     old, new = str(data.get("old") or ""), str(data.get("new") or "")
     cur = conn().cursor()
@@ -290,13 +317,24 @@ def list_people():
 
 @app.get("/families/<family_id>/tree")
 def family_tree(family_id):
-    _, graph, access = context()
+    actor, graph, access = context()
     if family_id not in graph.families:
         raise ApiError(404, "No such family")
     cur = conn().cursor()
     cur.execute("SELECT person_id FROM delete_requests WHERE status='pending'")
     pending = {r["person_id"] for r in cur.fetchall()}
-    return jsonify(views.family_json(graph, family_id, lambda pid: person_extras(graph, access, pending, pid)))
+    data = views.family_json(graph, family_id, lambda pid: person_extras(graph, access, pending, pid))
+    if is_guest(actor):
+        for card in [data["tree"]] + data["unlinked"]:
+            hide_private(card)
+    return jsonify(data)
+
+
+def hide_private(card):
+    card.pop("address", None)
+    card.pop("note", None)
+    for other in card.get("spouses", []) + card.get("children", []):
+        hide_private(other)
 
 
 def child_links(graph, parent_id):
@@ -536,6 +574,80 @@ def usernames(cur):
     return {r["person_id"]: r["username"] for r in cur.fetchall()}
 
 
+def guest_usernames(cur):
+    cur.execute("SELECT username FROM guest_logins")
+    return {r["username"] for r in cur.fetchall()}
+
+
+def temporary_password(data):
+    password = str(data.get("password") or "") or auth.new_password()
+    if not auth.valid_password(password):
+        raise RuleError("The password must be exactly %d digits" % auth.PASSWORD_LENGTH)
+    return password
+
+
+def temporary_minutes(data):
+    minutes = data.get("minutes", TEMP_LOGIN_MINUTES[0])
+    if minutes not in TEMP_LOGIN_MINUTES:
+        raise RuleError("A temporary login lasts %s minutes" % " or ".join(map(str, TEMP_LOGIN_MINUTES)))
+    return minutes
+
+
+def purge_expired_guests(cur):
+    cur.execute("DELETE FROM guest_logins WHERE expires_at <= %s", (now(),))
+    conn().commit()
+
+
+def require_global(access):
+    if not access.is_global:
+        raise ApiError(403, "Only a global admin can manage guest logins")
+
+
+@app.get("/guests")
+def list_guests():
+    cur = conn().cursor()
+    purge_expired_guests(cur)
+    _, _, access = context()
+    require_global(access)
+    cur.execute("SELECT username, expires_at FROM guest_logins ORDER BY expires_at")
+    return jsonify([{"username": r["username"], "minutes_left": max(1, -(-int((r["expires_at"] - now()).total_seconds()) // 60))}
+                    for r in cur.fetchall()])
+
+
+@app.post("/guests")
+def create_guest():
+    actor, _, access = context()
+    require_global(access)
+    data = body()
+    cur = conn().cursor()
+    purge_expired_guests(cur)
+    taken = set(usernames(cur).values()) | guest_usernames(cur)
+    if data.get("username"):
+        username = clean_username(data["username"])
+        if username in taken:
+            raise RuleError("The username %s is taken" % username)
+    else:
+        username = naming.username("guest", taken)
+    minutes = temporary_minutes(data)
+    password = temporary_password(data)
+    db.insert_rows(cur, "guest_logins", [{"username": username, "password_hash": auth.make_hash(password),
+                                         "expires_at": now() + timedelta(minutes=minutes), "created_by": actor}])
+    log(cur, actor, None, "guest_create", None, {"username": username, "minutes": minutes})
+    conn().commit()
+    return jsonify(username=username, password=password, minutes=minutes), 201
+
+
+@app.delete("/guests/<username>")
+def delete_guest(username):
+    actor, _, access = context()
+    require_global(access)
+    cur = conn().cursor()
+    cur.execute("DELETE FROM guest_logins WHERE username=%s", (username,))
+    log(cur, actor, None, "guest_delete", {"username": username}, None)
+    conn().commit()
+    return jsonify(status="deleted")
+
+
 def require_admin(access):
     if not access.is_admin():
         raise ApiError(403, "Only admins can do this")
@@ -589,17 +701,13 @@ def create_account():
     if graph.people[pid].get("life") != "living":
         raise RuleError("Only living people get a login; mark %s as living first" % name_of(graph, pid))
     cur = conn().cursor()
-    taken = set(usernames(cur).values())
+    taken = set(usernames(cur).values()) | guest_usernames(cur)
     username = clean_username(data["username"]) if data.get("username") else naming.username(name_of(graph, pid), taken)
     if username in taken:
         raise RuleError("The username %s is taken" % username)
     temporary = data.get("temporary") is True
-    minutes = data.get("minutes", TEMP_LOGIN_MINUTES[0])
-    if temporary and minutes not in TEMP_LOGIN_MINUTES:
-        raise RuleError("A temporary login lasts %s minutes" % " or ".join(map(str, TEMP_LOGIN_MINUTES)))
-    password = data.get("password") if temporary and data.get("password") else auth.new_password()
-    if not auth.valid_password(str(password)):
-        raise RuleError("The password must be exactly %d digits" % auth.PASSWORD_LENGTH)
+    minutes = temporary_minutes(data) if temporary else None
+    password = temporary_password(data) if temporary else auth.new_password()
     expires_at = now() + timedelta(minutes=minutes) if temporary else None
     db.insert_rows(cur, "accounts", [{"person_id": pid, "username": username, "password_hash": auth.make_hash(password),
                                       "expires_at": expires_at}])
@@ -618,7 +726,7 @@ def rename_account(pid):
     username = clean_username(body().get("username"))
     cur = conn().cursor()
     names = usernames(cur)
-    if username in set(names.values()) - {names[pid]}:
+    if username in (set(names.values()) | guest_usernames(cur)) - {names[pid]}:
         raise RuleError("The username %s is taken" % username)
     cur.execute("UPDATE accounts SET username=%s WHERE person_id=%s", (username, pid))
     log(cur, actor, pid, "account_rename", {"username": names[pid]}, {"username": username})

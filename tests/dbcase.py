@@ -5,7 +5,7 @@ from urllib.parse import urlsplit
 from backend import db
 
 TEST_URL = os.environ.get("TEST_DATABASE_URL", "mysql://root@localhost/family_tree_test")
-TABLES = ("change_log", "delete_requests", "sessions", "role_grants", "accounts",
+TABLES = ("guest_sessions", "guest_logins", "change_log", "delete_requests", "sessions", "role_grants", "accounts",
           "marriages", "people", "families", "villages")
 
 

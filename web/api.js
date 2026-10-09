@@ -37,6 +37,7 @@
   };
 
   api.roleText = function (me) {
+    if (me.guest) return 'Guest (view only)';
     if (me.is_global) return 'Global admin';
     var scopes = me.roles.map(function (r) { return r.scope; });
     if (scopes.indexOf('village') >= 0) return 'Village admin';
@@ -186,7 +187,7 @@
     var name = me.name || me.name_hi || me.username;
     document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
     document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
-    menuItem('Change password', passwordSheet);
+    if (!me.guest) menuItem('Change password', passwordSheet);
     if (me.is_admin) menuItem('Admin', function () { location.assign('admin.html'); });
     menuItem('Log out', function () {
       api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
