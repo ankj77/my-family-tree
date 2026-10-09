@@ -24,6 +24,7 @@ class TestViewing(ApiCase):
         villages = self.get("/villages").get_json()
         self.assertEqual([v["id"] for v in villages], ["bakheta", "kakroi", "pugthala"])
         self.assertEqual(villages[0]["families"][0]["id"], "bakheta")
+        self.assertEqual(villages[0]["families"][0]["root_name"], "Ram")
         people = self.get("/people").get_json()
         self.assertEqual(len(people), 9)
         self.assertTrue(next(p for p in people if p["id"] == "amit")["has_account"])

@@ -389,21 +389,22 @@
     });
   }
 
+  api.treeLabel = function (village, family) {
+    return village.name + ' · ' + (family.root_name || family.name);
+  };
+
   function familySwitcher(villages, current) {
     var select = document.createElement('select');
     select.id = 'family-picker';
-    select.setAttribute('aria-label', 'Family');
-    villages.filter(function (v) { return v.families.length; }).forEach(function (v) {
-      var group = document.createElement('optgroup');
-      group.label = v.name;
+    select.setAttribute('aria-label', 'Family tree');
+    villages.forEach(function (v) {
       v.families.forEach(function (f) {
         var option = document.createElement('option');
         option.value = f.id;
-        option.textContent = f.name;
+        option.textContent = api.treeLabel(v, f);
         if (f.id === current) option.selected = true;
-        group.appendChild(option);
+        select.appendChild(option);
       });
-      select.appendChild(group);
     });
     select.addEventListener('change', function () {
       location.assign(location.pathname + api.urlFor(select.value));

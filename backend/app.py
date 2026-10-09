@@ -266,7 +266,8 @@ def list_villages():
     out = []
     for village in graph.villages.values():
         families = [
-            {"id": f["id"], "name": f["name"], "root_person_id": f["root_person_id"]}
+            {"id": f["id"], "name": f["name"], "root_person_id": f["root_person_id"],
+             "root_name": name_of(graph, f["root_person_id"])}
             for f in graph.families.values() if f["village_id"] == village["id"]
         ]
         out.append(dict(village, families=families))
