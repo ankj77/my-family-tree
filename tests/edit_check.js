@@ -43,6 +43,10 @@ edit.withHindi({ name: 'Kiran' }, {}, function () { return Promise.resolve(''); 
   assert.deepStrictEqual(v, { name: 'Kiran' });
 });
 
+assert.deepStrictEqual(edit.forLife({ life: 'living', died: '1990' }), { life: 'living', died: null });
+assert.deepStrictEqual(edit.forLife({ life: 'deceased', died: '1990' }), { life: 'deceased', died: '1990' });
+assert.deepStrictEqual(edit.forLife({ name: 'X' }), { name: 'X' });
+
 assert.strictEqual(edit.esc('<b a="1">&'), '&lt;b a=&quot;1&quot;&gt;&amp;');
 assert.strictEqual(edit.esc(null), '');
 console.log('edit_check ok');

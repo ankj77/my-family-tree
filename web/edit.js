@@ -1,7 +1,7 @@
 (function (edit) {
   var LABELS = {
     name: 'Name', name_hi: 'Hindi name', gender: 'Gender', life: 'Living or deceased',
-    born: 'Born', died: 'Died', status: 'Name status', sort_order: 'Order among brothers and sisters',
+    born: 'Born date', died: 'Died date', status: 'Name status', sort_order: 'Order among brothers and sisters',
     address_line: 'Address', address_locality: 'Locality', address_city: 'City',
     address_state: 'State', address_country: 'Living in India?', origin_village_id: 'Origin Village (Family Village name)',
     father_name: 'Father (name only)',
@@ -15,8 +15,8 @@
     status: [['', '—'], ['uncertain', 'Name uncertain'], ['needs-parent', 'Parent not known'], ['gap', 'Unknown generation']]
   };
   var EDIT_MOVE = ['father_id', 'mother_id', 'family_id'];
-  var EDIT_ALL = ['name', 'gender', 'origin_village_id', 'life', 'born', 'died',
-    'address_line', 'address_locality', 'address_city', 'address_state', 'address_country', 'note'];
+  var EDIT_ALL = ['name', 'gender', 'origin_village_id', 'life', 'address_country',
+    'address_line', 'address_locality', 'address_city', 'address_state', 'born', 'died', 'note'];
   var NEW_CHILD = EDIT_ALL;
   var NEW_SPOUSE = EDIT_ALL.concat(['family_id']);
   var NEW_FATHER = EDIT_ALL.filter(function (n) { return n !== 'gender'; });
@@ -111,9 +111,23 @@
     });
   };
 
+  edit.forLife = function (values) {
+    if (values.life === 'living' && 'died' in values) values.died = null;
+    return values;
+  };
+
+  function showDiedOnlyIfDeceased(form) {
+    var life = form.elements.life, died = form.elements.died;
+    if (!life || !died) return;
+    var sync = function () { died.closest('label').hidden = life.value !== 'deceased'; };
+    life.addEventListener('change', sync);
+    sync();
+  }
+
   function openForm(body, html, onSubmit, onCancel, before) {
     body.innerHTML = html;
     var form = body.querySelector('form');
+    showDiedOnlyIfDeceased(form);
     form.querySelector('[data-cancel]').addEventListener('click', onCancel);
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -121,7 +135,7 @@
       var submit = form.querySelector('button[type=submit]');
       msg.textContent = 'Saving…';
       submit.disabled = true;
-      edit.withHindi(readForm(form), before || {}, FT.api.hindi).then(onSubmit).catch(function (err) {
+      edit.withHindi(edit.forLife(readForm(form)), before || {}, FT.api.hindi).then(onSubmit).catch(function (err) {
         submit.disabled = false;
         msg.textContent = err.message;
       });
