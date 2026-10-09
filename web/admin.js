@@ -257,13 +257,16 @@
     cell.querySelector('input').focus();
   }
 
+  function minutesField() {
+    return '<select name="minutes" aria-label="Lasts for">' + [5, 10, 15].map(function (m) {
+      return '<option value="' + m + '">' + m + ' minutes</option>';
+    }).join('') + '</select>';
+  }
+
   function tempFields() {
     return '<input name="username" autocomplete="off" placeholder="Username (optional)" aria-label="Username">' +
       '<input name="password" autocomplete="off" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" ' +
-      'placeholder="6-digit password (optional)" aria-label="Password">' +
-      '<select name="minutes" aria-label="Lasts for">' + [5, 10, 15].map(function (m) {
-        return '<option value="' + m + '">' + m + ' minutes</option>';
-      }).join('') + '</select>';
+      'placeholder="6-digit password (optional)" aria-label="Password">' + minutesField();
   }
 
   function guestSection(guests) {
@@ -287,9 +290,10 @@
 
   function startTemp(button, id) {
     var cell = button.closest('td');
-    cell.innerHTML = '<form data-form="temp" data-id="' + esc(id) + '" class="temp-form">' + tempFields() +
+    cell.innerHTML = '<form data-form="temp" data-id="' + esc(id) + '" class="temp-form">' +
+      '<label class="relation">Lasts for ' + minutesField() + '</label>' +
       '<button type="submit">Create</button> <button type="button" data-cancel>Cancel</button></form>';
-    cell.querySelector('input').focus();
+    cell.querySelector('select').focus();
   }
 
   admin.tempLogin = function (id, v) {
