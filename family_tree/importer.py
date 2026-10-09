@@ -56,6 +56,7 @@ def rows_from_yaml(path: str) -> dict:
             "address_city": p.address.city,
             "address_state": p.address.state,
             "address_country": p.address.country,
+            "address_abroad": None,
             "origin_village_id": origin_id,
         }
         if p.relation == "father":

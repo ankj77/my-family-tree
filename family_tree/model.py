@@ -35,9 +35,10 @@ class Address:
     city: Optional[str] = None
     state: Optional[str] = None
     country: Optional[str] = None
+    abroad: Optional[str] = None
 
     def is_empty(self) -> bool:
-        return not any([self.line, self.locality, self.city, self.state, self.country])
+        return not any([self.line, self.locality, self.city, self.state, self.country, self.abroad])
 
     def as_dict(self) -> dict:
         return {
@@ -48,6 +49,7 @@ class Address:
                 ("city", self.city),
                 ("state", self.state),
                 ("country", self.country),
+                ("abroad", self.abroad),
             )
             if v
         }

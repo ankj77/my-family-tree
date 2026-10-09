@@ -43,9 +43,13 @@ edit.withHindi({ name: 'Kiran' }, {}, function () { return Promise.resolve(''); 
   assert.deepStrictEqual(v, { name: 'Kiran' });
 });
 
-assert.deepStrictEqual(edit.forLife({ life: 'living', died: '1990' }), { life: 'living', died: null });
-assert.deepStrictEqual(edit.forLife({ life: 'deceased', died: '1990' }), { life: 'deceased', died: '1990' });
-assert.deepStrictEqual(edit.forLife({ name: 'X' }), { name: 'X' });
+assert.deepStrictEqual(edit.tidy({ life: 'living', died: '1990' }), { life: 'living', died: null });
+assert.deepStrictEqual(edit.tidy({ life: 'deceased', died: '1990' }), { life: 'deceased', died: '1990' });
+assert.deepStrictEqual(edit.tidy({ name: 'X' }), { name: 'X' });
+assert.deepStrictEqual(edit.tidy({ address_country: 'India', address_city: 'Delhi', address_abroad: 'x' }),
+  { address_country: 'India', address_city: 'Delhi', address_abroad: null });
+assert.deepStrictEqual(edit.tidy({ address_country: 'Outside India', address_city: 'Delhi', address_state: 'Delhi', address_abroad: 'Toronto, Canada' }),
+  { address_country: 'Outside India', address_city: null, address_state: null, address_abroad: 'Toronto, Canada' });
 
 assert.strictEqual(edit.esc('<b a="1">&'), '&lt;b a=&quot;1&quot;&gt;&amp;');
 assert.strictEqual(edit.esc(null), '');

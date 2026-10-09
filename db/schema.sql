@@ -33,6 +33,7 @@ CREATE TABLE people (
   address_city VARCHAR(200) NULL,
   address_state VARCHAR(200) NULL,
   address_country VARCHAR(200) NULL,
+  address_abroad VARCHAR(500) NULL,
   origin_village_id VARCHAR(64) NULL,
   created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),

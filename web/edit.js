@@ -3,7 +3,7 @@
     name: 'Name', name_hi: 'Hindi name', gender: 'Gender', life: 'Living or deceased',
     born: 'Born date', died: 'Died date', status: 'Name status', sort_order: 'Order among brothers and sisters',
     address_line: 'Address', address_locality: 'Locality', address_city: 'City',
-    address_state: 'State', address_country: 'Living in India?', origin_village_id: 'Origin Village (Family Village name)',
+    address_state: 'State', address_country: 'Living in India?', address_abroad: 'Address outside India (with country)', origin_village_id: 'Origin Village (Family Village name)',
     father_name: 'Father (name only)',
     mother_name: 'Mother (name only)', note: 'Note', family_id: 'Born in family',
     father_id: 'Father', mother_id: 'Mother'
@@ -12,11 +12,18 @@
     gender: [['', '—'], ['male', 'Male'], ['female', 'Female']],
     life: [['living', 'Living'], ['deceased', 'Deceased']],
     address_country: [['', '—'], ['India', 'Yes, in India'], ['Outside India', 'No, outside India']],
+    address_state: [['', '—']].concat(['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
+      'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra',
+      'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+      'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands',
+      'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir', 'Ladakh',
+      'Lakshadweep', 'Puducherry'].map(function (s) { return [s, s]; })),
     status: [['', '—'], ['uncertain', 'Name uncertain'], ['needs-parent', 'Parent not known'], ['gap', 'Unknown generation']]
   };
   var EDIT_MOVE = ['father_id', 'mother_id', 'family_id'];
   var EDIT_ALL = ['name', 'gender', 'origin_village_id', 'life', 'address_country',
-    'address_line', 'address_locality', 'address_city', 'address_state', 'born', 'died', 'note'];
+    'address_line', 'address_locality', 'address_city', 'address_state', 'address_abroad', 'born', 'died', 'note'];
+  var INDIA_ADDRESS = ['address_line', 'address_locality', 'address_city', 'address_state'];
   var NEW_CHILD = EDIT_ALL;
   var NEW_SPOUSE = EDIT_ALL.concat(['family_id']);
   var NEW_FATHER = EDIT_ALL.filter(function (n) { return n !== 'gender'; });
@@ -84,7 +91,9 @@
           esc(c[1]) + '</option>';
       }).join('') + '</select></label>';
     }
-    if (name === 'note') return label + '<textarea name="note" rows="3">' + esc(v) + '</textarea></label>';
+    if (name === 'note' || name === 'address_abroad') {
+      return label + '<textarea name="' + name + '" rows="3">' + esc(v) + '</textarea></label>';
+    }
     return label + '<input type="' + (name === 'sort_order' ? 'number' : 'text') + '" name="' + name +
       '" value="' + esc(v) + '"></label>';
   }
@@ -111,23 +120,35 @@
     });
   };
 
-  edit.forLife = function (values) {
-    if (values.life === 'living' && 'died' in values) values.died = null;
+  function clear(values, names) {
+    names.forEach(function (n) { if (n in values) values[n] = null; });
+  }
+
+  edit.tidy = function (values) {
+    if (values.life === 'living') clear(values, ['died']);
+    if (values.address_country === 'India') clear(values, ['address_abroad']);
+    if (values.address_country === 'Outside India') clear(values, INDIA_ADDRESS);
     return values;
   };
 
-  function showDiedOnlyIfDeceased(form) {
-    var life = form.elements.life, died = form.elements.died;
-    if (!life || !died) return;
-    var sync = function () { died.closest('label').hidden = life.value !== 'deceased'; };
-    life.addEventListener('change', sync);
+  function showWhen(form, controller, wanted, names) {
+    var control = form.elements[controller];
+    if (!control) return;
+    var sync = function () {
+      names.forEach(function (n) {
+        if (form.elements[n]) form.elements[n].closest('label').hidden = control.value !== wanted;
+      });
+    };
+    control.addEventListener('change', sync);
     sync();
   }
 
   function openForm(body, html, onSubmit, onCancel, before) {
     body.innerHTML = html;
     var form = body.querySelector('form');
-    showDiedOnlyIfDeceased(form);
+    showWhen(form, 'life', 'deceased', ['died']);
+    showWhen(form, 'address_country', 'India', INDIA_ADDRESS);
+    showWhen(form, 'address_country', 'Outside India', ['address_abroad']);
     form.querySelector('[data-cancel]').addEventListener('click', onCancel);
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -135,7 +156,7 @@
       var submit = form.querySelector('button[type=submit]');
       msg.textContent = 'Saving…';
       submit.disabled = true;
-      edit.withHindi(edit.forLife(readForm(form)), before || {}, FT.api.hindi).then(onSubmit).catch(function (err) {
+      edit.withHindi(edit.tidy(readForm(form)), before || {}, FT.api.hindi).then(onSubmit).catch(function (err) {
         submit.disabled = false;
         msg.textContent = err.message;
       });

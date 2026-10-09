@@ -13,7 +13,7 @@ TEXT_FIELDS = {
         "address_line", "address_locality", "address_city", "address_state", "address_country",
     )
 }
-TEXT_FIELDS.update({"born": 100, "died": 100, "note": 2000})
+TEXT_FIELDS.update({"born": 100, "died": 100, "note": 2000, "address_abroad": 500})
 CHOICES = {
     "gender": {"male", "female"},
     "life": {"living", "deceased"},

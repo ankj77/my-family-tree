@@ -208,7 +208,7 @@ FT.boot = function (data) {
 
   var ADDRESS_ROWS = [
     ['line', 'Address'], ['locality', 'Locality'], ['city', 'City'],
-    ['state', 'State'], ['country', 'Country']
+    ['state', 'State'], ['country', 'Country'], ['abroad', 'Address abroad']
   ];
 
   function norm(s) { return (s || '').trim().toLowerCase(); }

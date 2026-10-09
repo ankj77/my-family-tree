@@ -3,7 +3,7 @@ from typing import Iterable, List, Optional, Set, Tuple
 PERSON_COLUMNS = (
     "id", "family_id", "father_id", "mother_id", "father_name", "mother_name",
     "name", "name_hi", "gender", "life", "born", "died", "status", "note", "sort_order",
-    "address_line", "address_locality", "address_city", "address_state", "address_country",
+    "address_line", "address_locality", "address_city", "address_state", "address_country", "address_abroad",
     "origin_village_id",
 )
 

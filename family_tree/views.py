@@ -60,6 +60,7 @@ def _person(graph: Graph, pid: str, relation, relation_id, as_spouse: bool) -> P
             city=row.get("address_city"),
             state=row.get("address_state"),
             country=row.get("address_country"),
+            abroad=row.get("address_abroad"),
         ),
         origin=origin,
         origin_inherited=inherited,
