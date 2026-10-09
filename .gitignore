@@ -19,3 +19,5 @@ admin-password.txt
 .vercel/
 .vercel
 .env*
+
+db/backups/
