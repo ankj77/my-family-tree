@@ -299,7 +299,7 @@ class TestOrganicBranches(unittest.TestCase):
 
     def test_the_toggle_reads_plus_or_minus(self):
         html = _payload_html()
-        self.assertIn("FT.kidsAt(n, n.depth || 0).length ? '\\u2212' : '+'", html)
+        self.assertIn("FT.kidsAt(n, n.depth || 0).length && !FT.hasHiddenKids(n) ? '\\u2212' : '+'", html)
 
 
 class TestPlaceOnTheCard(unittest.TestCase):
