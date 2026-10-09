@@ -37,6 +37,10 @@ FT.boot = function (data) {
     (n.children || []).forEach(function (c) { walk(c, n); });
   })(tree, null);
 
+  FT.top = function () {
+    return (FT.state.branch && FT.byId[FT.state.branch]) || tree;
+  };
+
   FT.depthOf = function (id) {
     var d = 0, c = FT.parentOf[id];
     while (c) { d++; c = FT.parentOf[c.id]; }
@@ -375,21 +379,20 @@ FT.boot = function (data) {
   FT.showBranch = function (id) {
     var top = FT.byId[id];
     if (!top || top === tree) return;
-    var keep = FT.lineage(id), deepest = 0;
-    (function down(n) {
-      keep[n.id] = true;
-      deepest = Math.max(deepest, FT.depthOf(n.id));
-      (n.children || []).forEach(down);
-    })(top);
+    var deepest = 0;
+    (function down(n, depth) {
+      deepest = Math.max(deepest, depth);
+      (n.children || []).forEach(function (c) { down(c, depth + 1); });
+    })(top, 0);
     FT.state.picks = [];
     FT.state.place = null;
     FT.state.branch = id;
-    FT.state.only = keep;
+    FT.state.only = null;
     FT.state.collapsed = {};
     FT.revealDepth(deepest + 1);
     FT.renderPicks();
     FT.render();
-    FT.fit(top);
+    FT.fit();
   };
 
   FT.showPicks = function () {
@@ -779,15 +782,16 @@ FT.boot = function (data) {
       apply();
       return;
     }
-    view.layout(tree);
+    var top = FT.top();
+    view.layout(top);
     var edges = el('g', {}, vp);
     var nodes = el('g', {}, vp);
     stage.setAttribute('data-view', view.id);
-    view.drawEdges(edges, tree);
+    view.drawEdges(edges, top);
     (function walk(n, depth) {
       FT.drawNode(nodes, n);
       FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
-    })(tree, 0);
+    })(top, 0);
     if (FT.state.picks.length) {
       clearHl();
       FT.state.picks.forEach(hlPath);
@@ -888,8 +892,8 @@ FT.boot = function (data) {
     FT.fit();
   };
 
-  FT.fit = function (from) {
-    var view = from ? {} : FT.views[FT.state.viewId];
+  FT.fit = function () {
+    var view = FT.views[FT.state.viewId];
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     var owners = placeLayout();
     if (owners) {
@@ -904,7 +908,7 @@ FT.boot = function (data) {
       minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
       minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
       FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
-    })(from || tree, from ? FT.depthOf(from.id) : 0);
+    })(FT.top(), 0);
     if (view.extentPad) {
       minX = Math.min(minX, view.extentPad.minX); maxX = Math.max(maxX, view.extentPad.maxX);
       minY = Math.min(minY, view.extentPad.minY); maxY = Math.max(maxY, view.extentPad.maxY);
