@@ -93,7 +93,8 @@ async function loggedInBoots() {
   assert.deepStrictEqual(booted, [{ tree: { id: 't' }, unlinked: [], summary: { total: 1 } }]);
   assert.strictEqual(inits, 1);
   assert.strictEqual(brand.children.length, 1);
-  assert.strictEqual(brand.children[0].id, 'family-picker');
+  assert.strictEqual(brand.children[0].id, 'tree-pick');
+  assert.strictEqual(brand.children[0].children[1].id, 'family-picker');
   assert.strictEqual(elements.who.textContent, 'Asha · Member');
   assert.strictEqual(elements.avatar.textContent, 'A');
   assert.deepStrictEqual(menuLabels(), ['Change password', 'Log out']);

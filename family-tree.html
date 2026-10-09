@@ -233,8 +233,16 @@
   #login-form .pass-wrap input{margin-top:0;padding-right:72px;}
   #login-show{position:absolute;right:2px;top:2px;bottom:2px;min-width:64px;border:0;background:transparent;
     color:var(--hl);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);}
-  #family-picker{margin-top:4px;min-height:36px;font-size:14px;font-family:var(--font);
-    border:1px solid var(--edge);background:var(--card);color:var(--ink);max-width:100%;}
+  #tree-pick{position:relative;display:inline-flex;align-items:center;margin-top:4px;min-height:40px;
+    padding:0 34px 0 12px;border:1px solid var(--edge);border-radius:8px;background:var(--card);
+    color:var(--ink);font-size:15px;max-width:100%;box-sizing:border-box;cursor:pointer;}
+  #tree-pick::after{content:"▾";position:absolute;right:12px;color:var(--ink-muted);pointer-events:none;}
+  #tree-pick b{color:var(--name-ink);font-weight:700;}
+  .tree-pick-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #family-picker{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
+    font-size:16px;font-family:var(--font);}
+  #family-picker:focus-visible{opacity:0;}
+  #tree-pick:focus-within{outline:2px solid var(--hl);outline-offset:2px;}
   #sheet .edit-form{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
   #sheet .edit-form label{display:flex;flex-direction:column;gap:2px;font-size:11px;font-weight:600;
     color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em;}
@@ -1859,7 +1867,18 @@ FT.views.poster = {
     return village.name + ' · ' + (family.root_name || family.name);
   };
 
+  api.treeLabelHtml = function (village, family) {
+    var esc = function (s) {
+      return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+    };
+    return '<b>' + esc(village.name) + '</b> · ' + esc(family.root_name || family.name);
+  };
+
   function familySwitcher(villages, current) {
+    var pick = document.createElement('label');
+    pick.id = 'tree-pick';
+    var shown = document.createElement('span');
+    shown.className = 'tree-pick-text';
     var select = document.createElement('select');
     select.id = 'family-picker';
     select.setAttribute('aria-label', 'Family tree');
@@ -1868,14 +1887,19 @@ FT.views.poster = {
         var option = document.createElement('option');
         option.value = f.id;
         option.textContent = api.treeLabel(v, f);
-        if (f.id === current) option.selected = true;
+        if (f.id === current) {
+          option.selected = true;
+          shown.innerHTML = api.treeLabelHtml(v, f);
+        }
         select.appendChild(option);
       });
     });
     select.addEventListener('change', function () {
       location.assign(location.pathname + api.urlFor(select.value));
     });
-    document.querySelector('#toolbar .brand').appendChild(select);
+    pick.appendChild(shown);
+    pick.appendChild(select);
+    document.querySelector('#toolbar .brand').appendChild(pick);
   }
 
   function menuItem(label, onClick) {

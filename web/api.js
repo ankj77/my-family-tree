@@ -103,7 +103,18 @@
     return village.name + ' · ' + (family.root_name || family.name);
   };
 
+  api.treeLabelHtml = function (village, family) {
+    var esc = function (s) {
+      return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+    };
+    return '<b>' + esc(village.name) + '</b> · ' + esc(family.root_name || family.name);
+  };
+
   function familySwitcher(villages, current) {
+    var pick = document.createElement('label');
+    pick.id = 'tree-pick';
+    var shown = document.createElement('span');
+    shown.className = 'tree-pick-text';
     var select = document.createElement('select');
     select.id = 'family-picker';
     select.setAttribute('aria-label', 'Family tree');
@@ -112,14 +123,19 @@
         var option = document.createElement('option');
         option.value = f.id;
         option.textContent = api.treeLabel(v, f);
-        if (f.id === current) option.selected = true;
+        if (f.id === current) {
+          option.selected = true;
+          shown.innerHTML = api.treeLabelHtml(v, f);
+        }
         select.appendChild(option);
       });
     });
     select.addEventListener('change', function () {
       location.assign(location.pathname + api.urlFor(select.value));
     });
-    document.querySelector('#toolbar .brand').appendChild(select);
+    pick.appendChild(shown);
+    pick.appendChild(select);
+    document.querySelector('#toolbar .brand').appendChild(pick);
   }
 
   function menuItem(label, onClick) {

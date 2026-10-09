@@ -33,6 +33,7 @@ assert.strictEqual(api.base('jainparivar.online'), 'https://api.jainparivar.onli
 
 assert.strictEqual(api.treeLabel({ name: 'Pathri' }, { name: 'Jain', root_name: 'Ram Lal' }), 'Pathri · Ram Lal');
 assert.strictEqual(api.treeLabel({ name: 'Pathri' }, { name: 'Jain', root_name: null }), 'Pathri · Jain');
+assert.strictEqual(api.treeLabelHtml({ name: 'A<b>' }, { name: 'X', root_name: 'Ram' }), '<b>A&lt;b&gt;</b> · Ram');
 assert.strictEqual(api.roleText({ is_global: true, roles: [] }), 'Global admin');
 assert.strictEqual(api.roleText({ is_global: false, roles: [{ scope: 'village' }] }), 'Village admin');
 assert.strictEqual(api.roleText({ is_global: false, roles: [{ scope: 'branch' }] }), 'Branch rep');
