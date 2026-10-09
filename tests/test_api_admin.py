@@ -38,6 +38,7 @@ class TestAccounts(ApiCase):
         self.assertLessEqual(int(r.headers["Set-Cookie"].split("Max-Age=")[1].split(";")[0]), 300)
         self.assertEqual(neha.get("/me", headers=ORIGIN).status_code, 200)
         self.assertIn("ends", status())
+        self.assertTrue(neha.get("/me", headers=ORIGIN).get_json()["login_ends"])
         self.query("UPDATE accounts SET expires_at = UTC_TIMESTAMP() - INTERVAL 1 MINUTE WHERE person_id='neha'")
         self.query("UPDATE sessions SET expires_at = UTC_TIMESTAMP() - INTERVAL 1 MINUTE WHERE person_id='neha'")
         self.assertEqual(neha.get("/me", headers=ORIGIN).status_code, 401)

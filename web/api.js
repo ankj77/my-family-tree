@@ -213,6 +213,12 @@
         familySwitcher(api.villages, api.familyId);
         accountMenu(me);
         api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
+        if (me.login_ends) {
+          setTimeout(function () {
+            api.call('POST', '/logout', {}).catch(function () {});
+            showLogin('Your temporary login has ended.');
+          }, Math.max(0, new Date(me.login_ends + 'Z').getTime() - Date.now()) + 1000);
+        }
         var person = param('person');
         if (person) FT.openPerson(person);
         else {

@@ -146,8 +146,18 @@ def is_guest(actor):
 
 
 def guest_me_json(actor):
-    return {"id": None, "name": "Guest", "name_hi": None, "username": actor[len(GUEST_PREFIX):], "roles": [],
-            "is_admin": False, "is_global": False, "home_family": None, "guest": True}
+    username = actor[len(GUEST_PREFIX):]
+    cur = conn().cursor()
+    cur.execute("SELECT expires_at, temp_minutes FROM guest_logins WHERE username=%s", (username,))
+    return {"id": None, "name": "Guest", "name_hi": None, "username": username, "roles": [],
+            "is_admin": False, "is_global": False, "home_family": None, "guest": True,
+            "login_ends": login_ends(cur.fetchone())}
+
+
+def login_ends(row):
+    if not row or row["temp_minutes"] or row["expires_at"] is None:
+        return None
+    return row["expires_at"].isoformat()
 
 
 def context():
@@ -160,13 +170,15 @@ def me_json(pid):
     cur = conn().cursor()
     graph, grants = db.load_graph(cur)
     access = Access(graph, grants, pid)
-    cur.execute("SELECT username FROM accounts WHERE person_id=%s", (pid,))
+    cur.execute("SELECT username, expires_at, temp_minutes FROM accounts WHERE person_id=%s", (pid,))
+    account = cur.fetchone()
     row = graph.people[pid]
     return {
         "id": pid,
         "name": row.get("name"),
         "name_hi": row.get("name_hi"),
-        "username": cur.fetchone()["username"],
+        "username": account["username"],
+        "login_ends": login_ends(account),
         "roles": [{"id": g["id"], "scope": g["scope"], "scope_id": g["scope_id"]} for g in access.mine],
         "is_admin": access.is_admin(),
         "is_global": access.is_global,
