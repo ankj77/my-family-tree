@@ -1290,7 +1290,10 @@ FT.boot = function (data) {
   markLang();
 
   document.getElementById('expand-all').addEventListener('click', FT.expandAll);
-  document.getElementById('refresh').addEventListener('click', function () { location.reload(); });
+  document.getElementById('refresh').addEventListener('click', function () {
+    var api = FT.api;
+    location.assign(location.pathname + (api && api.familyId ? api.urlFor(api.familyId) : ''));
+  });
 
   var installPrompt = null;
   var installButtons = document.querySelectorAll('.install-app');
@@ -1397,6 +1400,7 @@ FT.boot = function (data) {
   }
 
   FT.init = function () {
+    searchBox.value = '';
     FT.collapseBelowOpenDepth();
     var savedLang = null;
     try { savedLang = localStorage.getItem('ft-lang'); } catch (e) {}
