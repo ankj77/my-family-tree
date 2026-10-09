@@ -61,6 +61,7 @@ CREATE TABLE accounts (
   failed_logins INT NOT NULL DEFAULT 0,
   locked_until DATETIME NULL,
   expires_at DATETIME NULL,
+  temp_minutes INT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_account_username (username),
   CONSTRAINT fk_account_person FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE
@@ -88,6 +89,7 @@ CREATE TABLE guest_logins (
   failed_logins INT NOT NULL DEFAULT 0,
   locked_until DATETIME NULL,
   expires_at DATETIME NOT NULL,
+  temp_minutes INT NULL,
   created_by VARCHAR(64) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

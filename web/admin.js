@@ -214,7 +214,7 @@
   }
 
   admin.secretText = function (r) {
-    return 'Jain Parivar Online ' + (r.minutes ? 'temporary login (stops working in ' + r.minutes + ' minutes)' : 'login') +
+    return 'Jain Parivar Online ' + (r.minutes ? 'temporary login (works for ' + r.minutes + ' minutes after you log in)' : 'login') +
       '\nhttps://jainparivar.online\nUsername: ' + r.username + '\nPassword: ' + r.password;
   };
 
@@ -222,7 +222,8 @@
     var box = document.getElementById('secret');
     box.hidden = false;
     box.innerHTML = '<p>Send this to them now. The password is shown only once.' +
-      (r.minutes ? ' This login stops working ' + esc(r.minutes) + ' minutes from now.' : '') + '</p>' +
+      (r.minutes ? ' It works for ' + esc(r.minutes) + ' minutes from the first login; if nobody uses it, it expires in ' +
+        esc(r.unused_hours) + ' hours.' : '') + '</p>' +
       '<p class="secret-value">Username: <b>' + esc(r.username) + '</b><br>Password: <b>' + esc(r.password) + '</b></p>' +
       '<button type="button" id="secret-copy">Copy</button>';
     document.getElementById('secret-copy').addEventListener('click', function () {
@@ -272,7 +273,8 @@
   function guestSection(guests) {
     if (!guests) return '';
     var rows = guests.length ? table(['Guest username', 'Time left', ''], guests.map(function (g) {
-      return '<tr><td>' + esc(g.username) + '</td><td>' + esc(g.minutes_left) + ' min</td><td>' +
+      var left = g.unused_minutes ? 'Not used yet (' + g.unused_minutes + ' min after first login)' : g.minutes_left + ' min';
+      return '<tr><td>' + esc(g.username) + '</td><td>' + esc(left) + '</td><td>' +
         '<button type="button" data-guest-remove="' + esc(g.username) + '">Remove</button></td></tr>';
     })) : '<p>No guest logins right now.</p>';
     return '<h3>Guest logins</h3><p class="relation">For people outside the family, e.g. a demo. ' +

@@ -17,6 +17,7 @@ SESSION_DAYS = 30
 LOCK_AFTER = 5
 LOCK_MINUTES = 15
 TEMP_LOGIN_MINUTES = (5, 10, 15)
+UNUSED_TEMP_LOGIN_HOURS = 24
 CHANGE_LOG_BATCH = 500
 CHANGE_LOG_SCAN_MAX = 5000
 WRITE_METHODS = ("POST", "PATCH", "DELETE")
@@ -190,12 +191,12 @@ def login():
     purge_expired_accounts(cur)
     purge_expired_guests(cur)
     table, key, sessions = "accounts", "person_id", "sessions"
-    cur.execute("SELECT person_id AS who, password_hash, failed_logins, locked_until, expires_at "
+    cur.execute("SELECT person_id AS who, password_hash, failed_logins, locked_until, expires_at, temp_minutes "
                 "FROM accounts WHERE username=%s", (username,))
     account = cur.fetchone()
     if account is None:
         table, key, sessions = "guest_logins", "username", "guest_sessions"
-        cur.execute("SELECT username AS who, password_hash, failed_logins, locked_until, expires_at "
+        cur.execute("SELECT username AS who, password_hash, failed_logins, locked_until, expires_at, temp_minutes "
                     "FROM guest_logins WHERE username=%s", (username,))
         account = cur.fetchone()
     if account is None:
@@ -216,6 +217,10 @@ def login():
     cur.execute("UPDATE %s SET failed_logins=0, locked_until=NULL WHERE %s=%%s" % (table, key), (who,))
     cur.execute("DELETE FROM sessions WHERE expires_at < %s", (now(),))
     cur.execute("DELETE FROM guest_sessions WHERE expires_at < %s", (now(),))
+    if account["temp_minutes"]:
+        account["expires_at"] = now() + timedelta(minutes=account["temp_minutes"])
+        cur.execute("UPDATE %s SET expires_at=%%s, temp_minutes=NULL WHERE %s=%%s" % (table, key),
+                    (account["expires_at"], who))
     ends = min(now() + timedelta(days=SESSION_DAYS), account["expires_at"] or datetime.max)
     cur.execute("INSERT INTO %s (token_hash, %s, expires_at) VALUES (%%s, %%s, %%s)" % (sessions, key),
                 (auth.token_hash(token), who, ends))
@@ -605,6 +610,10 @@ def temporary_minutes(data):
     return minutes
 
 
+def unused_deadline():
+    return now() + timedelta(hours=UNUSED_TEMP_LOGIN_HOURS)
+
+
 def purge_expired_guests(cur):
     cur.execute("DELETE FROM guest_logins WHERE expires_at <= %s", (now(),))
     conn().commit()
@@ -621,8 +630,9 @@ def list_guests():
     purge_expired_guests(cur)
     _, _, access = context()
     require_global(access)
-    cur.execute("SELECT username, expires_at FROM guest_logins ORDER BY expires_at")
-    return jsonify([{"username": r["username"], "minutes_left": max(1, -(-int((r["expires_at"] - now()).total_seconds()) // 60))}
+    cur.execute("SELECT username, expires_at, temp_minutes FROM guest_logins ORDER BY expires_at")
+    return jsonify([{"username": r["username"], "unused_minutes": r["temp_minutes"],
+                     "minutes_left": max(1, -(-int((r["expires_at"] - now()).total_seconds()) // 60))}
                     for r in cur.fetchall()])
 
 
@@ -643,10 +653,11 @@ def create_guest():
     minutes = temporary_minutes(data)
     password = temporary_password(data)
     db.insert_rows(cur, "guest_logins", [{"username": username, "password_hash": auth.make_hash(password),
-                                         "expires_at": now() + timedelta(minutes=minutes), "created_by": actor}])
+                                         "expires_at": unused_deadline(), "temp_minutes": minutes,
+                                         "created_by": actor}])
     log(cur, actor, None, "guest_create", None, {"username": username, "minutes": minutes})
     conn().commit()
-    return jsonify(username=username, password=password, minutes=minutes), 201
+    return jsonify(username=username, password=password, minutes=minutes, unused_hours=UNUSED_TEMP_LOGIN_HOURS), 201
 
 
 @app.delete("/guests/<username>")
@@ -721,14 +732,15 @@ def create_account():
         raise RuleError("The username %s is taken" % username)
     minutes = temporary_minutes(data) if temporary else None
     password = temporary_password(data) if temporary else auth.new_password()
-    expires_at = now() + timedelta(minutes=minutes) if temporary else None
+    expires_at = unused_deadline() if temporary else None
     db.insert_rows(cur, "accounts", [{"person_id": pid, "username": username, "password_hash": auth.make_hash(password),
-                                      "expires_at": expires_at}])
+                                      "expires_at": expires_at, "temp_minutes": minutes}])
     log(cur, actor, pid, "account_create", None, {"username": username, "temporary": temporary})
     commit_checked(cur)
     out = {"username": username, "password": password}
     if temporary:
         out["minutes"] = minutes
+        out["unused_hours"] = UNUSED_TEMP_LOGIN_HOURS
     return jsonify(out), 201
 
 

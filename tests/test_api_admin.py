@@ -53,11 +53,15 @@ class TestAccounts(ApiCase):
         r = self.post("/accounts", {"person_id": "neha", "temporary": True, "minutes": 15,
                                     "username": "guest.neha", "password": "246810"})
         self.assertEqual(r.status_code, 201, r.get_json())
-        self.assertEqual(r.get_json(), {"username": "guest.neha", "password": "246810", "minutes": 15})
-        expires = self.query("SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), expires_at) AS s FROM accounts WHERE person_id='neha'")[0]["s"]
-        self.assertTrue(14 * 60 < expires <= 15 * 60)
+        self.assertEqual(r.get_json(), {"username": "guest.neha", "password": "246810", "minutes": 15, "unused_hours": 24})
+        left = "SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), expires_at) AS s FROM accounts WHERE person_id='neha'"
+        self.assertTrue(23 * 3600 < self.query(left)[0]["s"] <= 24 * 3600)
         self.post("/logout")
         self.assertEqual(self.post("/login", {"username": "guest.neha", "password": "246810"}).status_code, 200)
+        self.assertTrue(14 * 60 < self.query(left)[0]["s"] <= 15 * 60)
+        self.post("/logout")
+        self.assertEqual(self.post("/login", {"username": "guest.neha", "password": "246810"}).status_code, 200)
+        self.assertTrue(14 * 60 < self.query(left)[0]["s"] <= 15 * 60)
 
     def test_only_living(self):
         self.login("mohan")
@@ -263,7 +267,7 @@ class TestGuests(ApiCase):
     def test_guest_sees_tree_without_addresses_and_cannot_change_anything(self):
         self.query("UPDATE people SET address_city='Delhi', note='private' WHERE id='amit'")
         made = self.make({"username": "demo1", "password": "135790", "minutes": 15})
-        self.assertEqual(made, {"username": "demo1", "password": "135790", "minutes": 15})
+        self.assertEqual(made, {"username": "demo1", "password": "135790", "minutes": 15, "unused_hours": 24})
         r = self.post("/login", {"username": "demo1", "password": "135790"})
         self.assertEqual(r.status_code, 200, r.get_json())
         self.assertTrue(r.get_json()["guest"])
