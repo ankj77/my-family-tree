@@ -502,6 +502,26 @@
     });
   }
 
+  api.timeLeft = function (ends, nowMs) {
+    var seconds = Math.floor((new Date(ends + 'Z').getTime() - nowMs) / 1000);
+    if (seconds <= 0) return '';
+    var s = seconds % 60;
+    return Math.floor(seconds / 60) + ':' + (s < 10 ? '0' : '') + s + ' left';
+  };
+
+  function countDown(me) {
+    var who = document.getElementById('who');
+    var base = who.textContent;
+    var timer = setInterval(function () {
+      var left = api.timeLeft(me.login_ends, Date.now());
+      if (left) { who.textContent = base + ' · ' + left; return; }
+      clearInterval(timer);
+      who.textContent = base;
+      api.call('POST', '/logout', {}).catch(function () {});
+      showLogin('Your temporary login has ended.');
+    }, 1000);
+  }
+
   function accountMenu(me) {
     var name = me.name || me.name_hi || me.username;
     document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
@@ -532,12 +552,7 @@
         familySwitcher(api.villages, api.familyId);
         accountMenu(me);
         api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
-        if (me.login_ends) {
-          setTimeout(function () {
-            api.call('POST', '/logout', {}).catch(function () {});
-            showLogin('Your temporary login has ended.');
-          }, Math.max(0, new Date(me.login_ends + 'Z').getTime() - Date.now()) + 1000);
-        }
+        if (me.login_ends) countDown(me);
         var person = param('person');
         if (person) FT.openPerson(person);
         else {

@@ -38,6 +38,8 @@ assert.ok(api.hindiUrl('Ram Krishan').indexOf('text=Ram%20Krishan') > 0);
 assert.strictEqual(api.treeLabel({ name: 'Pathri' }, { name: 'Jain', root_name: 'Ram Lal' }), 'Pathri · Ram Lal');
 assert.strictEqual(api.treeLabel({ name: 'Pathri' }, { name: 'Jain', root_name: null }), 'Pathri · Jain');
 assert.strictEqual(api.treeLabelHtml({ name: 'A<b>' }, { name: 'X', root_name: 'Ram' }), '<b>A&lt;b&gt;</b> · Ram');
+assert.strictEqual(api.timeLeft('2026-10-09T10:04:32', Date.UTC(2026, 9, 9, 10, 0, 0)), '4:32 left');
+assert.strictEqual(api.timeLeft('2026-10-09T09:00:00', Date.UTC(2026, 9, 9, 10, 0, 0)), '');
 assert.strictEqual(api.roleText({ guest: true, is_global: false, roles: [] }), 'Guest (view only)');
 assert.strictEqual(api.roleText({ is_global: true, roles: [] }), 'Global admin');
 assert.strictEqual(api.roleText({ is_global: false, roles: [{ scope: 'village' }] }), 'Village admin');
