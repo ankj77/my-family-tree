@@ -21,6 +21,11 @@
     }).join('; ');
   };
 
+  admin.villageTitle = function (v) {
+    var where = [v.district && 'District ' + v.district, v.state && 'State ' + v.state].filter(Boolean).join(' · ');
+    return where ? v.name + ' — ' + where : v.name;
+  };
+
   admin.logPath = function (personId) {
     return '/change-log?limit=100' + (personId ? '&person_id=' + encodeURIComponent(personId) : '');
   };
@@ -107,10 +112,11 @@
     },
     families: function () {
       var html = state.villages.map(function (v) {
-        return '<h3>' + esc(v.name) + '</h3><ul>' + v.families.map(function (f) {
+        var families = v.families.length ? v.families.map(function (f) {
           return '<li><a href="./?family=' + encodeURIComponent(f.id) + '">' + esc(f.name) + '</a> — starts at ' +
             esc(personName(f.root_person_id)) + '</li>';
-        }).join('') + '</ul>';
+        }).join('') : '<li>No family tree yet</li>';
+        return '<h3>' + esc(admin.villageTitle(v)) + '</h3><ul>' + families + '</ul>';
       }).join('');
       if (state.me.is_global) {
         html += '<h3>Add a village</h3><form data-form="village" class="admin-form">' +
