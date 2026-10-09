@@ -351,6 +351,8 @@ def create_person():
     if kind == "spouse":
         husband, wife = (pid, anchor) if fields["gender"] == "male" else (anchor, pid)
         db.insert_rows(cur, "marriages", [{"husband_id": husband, "wife_id": wife}])
+        cur.execute("UPDATE people SET mother_id=%s WHERE father_id=%s AND mother_id IS NULL", (wife, husband))
+        cur.execute("UPDATE people SET father_id=%s WHERE mother_id=%s AND father_id IS NULL", (husband, wife))
     log(cur, actor, pid, "create", None, fields)
     commit_checked(cur)
     return jsonify(id=pid), 201

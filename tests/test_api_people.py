@@ -98,6 +98,15 @@ class TestAdding(ApiCase):
         again = self.post("/people", {"as": "spouse", "spouse_id": "amit", "name": "Other"})
         self.assertEqual(again.status_code, 409)
 
+    def test_wife_added_later_becomes_mother_of_his_children(self):
+        self.login("mohan")
+        dev = self.post("/people", {"as": "child", "parent_id": "ram", "name": "Dev", "gender": "male"}).get_json()["id"]
+        lone = self.post("/people", {"as": "child", "parent_id": dev, "name": "Lala"}).get_json()["id"]
+        self.assertIsNone(self.query("SELECT mother_id FROM people WHERE id=%s", (lone,))[0]["mother_id"])
+        r = self.post("/people", {"as": "spouse", "spouse_id": dev, "name": "Kamla"})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        self.assertEqual(self.query("SELECT mother_id FROM people WHERE id=%s", (lone,))[0]["mother_id"], r.get_json()["id"])
+
     def test_spouse_with_born_in_family_is_unlinked(self):
         self.login("mohan")
         r = self.post("/people", {"as": "spouse", "spouse_id": "amit", "name": "Pooja", "family_id": "pugthala"})
