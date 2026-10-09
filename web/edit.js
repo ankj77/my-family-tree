@@ -16,9 +16,8 @@
   };
   var EDIT_MOVE = ['father_id', 'mother_id', 'family_id'];
   var EDIT_ALL = ['name', 'gender', 'origin_village_id', 'life', 'born', 'died',
-    'address_line', 'address_locality', 'address_city', 'address_state', 'address_country',
-    'father_name', 'mother_name', 'note'];
-  var NEW_CHILD = EDIT_ALL.filter(function (n) { return n !== 'father_name' && n !== 'mother_name'; });
+    'address_line', 'address_locality', 'address_city', 'address_state', 'address_country', 'note'];
+  var NEW_CHILD = EDIT_ALL;
   var NEW_SPOUSE = EDIT_ALL.concat(['family_id']);
   var NEW_FATHER = EDIT_ALL.filter(function (n) { return n !== 'gender'; });
 
