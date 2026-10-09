@@ -736,7 +736,7 @@ def create_family():
         raise ApiError(404, "No such village")
     if not access.can_create_family(village_id):
         raise ApiError(403, "You cannot add families to this village")
-    name = required_text(data, "name", "Family name")
+    name = graph.villages[village_id]["name"]
     root = data.get("root") if isinstance(data.get("root"), dict) else {}
     root_fields = clean_person_fields(graph, root, rules.EDIT_FIELDS)
     fid = naming.slug(name, set(graph.families), fallback="family")
