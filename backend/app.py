@@ -16,6 +16,7 @@ SESSION_COOKIE = "ft_session"
 SESSION_DAYS = 30
 LOCK_AFTER = 5
 LOCK_MINUTES = 15
+TEMP_LOGIN_MINUTES = 5
 CHANGE_LOG_BATCH = 500
 CHANGE_LOG_SCAN_MAX = 5000
 WRITE_METHODS = ("POST", "PATCH", "DELETE")
@@ -171,7 +172,8 @@ def login():
     username = str(data.get("username") or "").strip().lower()
     password = str(data.get("password") or "")
     cur = conn().cursor()
-    cur.execute("SELECT person_id, password_hash, failed_logins, locked_until FROM accounts WHERE username=%s",
+    purge_expired_accounts(cur)
+    cur.execute("SELECT person_id, password_hash, failed_logins, locked_until, expires_at FROM accounts WHERE username=%s",
                 (username,))
     account = cur.fetchone()
     if account is None:
@@ -191,11 +193,12 @@ def login():
     token = auth.new_token()
     cur.execute("UPDATE accounts SET failed_logins=0, locked_until=NULL WHERE person_id=%s", (pid,))
     cur.execute("DELETE FROM sessions WHERE expires_at < %s", (now(),))
+    ends = min(now() + timedelta(days=SESSION_DAYS), account["expires_at"] or datetime.max)
     cur.execute("INSERT INTO sessions (token_hash, person_id, expires_at) VALUES (%s, %s, %s)",
-                (auth.token_hash(token), pid, now() + timedelta(days=SESSION_DAYS)))
+                (auth.token_hash(token), pid, ends))
     conn().commit()
     response = jsonify(me_json(pid))
-    _set_cookie(response, token, SESSION_DAYS * 86400)
+    _set_cookie(response, token, int((ends - now()).total_seconds()))
     return response
 
 
@@ -225,8 +228,8 @@ def change_password():
     cur.execute("SELECT password_hash FROM accounts WHERE person_id=%s", (actor,))
     if not auth.check_hash(old, cur.fetchone()["password_hash"]):
         raise ApiError(403, "The old password is wrong")
-    if len(new) < auth.MIN_LENGTH:
-        raise RuleError("The new password needs at least %d characters" % auth.MIN_LENGTH)
+    if not auth.valid_password(new):
+        raise RuleError("The new password must be exactly %d digits" % auth.PASSWORD_LENGTH)
     current = auth.token_hash(request.cookies.get(SESSION_COOKIE))
     cur.execute("UPDATE accounts SET password_hash=%s WHERE person_id=%s", (auth.make_hash(new), actor))
     cur.execute("DELETE FROM sessions WHERE person_id=%s AND token_hash<>%s", (actor, current))
@@ -543,14 +546,26 @@ def manageable(graph, access, pid):
         raise ApiError(403, "You cannot manage %s's login" % name_of(graph, pid))
 
 
+def purge_expired_accounts(cur):
+    cur.execute("SELECT person_id FROM accounts WHERE expires_at IS NOT NULL AND expires_at <= %s", (now(),))
+    for row in cur.fetchall():
+        cur.execute("DELETE FROM accounts WHERE person_id=%s", (row["person_id"],))
+        log(cur, row["person_id"], row["person_id"], "temporary_login_ended")
+    conn().commit()
+
+
 @app.get("/accounts")
 def list_accounts():
+    cur = conn().cursor()
+    purge_expired_accounts(cur)
     _, graph, access = context()
     require_admin(access)
-    names = usernames(conn().cursor())
+    names = usernames(cur)
+    cur.execute("SELECT person_id FROM accounts WHERE expires_at IS NOT NULL")
+    temporary = {r["person_id"] for r in cur.fetchall()}
     return jsonify([
         {"person_id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"),
-         "family_id": graph.home_family(pid), "username": names.get(pid),
+         "family_id": graph.home_family(pid), "username": names.get(pid), "temporary": pid in temporary,
          "relation": views.relation_text(graph, pid),
          "can_manage": access.can_manage_account(pid)}
         for pid, row in graph.people.items()
@@ -577,10 +592,16 @@ def create_account():
     if username in taken:
         raise RuleError("The username %s is taken" % username)
     password = auth.new_password()
-    db.insert_rows(cur, "accounts", [{"person_id": pid, "username": username, "password_hash": auth.make_hash(password)}])
-    log(cur, actor, pid, "account_create", None, {"username": username})
+    temporary = data.get("temporary") is True
+    expires_at = now() + timedelta(minutes=TEMP_LOGIN_MINUTES) if temporary else None
+    db.insert_rows(cur, "accounts", [{"person_id": pid, "username": username, "password_hash": auth.make_hash(password),
+                                      "expires_at": expires_at}])
+    log(cur, actor, pid, "account_create", None, {"username": username, "temporary": temporary})
     commit_checked(cur)
-    return jsonify(username=username, password=password), 201
+    out = {"username": username, "password": password}
+    if temporary:
+        out["minutes"] = TEMP_LOGIN_MINUTES
+    return jsonify(out), 201
 
 
 @app.patch("/accounts/<pid>")

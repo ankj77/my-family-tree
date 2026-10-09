@@ -59,6 +59,7 @@ CREATE TABLE accounts (
   password_hash VARCHAR(200) NOT NULL,
   failed_logins INT NOT NULL DEFAULT 0,
   locked_until DATETIME NULL,
+  expires_at DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_account_username (username),
   CONSTRAINT fk_account_person FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE

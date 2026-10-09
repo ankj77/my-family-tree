@@ -15,19 +15,10 @@
     return (match && match[1] && match[1][0]) || '';
   };
 
-  api.autoHindi = function (form, from, to) {
-    var source = form.elements[from], target = form.elements[to];
-    if (!source || !target) return;
-    var auto = !target.value;
-    target.addEventListener('input', function () { auto = !target.value; });
-    source.addEventListener('change', function () {
-      var text = source.value.trim();
-      if (!auto || !text) return;
-      fetch(api.hindiUrl(text)).then(function (r) { return r.json(); }).then(function (reply) {
-        var hindi = api.firstHindi(reply);
-        if (hindi && auto) target.value = hindi;
-      }).catch(function () {});
-    });
+  api.hindi = function (text) {
+    if (!text) return Promise.resolve('');
+    return fetch(api.hindiUrl(text)).then(function (r) { return r.json(); })
+      .then(api.firstHindi, function () { return ''; });
   };
 
   api.pickFamily = function (requested, stored, home, villages) {
@@ -176,7 +167,8 @@
     var body = document.getElementById('sheet-body');
     body.innerHTML = '<h3>Change password</h3><form id="pw-form" class="edit-form">' +
       '<label>Old password<input type="password" name="old" autocomplete="current-password" required></label>' +
-      '<label>New password<input type="password" name="new" autocomplete="new-password" minlength="8" required></label>' +
+      '<label>New password (6 digits)<input type="password" name="new" autocomplete="new-password" inputmode="numeric" ' +
+      'pattern="[0-9]{6}" minlength="6" maxlength="6" required></label>' +
       '<div class="form-buttons"><button type="submit">Save</button></div>' +
       '<p class="form-msg" role="alert"></p></form>';
     document.getElementById('sheet').classList.remove('hidden');

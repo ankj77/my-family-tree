@@ -89,13 +89,14 @@ class TestGuards(ApiCase):
 class TestOwnPassword(ApiCase):
     def test_change(self):
         self.login("amit")
-        self.assertEqual(self.post("/me/password", {"old": "bad", "new": "newpass99"}).status_code, 403)
-        self.assertEqual(self.post("/me/password", {"old": "pw-amit", "new": "short"}).status_code, 409)
-        self.assertEqual(self.post("/me/password", {"old": "pw-amit", "new": "newpass99"}).status_code, 200)
+        self.assertEqual(self.post("/me/password", {"old": "bad", "new": "482915"}).status_code, 403)
+        self.assertEqual(self.post("/me/password", {"old": "pw-amit", "new": "12345"}).status_code, 409)
+        self.assertEqual(self.post("/me/password", {"old": "pw-amit", "new": "newpass"}).status_code, 409)
+        self.assertEqual(self.post("/me/password", {"old": "pw-amit", "new": "482915"}).status_code, 200)
         self.assertEqual(self.get("/me").status_code, 200)
         self.post("/logout")
         self.assertEqual(self.post("/login", {"username": "amit", "password": "pw-amit"}).status_code, 401)
-        self.assertEqual(self.post("/login", {"username": "amit", "password": "newpass99"}).status_code, 200)
+        self.assertEqual(self.post("/login", {"username": "amit", "password": "482915"}).status_code, 200)
 
 
 class TestDummyHash(ApiCase):

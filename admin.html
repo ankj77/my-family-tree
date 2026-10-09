@@ -325,19 +325,10 @@
     return (match && match[1] && match[1][0]) || '';
   };
 
-  api.autoHindi = function (form, from, to) {
-    var source = form.elements[from], target = form.elements[to];
-    if (!source || !target) return;
-    var auto = !target.value;
-    target.addEventListener('input', function () { auto = !target.value; });
-    source.addEventListener('change', function () {
-      var text = source.value.trim();
-      if (!auto || !text) return;
-      fetch(api.hindiUrl(text)).then(function (r) { return r.json(); }).then(function (reply) {
-        var hindi = api.firstHindi(reply);
-        if (hindi && auto) target.value = hindi;
-      }).catch(function () {});
-    });
+  api.hindi = function (text) {
+    if (!text) return Promise.resolve('');
+    return fetch(api.hindiUrl(text)).then(function (r) { return r.json(); })
+      .then(api.firstHindi, function () { return ''; });
   };
 
   api.pickFamily = function (requested, stored, home, villages) {
@@ -486,7 +477,8 @@
     var body = document.getElementById('sheet-body');
     body.innerHTML = '<h3>Change password</h3><form id="pw-form" class="edit-form">' +
       '<label>Old password<input type="password" name="old" autocomplete="current-password" required></label>' +
-      '<label>New password<input type="password" name="new" autocomplete="new-password" minlength="8" required></label>' +
+      '<label>New password (6 digits)<input type="password" name="new" autocomplete="new-password" inputmode="numeric" ' +
+      'pattern="[0-9]{6}" minlength="6" maxlength="6" required></label>' +
       '<div class="form-buttons"><button type="submit">Save</button></div>' +
       '<p class="form-msg" role="alert"></p></form>';
     document.getElementById('sheet').classList.remove('hidden');
@@ -629,11 +621,13 @@
               ? '<button type="button" data-rename="' + id + '">Change username</button>' +
                 (own ? '' : ' <button type="button" data-reset="' + id + '">Reset password</button> ' +
                   '<button type="button" data-remove="' + id + '">Remove login</button>')
-              : '<button type="button" data-create="' + id + '">Create login</button>';
+              : '<button type="button" data-create="' + id + '">Create login</button> ' +
+                '<button type="button" data-temp="' + id + '">Temporary login (5 min)</button>';
             var key = [a.name, a.name_hi, a.relation, a.username].filter(Boolean).join(' ').toLowerCase();
             return '<tr data-search="' + esc(key) + '"><td>' + esc(a.name || a.name_hi) +
               (a.relation ? ' <span class="relation">(' + esc(a.relation) + ')</span>' : '') + '</td><td>' +
-              esc(familyName(a.family_id)) + '</td><td class="uname">' + esc(a.username || '—') + '</td><td>' + buttons + '</td></tr>';
+              esc(familyName(a.family_id)) + '</td><td class="uname">' + esc(a.username || '—') +
+              (a.temporary ? ' <span class="relation">(temporary)</span>' : '') + '</td><td>' + buttons + '</td></tr>';
           }));
       });
     },
@@ -672,7 +666,7 @@
       if (mine.length) {
         html += '<h3>Add new family tree</h3><form data-form="family" class="admin-form">' +
           select('village_id', 'Village', mine) +
-          text('root_name', 'Eldest known ancestor') + text('root_name_hi', 'Ancestor, Hindi name') +
+          text('root_name', 'Eldest known ancestor') +
           select('root_gender', 'Ancestor gender', [['male', 'Male'], ['female', 'Female']]) +
           '<button type="submit">Add new family tree</button></form>';
       }
@@ -712,8 +706,6 @@
     main.innerHTML = '<p>Loading…</p>';
     return tabs[state.tab]().then(function (html) {
       main.innerHTML = html;
-      var familyForm = main.querySelector('form[data-form="family"]');
-      if (familyForm) api().autoHindi(familyForm, 'root_name', 'root_name_hi');
       var logPerson = document.getElementById('log-person');
       if (logPerson) {
         logPerson.addEventListener('change', function () {
@@ -733,15 +725,20 @@
     }, function (err) { main.innerHTML = '<p class="form-msg">' + esc(err.message) + '</p>'; });
   }
 
+  admin.secretText = function (r) {
+    return 'Jain Parivar Online ' + (r.minutes ? 'temporary login (stops working in ' + r.minutes + ' minutes)' : 'login') +
+      '\nhttps://jainparivar.online\nUsername: ' + r.username + '\nPassword: ' + r.password;
+  };
+
   function showSecret(r) {
     var box = document.getElementById('secret');
     box.hidden = false;
-    box.innerHTML = '<p>Send this to them now. The password is shown only once.</p>' +
+    box.innerHTML = '<p>Send this to them now. The password is shown only once.' +
+      (r.minutes ? ' This login stops working ' + esc(r.minutes) + ' minutes from now.' : '') + '</p>' +
       '<p class="secret-value">Username: <b>' + esc(r.username) + '</b><br>Password: <b>' + esc(r.password) + '</b></p>' +
       '<button type="button" id="secret-copy">Copy</button>';
     document.getElementById('secret-copy').addEventListener('click', function () {
-      var textValue = 'Jain Parivar Online login\nhttps://jainparivar.online\nUsername: ' + r.username + '\nPassword: ' + r.password;
-      if (navigator.clipboard) navigator.clipboard.writeText(textValue);
+      if (navigator.clipboard) navigator.clipboard.writeText(admin.secretText(r));
       this.textContent = 'Copied';
     });
   }
@@ -784,6 +781,7 @@
     else if ((id = b.getAttribute('data-rename'))) startRename(b, id);
     else if ((id = b.getAttribute('data-create'))) done(api().call('POST', '/accounts', { person_id: id }), showSecret, b);
     else if ((id = b.getAttribute('data-reset'))) done(api().call('POST', '/accounts/' + encodeURIComponent(id) + '/password', {}), showSecret, b);
+    else if ((id = b.getAttribute('data-temp'))) done(api().call('POST', '/accounts', { person_id: id, temporary: true }), showSecret, b);
     else if ((id = b.getAttribute('data-remove')) && armed(b)) done(api().call('DELETE', '/accounts/' + encodeURIComponent(id)), null, b);
     else if ((id = b.getAttribute('data-revoke')) && armed(b)) done(api().call('DELETE', '/role-grants/' + id), null, b);
   }
@@ -806,9 +804,11 @@
     } else if (kind === 'village') {
       request = api().call('POST', '/villages', { name: v.name, district: v.district || null, state: v.state || null });
     } else {
-      request = api().call('POST', '/families', {
-        village_id: v.village_id,
-        root: { name: v.root_name || null, name_hi: v.root_name_hi || null, gender: v.root_gender }
+      request = api().hindi(v.root_name).then(function (hindi) {
+        return api().call('POST', '/families', {
+          village_id: v.village_id,
+          root: { name: v.root_name || null, name_hi: hindi || null, gender: v.root_gender }
+        });
       });
     }
     done(request, function () { say('Saved.'); }, form.querySelector('button[type=submit]'));

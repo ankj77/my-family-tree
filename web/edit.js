@@ -3,7 +3,7 @@
     name: 'Name', name_hi: 'Hindi name', gender: 'Gender', life: 'Living or deceased',
     born: 'Born', died: 'Died', status: 'Name status', sort_order: 'Order among brothers and sisters',
     address_line: 'Address', address_locality: 'Locality', address_city: 'City',
-    address_state: 'State', address_country: 'Country', origin_village_id: 'Home village',
+    address_state: 'State', address_country: 'Living in India?', origin_village_id: 'Home village',
     father_name: 'Father (name only)',
     mother_name: 'Mother (name only)', note: 'Note', family_id: 'Born in family',
     father_id: 'Father', mother_id: 'Mother'
@@ -11,10 +11,11 @@
   var CHOICES = {
     gender: [['', '—'], ['male', 'Male'], ['female', 'Female']],
     life: [['living', 'Living'], ['deceased', 'Deceased']],
+    address_country: [['', '—'], ['India', 'Yes, in India'], ['Outside India', 'No, outside India']],
     status: [['', '—'], ['uncertain', 'Name uncertain'], ['needs-parent', 'Parent not known'], ['gap', 'Unknown generation']]
   };
   var EDIT_MOVE = ['father_id', 'mother_id', 'family_id'];
-  var EDIT_ALL = ['name', 'name_hi', 'gender', 'life', 'born', 'died', 'status', 'sort_order',
+  var EDIT_ALL = ['name', 'gender', 'life', 'born', 'died',
     'address_line', 'address_locality', 'address_city', 'address_state', 'address_country',
     'origin_village_id', 'father_name', 'mother_name', 'note'];
   var NEW_CHILD = EDIT_ALL.filter(function (n) { return n !== 'father_name' && n !== 'mother_name'; });
@@ -74,6 +75,9 @@
   function field(name, value, options) {
     var v = value === null || value === undefined ? '' : value;
     var choices = options[name] || CHOICES[name];
+    if (choices && v !== '' && !choices.some(function (c) { return String(c[0]) === String(v); })) {
+      choices = choices.concat([[v, v]]);
+    }
     var label = '<label>' + esc(LABELS[name] || name);
     if (choices) {
       return label + '<select name="' + name + '">' + choices.map(function (c) {
@@ -99,10 +103,18 @@
     return edit.payload(pairs);
   }
 
-  function openForm(body, html, onSubmit, onCancel) {
+  edit.withHindi = function (values, before, hindi) {
+    var unchanged = values.name === (before.name || null) && before.name_hi;
+    if (!values.name || unchanged) return Promise.resolve(values);
+    return hindi(values.name).then(function (text) {
+      if (text) values.name_hi = text;
+      return values;
+    });
+  };
+
+  function openForm(body, html, onSubmit, onCancel, before) {
     body.innerHTML = html;
     var form = body.querySelector('form');
-    FT.api.autoHindi(form, 'name', 'name_hi');
     form.querySelector('[data-cancel]').addEventListener('click', onCancel);
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -110,7 +122,7 @@
       var submit = form.querySelector('button[type=submit]');
       msg.textContent = 'Saving…';
       submit.disabled = true;
-      onSubmit(readForm(form)).catch(function (err) {
+      edit.withHindi(readForm(form), before || {}, FT.api.hindi).then(onSubmit).catch(function (err) {
         submit.disabled = false;
         msg.textContent = err.message;
       });
@@ -173,7 +185,7 @@
           var diff = edit.changes(person.edit || {}, values);
           if (!Object.keys(diff).length) { back(); return Promise.resolve(); }
           return api.call('PATCH', path, diff).then(function () { api.reloadAt(person.id); });
-        }, back);
+        }, back, person.edit || {});
       }, function (err) { body.insertAdjacentHTML('beforeend', '<p class="form-msg">' + esc(err.message) + '</p>'); });
     } else if (kind === 'child') {
       openForm(body, formHtml('Add a child of ' + nameOf(person), NEW_CHILD, { life: 'living' },

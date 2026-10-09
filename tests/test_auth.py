@@ -1,7 +1,7 @@
 import unittest
 
 from family_tree.auth import (PASSWORD_ALPHABET, check_hash, hash_password, make_hash,
-                              new_password, new_token, token_hash)
+                              new_password, new_token, token_hash, valid_password)
 
 
 class TestHashPassword(unittest.TestCase):
@@ -34,8 +34,14 @@ class TestAccountHelpers(unittest.TestCase):
 
     def test_new_password(self):
         pw = new_password()
-        self.assertEqual(len(pw), 10)
+        self.assertEqual(len(pw), 6)
         self.assertTrue(all(c in PASSWORD_ALPHABET for c in pw))
+        self.assertTrue(valid_password(pw))
+
+    def test_valid_password(self):
+        self.assertTrue(valid_password("048213"))
+        for bad in ("12345", "1234567", "abcdef", "12 345", "١٢٣٤٥٦"):
+            self.assertFalse(valid_password(bad))
 
     def test_tokens(self):
         self.assertNotEqual(new_token(), new_token())

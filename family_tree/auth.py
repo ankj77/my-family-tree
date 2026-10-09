@@ -1,9 +1,9 @@
 import hashlib
 import hmac
+import re
 import secrets
 
 ITERATIONS = 200000
-MIN_LENGTH = 8
 
 
 def hash_password(password: str, salt_hex: str, iterations: int) -> str:
@@ -12,8 +12,8 @@ def hash_password(password: str, salt_hex: str, iterations: int) -> str:
     ).hex()
 
 
-PASSWORD_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"
-PASSWORD_LENGTH = 10
+PASSWORD_ALPHABET = "0123456789"
+PASSWORD_LENGTH = 6
 MAX_ITERATIONS = 1000000
 
 
@@ -38,6 +38,10 @@ def check_hash(password: str, stored: str) -> bool:
 
 def new_password() -> str:
     return "".join(secrets.choice(PASSWORD_ALPHABET) for _ in range(PASSWORD_LENGTH))
+
+
+def valid_password(password: str) -> bool:
+    return re.fullmatch("[0-9]{%d}" % PASSWORD_LENGTH, password) is not None
 
 
 def new_token() -> str:

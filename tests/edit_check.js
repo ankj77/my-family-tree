@@ -28,6 +28,21 @@ assert.deepStrictEqual(edit.villageOptions([
   { id: 'k', name: 'Kakroi', district: 'Sonipat', state: 'Haryana' }, { id: 'b', name: 'Bakheta', district: null, state: null }
 ]), [['', 'Not recorded'], ['b', 'Bakheta'], ['k', 'Kakroi (Sonipat, Haryana)']]);
 
+function fakeHindi(text) { return Promise.resolve('हि:' + text); }
+edit.withHindi({ name: 'Ram' }, { name: 'Ram', name_hi: 'राम' }, fakeHindi).then(function (v) {
+  assert.deepStrictEqual(v, { name: 'Ram' });
+});
+edit.withHindi({ name: 'Ramesh' }, { name: 'Ram', name_hi: 'राम' }, fakeHindi).then(function (v) {
+  assert.deepStrictEqual(v, { name: 'Ramesh', name_hi: 'हि:Ramesh' });
+});
+edit.withHindi({ name: 'Ram' }, { name: 'Ram', name_hi: null }, fakeHindi).then(function (v) {
+  assert.strictEqual(v.name_hi, 'हि:Ram');
+});
+edit.withHindi({ name: null }, {}, fakeHindi).then(function (v) { assert.deepStrictEqual(v, { name: null }); });
+edit.withHindi({ name: 'Kiran' }, {}, function () { return Promise.resolve(''); }).then(function (v) {
+  assert.deepStrictEqual(v, { name: 'Kiran' });
+});
+
 assert.strictEqual(edit.esc('<b a="1">&'), '&lt;b a=&quot;1&quot;&gt;&amp;');
 assert.strictEqual(edit.esc(null), '');
 console.log('edit_check ok');
