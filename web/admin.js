@@ -85,7 +85,7 @@
                 (own ? '' : ' <button type="button" data-reset="' + id + '">Reset password</button> ' +
                   '<button type="button" data-remove="' + id + '">Remove login</button>')
               : '<button type="button" data-create="' + id + '">Create login</button> ' +
-                '<button type="button" data-temp="' + id + '">Temporary login (5 min)</button>';
+                '<button type="button" data-temp="' + id + '">Temporary login</button>';
             var key = [a.name, a.name_hi, a.relation, a.username].filter(Boolean).join(' ').toLowerCase();
             return '<tr data-search="' + esc(key) + '"><td>' + esc(a.name || a.name_hi) +
               (a.relation ? ' <span class="relation">(' + esc(a.relation) + ')</span>' : '') + '</td><td>' +
@@ -232,6 +232,26 @@
     cell.querySelector('input').focus();
   }
 
+  function startTemp(button, id) {
+    var cell = button.closest('td');
+    cell.innerHTML = '<form data-form="temp" data-id="' + esc(id) + '" class="temp-form">' +
+      '<input name="username" autocomplete="off" placeholder="Username (optional)" aria-label="Username">' +
+      '<input name="password" autocomplete="off" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" ' +
+      'placeholder="6-digit password (optional)" aria-label="Password">' +
+      '<select name="minutes" aria-label="Lasts for">' + [5, 10, 15].map(function (m) {
+        return '<option value="' + m + '">' + m + ' minutes</option>';
+      }).join('') + '</select>' +
+      '<button type="submit">Create</button> <button type="button" data-cancel>Cancel</button></form>';
+    cell.querySelector('input').focus();
+  }
+
+  admin.tempLogin = function (id, v) {
+    var out = { person_id: id, temporary: true, minutes: Number(v.minutes) };
+    if (v.username) out.username = v.username;
+    if (v.password) out.password = v.password;
+    return out;
+  };
+
   function onClick(e) {
     var b = e.target.closest('button');
     if (!b) return;
@@ -244,7 +264,8 @@
     else if ((id = b.getAttribute('data-rename'))) startRename(b, id);
     else if ((id = b.getAttribute('data-create'))) done(api().call('POST', '/accounts', { person_id: id }), showSecret, b);
     else if ((id = b.getAttribute('data-reset'))) done(api().call('POST', '/accounts/' + encodeURIComponent(id) + '/password', {}), showSecret, b);
-    else if ((id = b.getAttribute('data-temp'))) done(api().call('POST', '/accounts', { person_id: id, temporary: true }), showSecret, b);
+    else if ((id = b.getAttribute('data-temp'))) startTemp(b, id);
+    else if (b.hasAttribute('data-cancel')) open(state.tab);
     else if ((id = b.getAttribute('data-remove')) && armed(b)) done(api().call('DELETE', '/accounts/' + encodeURIComponent(id)), null, b);
     else if ((id = b.getAttribute('data-revoke')) && armed(b)) done(api().call('DELETE', '/role-grants/' + id), null, b);
   }
@@ -257,6 +278,11 @@
     Array.prototype.forEach.call(form.elements, function (el) { if (el.name) v[el.name] = el.value.trim(); });
     var kind = form.getAttribute('data-form');
     var request;
+    if (kind === 'temp') {
+      done(api().call('POST', '/accounts', admin.tempLogin(form.getAttribute('data-id'), v)), showSecret,
+        form.querySelector('button[type=submit]'));
+      return;
+    }
     if (kind === 'rename') {
       request = api().call('PATCH', '/accounts/' + encodeURIComponent(form.getAttribute('data-id')), { username: v.username });
     } else if (kind === 'grant') {

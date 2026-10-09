@@ -12,4 +12,8 @@ assert.strictEqual(admin.villageTitle({ name: 'Kakroi', district: 'Sonipat', sta
   'Kakroi — District Sonipat · State Haryana');
 assert.strictEqual(admin.villageTitle({ name: 'Chirag Dilli', district: null, state: 'Delhi' }), 'Chirag Dilli — State Delhi');
 assert.strictEqual(admin.villageTitle({ name: 'Aanwali', district: null, state: null }), 'Aanwali');
+assert.deepStrictEqual(admin.tempLogin('neha', { username: '', password: '', minutes: '10' }),
+  { person_id: 'neha', temporary: true, minutes: 10 });
+assert.deepStrictEqual(admin.tempLogin('neha', { username: 'guest1', password: '123456', minutes: '15' }),
+  { person_id: 'neha', temporary: true, minutes: 15, username: 'guest1', password: '123456' });
 console.log('admin_check ok');

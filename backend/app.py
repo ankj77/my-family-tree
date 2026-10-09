@@ -16,7 +16,7 @@ SESSION_COOKIE = "ft_session"
 SESSION_DAYS = 30
 LOCK_AFTER = 5
 LOCK_MINUTES = 15
-TEMP_LOGIN_MINUTES = 5
+TEMP_LOGIN_MINUTES = (5, 10, 15)
 CHANGE_LOG_BATCH = 500
 CHANGE_LOG_SCAN_MAX = 5000
 WRITE_METHODS = ("POST", "PATCH", "DELETE")
@@ -593,16 +593,21 @@ def create_account():
     username = clean_username(data["username"]) if data.get("username") else naming.username(name_of(graph, pid), taken)
     if username in taken:
         raise RuleError("The username %s is taken" % username)
-    password = auth.new_password()
     temporary = data.get("temporary") is True
-    expires_at = now() + timedelta(minutes=TEMP_LOGIN_MINUTES) if temporary else None
+    minutes = data.get("minutes", TEMP_LOGIN_MINUTES[0])
+    if temporary and minutes not in TEMP_LOGIN_MINUTES:
+        raise RuleError("A temporary login lasts %s minutes" % " or ".join(map(str, TEMP_LOGIN_MINUTES)))
+    password = data.get("password") if temporary and data.get("password") else auth.new_password()
+    if not auth.valid_password(str(password)):
+        raise RuleError("The password must be exactly %d digits" % auth.PASSWORD_LENGTH)
+    expires_at = now() + timedelta(minutes=minutes) if temporary else None
     db.insert_rows(cur, "accounts", [{"person_id": pid, "username": username, "password_hash": auth.make_hash(password),
                                       "expires_at": expires_at}])
     log(cur, actor, pid, "account_create", None, {"username": username, "temporary": temporary})
     commit_checked(cur)
     out = {"username": username, "password": password}
     if temporary:
-        out["minutes"] = TEMP_LOGIN_MINUTES
+        out["minutes"] = minutes
     return jsonify(out), 201
 
 

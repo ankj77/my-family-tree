@@ -43,6 +43,21 @@ class TestAccounts(ApiCase):
         listed = self.get("/accounts").get_json()
         self.assertIsNone(next(a for a in listed if a["person_id"] == "neha")["username"])
 
+    def test_temporary_login_with_chosen_username_password_and_length(self):
+        self.login("mohan")
+        bad = self.post("/accounts", {"person_id": "neha", "temporary": True, "minutes": 7})
+        self.assertEqual(bad.status_code, 409)
+        bad = self.post("/accounts", {"person_id": "neha", "temporary": True, "password": "abc"})
+        self.assertEqual(bad.status_code, 409)
+        r = self.post("/accounts", {"person_id": "neha", "temporary": True, "minutes": 15,
+                                    "username": "guest.neha", "password": "246810"})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        self.assertEqual(r.get_json(), {"username": "guest.neha", "password": "246810", "minutes": 15})
+        expires = self.query("SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), expires_at) AS s FROM accounts WHERE person_id='neha'")[0]["s"]
+        self.assertTrue(14 * 60 < expires <= 15 * 60)
+        self.post("/logout")
+        self.assertEqual(self.post("/login", {"username": "guest.neha", "password": "246810"}).status_code, 200)
+
     def test_only_living(self):
         self.login("mohan")
         self.assertEqual(self.post("/accounts", {"person_id": "ram"}).status_code, 409)
