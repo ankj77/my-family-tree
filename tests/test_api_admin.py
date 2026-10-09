@@ -138,8 +138,13 @@ class TestVillagesAndFamilies(ApiCase):
         r = self.post("/villages", {"name": "Bal Pabana", "district": "Karnal", "state": "Haryana"})
         self.assertEqual(r.status_code, 201, r.get_json())
         self.assertEqual(r.get_json()["id"], "bal_pabana")
+        again = self.post("/villages", {"name": "bal  pabana"})
+        self.assertEqual((again.status_code, again.get_json()["id"]), (200, "bal_pabana"))
         self.post("/logout")
-        self.login("bash")
+        self.login("jagdish")
+        self.assertEqual(self.post("/villages", {"name": "Sonipat Kalan"}).status_code, 201)
+        self.post("/logout")
+        self.login("amit")
         self.assertEqual(self.post("/villages", {"name": "X"}).status_code, 403)
 
     def test_family_create(self):

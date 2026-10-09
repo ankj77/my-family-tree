@@ -2184,7 +2184,14 @@ FT.views.poster = {
 
   function formHtml(title, names, values, options, submit) {
     return '<h3>' + esc(title) + '</h3><form class="edit-form">' +
-      names.map(function (n) { return field(n, values[n], options); }).join('') +
+      names.map(function (n) {
+        var html = field(n, values[n], options);
+        if (n === 'origin_village_id') {
+          html += field('new_village_name', '', {}) + field('new_village_district', '', {}) +
+            field('new_village_state', '', { new_village_state: CHOICES.address_state });
+        }
+        return html;
+      }).join('') +
       '<div class="form-buttons"><button type="submit">' + esc(submit) + '</button>' +
       '<button type="button" data-cancel>Cancel</button></div><p class="form-msg" role="alert"></p></form>';
   }
@@ -2233,6 +2240,7 @@ FT.views.poster = {
     showWhen(form, 'life', 'deceased', ['died']);
     showWhen(form, 'address_country', 'India', INDIA_ADDRESS);
     showWhen(form, 'address_country', 'Outside India', ['address_abroad']);
+    showWhen(form, 'origin_village_id', NEW_VILLAGE, NEW_VILLAGE_FIELDS);
     form.querySelector('[data-cancel]').addEventListener('click', onCancel);
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -2240,7 +2248,9 @@ FT.views.poster = {
       var submit = form.querySelector('button[type=submit]');
       msg.textContent = 'Saving…';
       submit.disabled = true;
-      edit.withHindi(edit.tidy(readForm(form)), before || {}, FT.api.hindi).then(onSubmit).catch(function (err) {
+      edit.withNewVillage(edit.tidy(readForm(form)), FT.api.call).then(function (values) {
+        return edit.withHindi(values, before || {}, FT.api.hindi);
+      }).then(onSubmit).catch(function (err) {
         submit.disabled = false;
         msg.textContent = err.message;
       });
@@ -2257,11 +2267,32 @@ FT.views.poster = {
     return out;
   }
 
+  var NEW_VILLAGE = '__new';
+  var NEW_VILLAGE_FIELDS = ['new_village_name', 'new_village_district', 'new_village_state'];
+  LABELS.new_village_name = 'New village name';
+  LABELS.new_village_district = 'District';
+  LABELS.new_village_state = 'State';
+
   edit.villageOptions = function (villages) {
-    return [['', 'Not recorded']].concat(villages.map(function (v) {
+    return [['', 'Choose village']].concat(villages.map(function (v) {
       var where = [v.district, v.state].filter(Boolean).join(', ');
       return [v.id, where ? v.name + ' (' + where + ')' : v.name];
-    }).sort(function (a, b) { return a[1].localeCompare(b[1]); }));
+    }).sort(function (a, b) { return a[1].localeCompare(b[1]); }), [[NEW_VILLAGE, '+ Add a new village']]);
+  };
+
+  edit.withNewVillage = function (values, call) {
+    var wanted = values.origin_village_id === NEW_VILLAGE;
+    var place = { name: values.new_village_name, district: values.new_village_district, state: values.new_village_state };
+    NEW_VILLAGE_FIELDS.forEach(function (n) { delete values[n]; });
+    if (!wanted) return Promise.resolve(values);
+    if (!place.name) return Promise.reject(new Error('Enter the new village name'));
+    return call('POST', '/villages', place).then(function (r) {
+      values.origin_village_id = r.id;
+      if (FT.api.villages && !FT.api.villages.some(function (v) { return v.id === r.id; })) {
+        FT.api.villages.push({ id: r.id, name: place.name, district: place.district, state: place.state, families: [] });
+      }
+      return values;
+    });
   };
 
   function peopleOptions(people, skip) {

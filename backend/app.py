@@ -729,13 +729,20 @@ def required_text(data, key, label):
     return value
 
 
+def same_place(a, b):
+    return "".join(a.lower().split()) == "".join(b.lower().split())
+
+
 @app.post("/villages")
 def create_village():
     actor, graph, access = context()
-    if not access.is_global:
-        raise ApiError(403, "Only a global admin can add villages")
+    if not access.mine:
+        raise ApiError(403, "Only people who can edit the tree can add villages")
     data = body()
     name = required_text(data, "name", "Village name")
+    same = [v for v in graph.villages.values() if same_place(v["name"], name)]
+    if same:
+        return jsonify(id=same[0]["id"], existing=True)
     extra = {}
     for key, label in (("district", "District"), ("state", "State")):
         value = str(data.get(key) or "").strip()

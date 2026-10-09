@@ -26,7 +26,7 @@ assert.deepStrictEqual(edit.editNames(true).slice(-3), ['father_id', 'mother_id'
 
 assert.deepStrictEqual(edit.villageOptions([
   { id: 'k', name: 'Kakroi', district: 'Sonipat', state: 'Haryana' }, { id: 'b', name: 'Bakheta', district: null, state: null }
-]), [['', 'Not recorded'], ['b', 'Bakheta'], ['k', 'Kakroi (Sonipat, Haryana)']]);
+]), [['', 'Choose village'], ['b', 'Bakheta'], ['k', 'Kakroi (Sonipat, Haryana)'], ['__new', '+ Add a new village']]);
 
 function fakeHindi(text) { return Promise.resolve('हि:' + text); }
 edit.withHindi({ name: 'Ram' }, { name: 'Ram', name_hi: 'राम' }, fakeHindi).then(function (v) {
@@ -50,6 +50,23 @@ assert.deepStrictEqual(edit.tidy({ address_country: 'India', address_city: 'Delh
   { address_country: 'India', address_city: 'Delhi', address_abroad: null });
 assert.deepStrictEqual(edit.tidy({ address_country: 'Outside India', address_city: 'Delhi', address_state: 'Delhi', address_abroad: 'Toronto, Canada' }),
   { address_country: 'Outside India', address_city: null, address_state: null, address_abroad: 'Toronto, Canada' });
+
+global.FT = { api: { villages: [] } };
+var posted = [];
+function fakeCall(method, path, data) { posted.push([method, path, data]); return Promise.resolve({ id: 'kheri' }); }
+edit.withNewVillage({ name: 'A', origin_village_id: 'pathri', new_village_name: '', new_village_district: '', new_village_state: '' },
+  function () { assert.fail('no village should be created'); })
+  .then(function (v) { assert.deepStrictEqual(v, { name: 'A', origin_village_id: 'pathri' }); });
+edit.withNewVillage({ origin_village_id: '__new', new_village_name: 'Kheri', new_village_district: null, new_village_state: 'Haryana' }, fakeCall)
+  .then(function (v) {
+    assert.deepStrictEqual(v, { origin_village_id: 'kheri' });
+    assert.deepStrictEqual(posted[0], ['POST', '/villages', { name: 'Kheri', district: null, state: 'Haryana' }]);
+    assert.strictEqual(FT.api.villages[0].id, 'kheri');
+  });
+edit.withNewVillage({ origin_village_id: '__new', new_village_name: null }, fakeCall)
+  .then(function () { assert.fail('should refuse'); }, function (e) { assert.strictEqual(e.message, 'Enter the new village name'); });
+assert.strictEqual(edit.villageOptions([])[0][1], 'Choose village');
+assert.deepStrictEqual(edit.villageOptions([]).slice(-1)[0], ['__new', '+ Add a new village']);
 
 assert.strictEqual(edit.esc('<b a="1">&'), '&lt;b a=&quot;1&quot;&gt;&amp;');
 assert.strictEqual(edit.esc(null), '');
