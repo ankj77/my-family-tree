@@ -73,6 +73,10 @@
     pointer-events:none;}
   .toggle-sign{font-size:15px;font-weight:700;fill:var(--bark);font-family:var(--font);
     cursor:pointer;pointer-events:none;}
+  .branch-btn{cursor:pointer;}
+  .branch-btn rect{fill:var(--card);stroke:var(--bark);stroke-width:1.5px;}
+  .branch-btn text{font-size:22px;font-weight:600;fill:var(--name-ink);font-family:var(--font);}
+  .branch-btn:hover rect{fill:var(--band);}
   .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
   #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:var(--card);
     border-left:1px solid var(--edge);border-bottom:1px solid var(--edge);padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}

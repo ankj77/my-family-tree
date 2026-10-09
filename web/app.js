@@ -387,6 +387,7 @@ FT.boot = function (data) {
     FT.state.picks = [];
     FT.state.place = null;
     FT.state.branch = id;
+    FT.state.branchFocus = id;
     FT.state.only = null;
     FT.state.collapsed = {};
     FT.revealDepth(deepest + 1);
@@ -394,6 +395,45 @@ FT.boot = function (data) {
     FT.render();
     FT.fit();
   };
+
+  FT.branchUp = function () {
+    var top = FT.top(), parent = FT.parentOf[top.id];
+    if (!parent) return;
+    (parent.children || []).forEach(function (c) { if (c !== top) FT.state.collapsed[c.id] = true; });
+    FT.state.collapsed[parent.id] = false;
+    FT.revealDepth(FT.treeDepth() + 1);
+    FT.state.branch = parent.id;
+    FT.renderPicks();
+    FT.render();
+    FT.fit();
+  };
+
+  FT.branchDown = function () {
+    var top = FT.top(), n = FT.byId[FT.state.branchFocus];
+    if (!n || n === top) return;
+    while (FT.parentOf[n.id] && FT.parentOf[n.id] !== top) n = FT.parentOf[n.id];
+    FT.state.branch = n.id;
+    FT.renderPicks();
+    FT.render();
+    FT.fit();
+  };
+
+  function branchButton(parent, x, y, text, onClick) {
+    var g = el('g', { 'class': 'branch-btn', transform: 'translate(' + x + ',' + y + ')' }, parent);
+    var w = text.length * 13 + 48;
+    el('rect', { x: -w / 2, y: -28, width: w, height: 56, rx: 28 }, g);
+    el('text', { x: 0, y: 8, 'text-anchor': 'middle' }, g).textContent = text;
+    g.addEventListener('click', function (ev) { ev.stopPropagation(); onClick(); });
+    return y + 70;
+  }
+
+  function branchControls(parent) {
+    if (!FT.state.branch) return;
+    var top = FT.top(), up = FT.parentOf[top.id];
+    var x = top.x + FT.jointX(top), y = top.y + FT.nodeH(top) + 50;
+    if (up) y = branchButton(parent, x, y, '+ Show father: ' + FT.label(up)[0], FT.branchUp);
+    if (top.id !== FT.state.branchFocus) branchButton(parent, x, y, '\u2212 Hide ' + FT.label(top)[0], FT.branchDown);
+  }
 
   FT.showPicks = function () {
     FT.state.place = null;
@@ -792,6 +832,7 @@ FT.boot = function (data) {
       FT.drawNode(nodes, n);
       FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
     })(top, 0);
+    branchControls(nodes);
     if (FT.state.picks.length) {
       clearHl();
       FT.state.picks.forEach(hlPath);
@@ -1130,7 +1171,7 @@ FT.boot = function (data) {
       return;
     }
     if (FT.state.branch && FT.byId[FT.state.branch]) {
-      picksBar.innerHTML = '<span class="pick pick-place">Family of ' + esc(FT.label(FT.byId[FT.state.branch])[0]) +
+      picksBar.innerHTML = '<span class="pick pick-place">Family of ' + esc(FT.label(FT.top())[0]) +
         '<button class="pick-clear-x" aria-label="Show the whole tree">×</button></span>';
       return;
     }

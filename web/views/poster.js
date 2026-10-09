@@ -6,11 +6,13 @@ FT.views.poster = {
   maxDepth: 4,
   extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },
   rowTop: function (depth) {
+    if (this.plain) return -depth * 360;
     return depth === 0 ? 210 : -470 - (depth - 1) * 360;
   },
   layout: function (root) {
     var view = this;
     var cursor = 0;
+    this.plain = root !== FT.nodes[0];
     function shiftRight(n, depth, dx) {
       n.x += dx;
       FT.kidsAt(n, depth).forEach(function (c) { shiftRight(c, depth + 1, dx); });
@@ -39,7 +41,7 @@ FT.views.poster = {
       minX: -140,
       maxX: cursor + 140,
       minY: -80,
-      maxY: 360
+      maxY: this.plain ? FT.nodeH(root) + 200 : 360
     };
   },
   drawEdges: function (g, root) {
@@ -48,7 +50,8 @@ FT.views.poster = {
     var TRUNK_TOP = GROUND - FT.ROOT_ART_LEN;
     var view = this;
 
-    FT.rootArt(g, 'translate(' + cx + ',' + GROUND + ')');
+    var trunk = !this.plain;
+    if (trunk) FT.rootArt(g, 'translate(' + cx + ',' + GROUND + ')');
 
     function branch(x1, y1, x2, y2, weight, id) {
       var bow = (x2 - x1) * 0.42 + (FT.hash01(id) - 0.5) * 70;
@@ -62,11 +65,12 @@ FT.views.poster = {
 
     (function walk(n, depth) {
       FT.kidsAt(n, depth).forEach(function (c) {
-        var x1 = depth === 0 ? cx : n.x + FT.jointX(n);
-        var y1 = depth === 0 ? TRUNK_TOP + 10 : n.y;
-        var thickness = depth === 0 ? 2.4 : 1.7;
+        var fromTrunk = trunk && depth === 0;
+        var x1 = fromTrunk ? cx : n.x + FT.jointX(n);
+        var y1 = fromTrunk ? TRUNK_TOP + 10 : n.y;
+        var thickness = fromTrunk ? 2.4 : 1.7;
         branch(x1, y1, c.x + FT.jointX(c), c.y + FT.nodeH(c),
-          Math.max(depth === 0 ? 6 : 3.5, Math.sqrt(FT.leafCount(c)) * thickness), c.id);
+          Math.max(fromTrunk ? 6 : 3.5, Math.sqrt(FT.leafCount(c)) * thickness), c.id);
         walk(c, depth + 1);
       });
     })(root, 0);

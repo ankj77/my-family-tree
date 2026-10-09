@@ -83,6 +83,10 @@
     pointer-events:none;}
   .toggle-sign{font-size:15px;font-weight:700;fill:var(--bark);font-family:var(--font);
     cursor:pointer;pointer-events:none;}
+  .branch-btn{cursor:pointer;}
+  .branch-btn rect{fill:var(--card);stroke:var(--bark);stroke-width:1.5px;}
+  .branch-btn text{font-size:22px;font-weight:600;fill:var(--name-ink);font-family:var(--font);}
+  .branch-btn:hover rect{fill:var(--band);}
   .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
   #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:var(--card);
     border-left:1px solid var(--edge);border-bottom:1px solid var(--edge);padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
@@ -730,6 +734,7 @@ FT.boot = function (data) {
     FT.state.picks = [];
     FT.state.place = null;
     FT.state.branch = id;
+    FT.state.branchFocus = id;
     FT.state.only = null;
     FT.state.collapsed = {};
     FT.revealDepth(deepest + 1);
@@ -737,6 +742,45 @@ FT.boot = function (data) {
     FT.render();
     FT.fit();
   };
+
+  FT.branchUp = function () {
+    var top = FT.top(), parent = FT.parentOf[top.id];
+    if (!parent) return;
+    (parent.children || []).forEach(function (c) { if (c !== top) FT.state.collapsed[c.id] = true; });
+    FT.state.collapsed[parent.id] = false;
+    FT.revealDepth(FT.treeDepth() + 1);
+    FT.state.branch = parent.id;
+    FT.renderPicks();
+    FT.render();
+    FT.fit();
+  };
+
+  FT.branchDown = function () {
+    var top = FT.top(), n = FT.byId[FT.state.branchFocus];
+    if (!n || n === top) return;
+    while (FT.parentOf[n.id] && FT.parentOf[n.id] !== top) n = FT.parentOf[n.id];
+    FT.state.branch = n.id;
+    FT.renderPicks();
+    FT.render();
+    FT.fit();
+  };
+
+  function branchButton(parent, x, y, text, onClick) {
+    var g = el('g', { 'class': 'branch-btn', transform: 'translate(' + x + ',' + y + ')' }, parent);
+    var w = text.length * 13 + 48;
+    el('rect', { x: -w / 2, y: -28, width: w, height: 56, rx: 28 }, g);
+    el('text', { x: 0, y: 8, 'text-anchor': 'middle' }, g).textContent = text;
+    g.addEventListener('click', function (ev) { ev.stopPropagation(); onClick(); });
+    return y + 70;
+  }
+
+  function branchControls(parent) {
+    if (!FT.state.branch) return;
+    var top = FT.top(), up = FT.parentOf[top.id];
+    var x = top.x + FT.jointX(top), y = top.y + FT.nodeH(top) + 50;
+    if (up) y = branchButton(parent, x, y, '+ Show father: ' + FT.label(up)[0], FT.branchUp);
+    if (top.id !== FT.state.branchFocus) branchButton(parent, x, y, '\u2212 Hide ' + FT.label(top)[0], FT.branchDown);
+  }
 
   FT.showPicks = function () {
     FT.state.place = null;
@@ -1135,6 +1179,7 @@ FT.boot = function (data) {
       FT.drawNode(nodes, n);
       FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
     })(top, 0);
+    branchControls(nodes);
     if (FT.state.picks.length) {
       clearHl();
       FT.state.picks.forEach(hlPath);
@@ -1473,7 +1518,7 @@ FT.boot = function (data) {
       return;
     }
     if (FT.state.branch && FT.byId[FT.state.branch]) {
-      picksBar.innerHTML = '<span class="pick pick-place">Family of ' + esc(FT.label(FT.byId[FT.state.branch])[0]) +
+      picksBar.innerHTML = '<span class="pick pick-place">Family of ' + esc(FT.label(FT.top())[0]) +
         '<button class="pick-clear-x" aria-label="Show the whole tree">×</button></span>';
       return;
     }
@@ -1716,11 +1761,13 @@ FT.views.poster = {
   maxDepth: 4,
   extentPad: { minX: -300, maxX: 300, minY: -60, maxY: 320 },
   rowTop: function (depth) {
+    if (this.plain) return -depth * 360;
     return depth === 0 ? 210 : -470 - (depth - 1) * 360;
   },
   layout: function (root) {
     var view = this;
     var cursor = 0;
+    this.plain = root !== FT.nodes[0];
     function shiftRight(n, depth, dx) {
       n.x += dx;
       FT.kidsAt(n, depth).forEach(function (c) { shiftRight(c, depth + 1, dx); });
@@ -1749,7 +1796,7 @@ FT.views.poster = {
       minX: -140,
       maxX: cursor + 140,
       minY: -80,
-      maxY: 360
+      maxY: this.plain ? FT.nodeH(root) + 200 : 360
     };
   },
   drawEdges: function (g, root) {
@@ -1758,7 +1805,8 @@ FT.views.poster = {
     var TRUNK_TOP = GROUND - FT.ROOT_ART_LEN;
     var view = this;
 
-    FT.rootArt(g, 'translate(' + cx + ',' + GROUND + ')');
+    var trunk = !this.plain;
+    if (trunk) FT.rootArt(g, 'translate(' + cx + ',' + GROUND + ')');
 
     function branch(x1, y1, x2, y2, weight, id) {
       var bow = (x2 - x1) * 0.42 + (FT.hash01(id) - 0.5) * 70;
@@ -1772,11 +1820,12 @@ FT.views.poster = {
 
     (function walk(n, depth) {
       FT.kidsAt(n, depth).forEach(function (c) {
-        var x1 = depth === 0 ? cx : n.x + FT.jointX(n);
-        var y1 = depth === 0 ? TRUNK_TOP + 10 : n.y;
-        var thickness = depth === 0 ? 2.4 : 1.7;
+        var fromTrunk = trunk && depth === 0;
+        var x1 = fromTrunk ? cx : n.x + FT.jointX(n);
+        var y1 = fromTrunk ? TRUNK_TOP + 10 : n.y;
+        var thickness = fromTrunk ? 2.4 : 1.7;
         branch(x1, y1, c.x + FT.jointX(c), c.y + FT.nodeH(c),
-          Math.max(depth === 0 ? 6 : 3.5, Math.sqrt(FT.leafCount(c)) * thickness), c.id);
+          Math.max(fromTrunk ? 6 : 3.5, Math.sqrt(FT.leafCount(c)) * thickness), c.id);
         walk(c, depth + 1);
       });
     })(root, 0);
