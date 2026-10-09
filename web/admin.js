@@ -1,5 +1,5 @@
 (function (admin) {
-  var TABS = [['deletes', 'Pending deletes'], ['accounts', 'Accounts'], ['roles', 'Roles'],
+  var TABS = [['accounts', 'Accounts'], ['roles', 'Roles'], ['deletes', 'Pending deletes'],
     ['families', 'Villages & families'], ['log', 'Change log']];
   var ROLE = { global: 'Global admin', village: 'Village admin', branch: 'Branch rep' };
   var state = {};
@@ -163,7 +163,7 @@
   }
 
   function open(tab) {
-    state.tab = tabs[tab] ? tab : 'deletes';
+    state.tab = tabs[tab] ? tab : TABS[0][0];
     history.replaceState(null, '', '#' + state.tab);
     Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function (b) {
       b.setAttribute('aria-current', b.getAttribute('data-tab') === state.tab ? 'page' : 'false');
