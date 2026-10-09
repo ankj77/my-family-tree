@@ -71,7 +71,9 @@ global.fetch = function (url, options) {
 global.FT = {
   boot: function (data) { booted.push(data); },
   init: function () { inits++; },
-  openPerson: function (id) { opened.push(id); }
+  openPerson: function (id) { opened.push(id); },
+  grandfatherOf: function (id) { return id === 'a' ? { id: 'gf' } : null; },
+  showBranch: function (id) { opened.push('branch:' + id); }
 };
 require('../web/api.js');
 
@@ -99,7 +101,7 @@ async function loggedInBoots() {
   assert.strictEqual(elements.avatar.textContent, 'A');
   assert.deepStrictEqual(menuLabels(), ['Change password', 'Log out']);
   assert.ok(elements.login.classList.contains('hidden'));
-  assert.deepStrictEqual(opened, []);
+  assert.deepStrictEqual(opened, ['branch:gf']);
   assert.strictEqual(store['ft-family'], 'f1');
 }
 

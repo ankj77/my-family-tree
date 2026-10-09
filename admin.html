@@ -532,6 +532,10 @@
         api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
         var person = param('person');
         if (person) FT.openPerson(person);
+        else {
+          var grandfather = FT.grandfatherOf(me.id);
+          if (grandfather) FT.showBranch(grandfather.id);
+        }
       });
     }).catch(function (err) {
       showLogin(err.status === 401 ? '' : err.message);

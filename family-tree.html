@@ -659,9 +659,7 @@ FT.boot = function (data) {
   };
 
   FT.openPerson = function (id) {
-    var owner = FT.byId[id] || FT.nodes.filter(function (n) {
-      return (n.spouses || []).some(function (s) { return s.id === id; });
-    })[0];
+    var owner = FT.ownerOf(id);
     if (!owner) return;
     FT.state.picks = [owner.id];
     FT.showPicks();
@@ -705,8 +703,41 @@ FT.boot = function (data) {
     if (FT.renderPicks) FT.renderPicks();
   };
 
+  FT.ownerOf = function (id) {
+    return FT.byId[id] || FT.nodes.filter(function (n) {
+      return (n.spouses || []).some(function (s) { return s.id === id; });
+    })[0];
+  };
+
+  FT.grandfatherOf = function (id) {
+    var n = FT.ownerOf(id);
+    for (var up = 0; n && up < 2 && FT.parentOf[n.id]; up++) n = FT.parentOf[n.id];
+    return n || null;
+  };
+
+  FT.showBranch = function (id) {
+    var top = FT.byId[id];
+    if (!top || top === tree) return;
+    var keep = FT.lineage(id), deepest = 0;
+    (function down(n) {
+      keep[n.id] = true;
+      deepest = Math.max(deepest, FT.depthOf(n.id));
+      (n.children || []).forEach(down);
+    })(top);
+    FT.state.picks = [];
+    FT.state.place = null;
+    FT.state.branch = id;
+    FT.state.only = keep;
+    FT.state.collapsed = {};
+    FT.revealDepth(deepest + 1);
+    FT.renderPicks();
+    FT.render();
+    FT.fit(top);
+  };
+
   FT.showPicks = function () {
     FT.state.place = null;
+    FT.state.branch = null;
     var ids = FT.state.picks.filter(function (id) { return FT.byId[id]; });
     FT.state.picks = ids;
     FT.renderPicks();
@@ -1200,8 +1231,8 @@ FT.boot = function (data) {
     FT.fit();
   };
 
-  FT.fit = function () {
-    var view = FT.views[FT.state.viewId];
+  FT.fit = function (from) {
+    var view = from ? {} : FT.views[FT.state.viewId];
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     var owners = placeLayout();
     if (owners) {
@@ -1216,7 +1247,7 @@ FT.boot = function (data) {
       minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
       minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
       FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
-    })(tree, 0);
+    })(from || tree, from ? FT.depthOf(from.id) : 0);
     if (view.extentPad) {
       minX = Math.min(minX, view.extentPad.minX); maxX = Math.max(maxX, view.extentPad.maxX);
       minY = Math.min(minY, view.extentPad.minY); maxY = Math.max(maxY, view.extentPad.maxY);
@@ -1291,6 +1322,7 @@ FT.boot = function (data) {
     var grp = FT.placeGroups()[key];
     FT.state.picks = [];
     FT.state.place = grp ? key : null;
+    FT.state.branch = null;
     FT.renderPicks();
     FT.state.only = null;
     FT.closeSheet();
@@ -1434,6 +1466,11 @@ FT.boot = function (data) {
       picksBar.innerHTML = '<span class="pick pick-place">' + esc(FT.placeLabel(grp)) +
         ' · ' + grp.members.length + (grp.members.length === 1 ? ' person' : ' people') +
         '<button class="pick-clear-x" aria-label="Remove">×</button></span>';
+      return;
+    }
+    if (FT.state.branch && FT.byId[FT.state.branch]) {
+      picksBar.innerHTML = '<span class="pick pick-place">Family of ' + esc(FT.label(FT.byId[FT.state.branch])[0]) +
+        '<button class="pick-clear-x" aria-label="Show the whole tree">×</button></span>';
       return;
     }
     var html = ids.map(function (id) {
@@ -1989,6 +2026,10 @@ FT.views.poster = {
         api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
         var person = param('person');
         if (person) FT.openPerson(person);
+        else {
+          var grandfather = FT.grandfatherOf(me.id);
+          if (grandfather) FT.showBranch(grandfather.id);
+        }
       });
     }).catch(function (err) {
       showLogin(err.status === 401 ? '' : err.message);
