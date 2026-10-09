@@ -2086,7 +2086,7 @@ FT.views.poster = {
     name: 'Name', name_hi: 'Hindi name', gender: 'Gender', life: 'Living or deceased',
     born: 'Born', died: 'Died', status: 'Name status', sort_order: 'Order among brothers and sisters',
     address_line: 'Address', address_locality: 'Locality', address_city: 'City',
-    address_state: 'State', address_country: 'Living in India?', origin_village_id: 'Home village',
+    address_state: 'State', address_country: 'Living in India?', origin_village_id: 'Origin Village (Family Village name)',
     father_name: 'Father (name only)',
     mother_name: 'Mother (name only)', note: 'Note', family_id: 'Born in family',
     father_id: 'Father', mother_id: 'Mother'
@@ -2098,9 +2098,9 @@ FT.views.poster = {
     status: [['', '—'], ['uncertain', 'Name uncertain'], ['needs-parent', 'Parent not known'], ['gap', 'Unknown generation']]
   };
   var EDIT_MOVE = ['father_id', 'mother_id', 'family_id'];
-  var EDIT_ALL = ['name', 'gender', 'life', 'born', 'died',
+  var EDIT_ALL = ['name', 'gender', 'origin_village_id', 'life', 'born', 'died',
     'address_line', 'address_locality', 'address_city', 'address_state', 'address_country',
-    'origin_village_id', 'father_name', 'mother_name', 'note'];
+    'father_name', 'mother_name', 'note'];
   var NEW_CHILD = EDIT_ALL.filter(function (n) { return n !== 'father_name' && n !== 'mother_name'; });
   var NEW_SPOUSE = EDIT_ALL.concat(['family_id']);
   var NEW_FATHER = EDIT_ALL.filter(function (n) { return n !== 'gender'; });
