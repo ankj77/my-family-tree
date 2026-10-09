@@ -6,15 +6,18 @@ from family_tree.render import _node_json, _person_json, summary_json
 from family_tree.rules import display
 from family_tree.tree import build_tree
 
-ORIGIN_COLUMNS = (("village", "origin_village"), ("district", "origin_district"), ("state", "origin_state"))
 VILLAGE_COLUMNS = (("village", "name"), ("district", "district"), ("state", "state"))
+
+
+def village_place(village: dict) -> dict:
+    return {key: village[column] for key, column in VILLAGE_COLUMNS if village.get(column)}
 
 
 def origin_of(graph: Graph, pid: str, seen=None) -> Tuple[dict, bool]:
     row = graph.people[pid]
-    own = {key: row[column] for key, column in ORIGIN_COLUMNS if row.get(column)}
+    own = graph.villages.get(row.get("origin_village_id"))
     if own:
-        return own, False
+        return village_place(own), False
     seen = (seen or set()) | {pid}
     father = row.get("father_id")
     if father in graph.people and father not in seen:
@@ -22,8 +25,7 @@ def origin_of(graph: Graph, pid: str, seen=None) -> Tuple[dict, bool]:
         return found, bool(found)
     family = graph.families.get(row.get("family_id"))
     if family and family.get("root_person_id") == pid:
-        village = graph.villages[family["village_id"]]
-        return {key: village[column] for key, column in VILLAGE_COLUMNS if village.get(column)}, True
+        return village_place(graph.villages[family["village_id"]]), True
     return {}, False
 
 

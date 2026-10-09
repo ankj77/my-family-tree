@@ -4,7 +4,7 @@ PERSON_COLUMNS = (
     "id", "family_id", "father_id", "mother_id", "father_name", "mother_name",
     "name", "name_hi", "gender", "life", "born", "died", "status", "note", "sort_order",
     "address_line", "address_locality", "address_city", "address_state", "address_country",
-    "origin_village", "origin_district", "origin_state",
+    "origin_village_id",
 )
 
 

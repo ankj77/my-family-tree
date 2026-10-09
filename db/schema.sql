@@ -34,13 +34,12 @@ CREATE TABLE people (
   address_city VARCHAR(200) NULL,
   address_state VARCHAR(200) NULL,
   address_country VARCHAR(200) NULL,
-  origin_village VARCHAR(200) NULL,
-  origin_district VARCHAR(200) NULL,
-  origin_state VARCHAR(200) NULL,
+  origin_village_id VARCHAR(64) NULL,
   created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   updated_by VARCHAR(64) NULL,
   CONSTRAINT fk_person_family FOREIGN KEY (family_id) REFERENCES families(id),
+  CONSTRAINT fk_person_origin_village FOREIGN KEY (origin_village_id) REFERENCES villages(id),
   CONSTRAINT fk_person_father FOREIGN KEY (father_id) REFERENCES people(id) ON DELETE RESTRICT,
   CONSTRAINT fk_person_mother FOREIGN KEY (mother_id) REFERENCES people(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

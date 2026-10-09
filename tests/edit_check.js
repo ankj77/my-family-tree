@@ -21,6 +21,10 @@ assert.deepStrictEqual(edit.changes({ name: 'Amit', born: null, city: undefined 
 assert.strictEqual(edit.editNames(false).indexOf('family_id'), -1);
 assert.deepStrictEqual(edit.editNames(true).slice(-3), ['father_id', 'mother_id', 'family_id']);
 
+assert.deepStrictEqual(edit.villageOptions([
+  { id: 'k', name: 'Kakroi', district: 'Sonipat', state: 'Haryana' }, { id: 'b', name: 'Bakheta', district: null, state: null }
+]), [['', 'Not recorded'], ['b', 'Bakheta'], ['k', 'Kakroi (Sonipat, Haryana)']]);
+
 assert.strictEqual(edit.esc('<b a="1">&'), '&lt;b a=&quot;1&quot;&gt;&amp;');
 assert.strictEqual(edit.esc(null), '');
 console.log('edit_check ok');

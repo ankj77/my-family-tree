@@ -6,7 +6,7 @@ from family_tree.importer import rows_from_yaml
 from family_tree.model import inherit_origins, load_people
 from family_tree.render import _node_json, _person_json, summary_json
 from family_tree.tree import build_tree
-from family_tree.views import family_json, family_links, origin_of, relation_text
+from family_tree.views import family_json, family_links, origin_of, relation_text, village_place
 from tests.sample import sample_graph
 
 YAML = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "family-tree.yaml")
@@ -74,12 +74,15 @@ class TestSampleViews(unittest.TestCase):
 
 class TestSameTreeAsToday(unittest.TestCase):
     def test_api_tree_matches_the_static_build(self):
+        rows = rows_from_yaml(YAML)
+        villages = {v["name"]: village_place(v) for v in rows["villages"]}
         people = load_people(YAML)
+        for p in people:
+            p.origin = dict(villages.get(p.origin.get("village"), {}))
         inherit_origins(people)
         for p in people:
             p.life = p.life or "living"
         root, unlinked, summary = build_tree(people)
-        rows = rows_from_yaml(YAML)
         graph = Graph(rows["people"], rows["marriages"], rows["families"], rows["villages"])
         data = family_json(graph, "bakheta", lambda pid: {})
         self.assertEqual(data["tree"], _node_json(root))

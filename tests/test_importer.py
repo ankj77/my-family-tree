@@ -16,7 +16,7 @@ class TestImporter(unittest.TestCase):
     def test_counts(self):
         self.assertEqual(len(self.rows["people"]), 175)
         self.assertEqual(len(self.rows["marriages"]), 28)
-        self.assertEqual([v["id"] for v in self.rows["villages"]], ["bakheta"])
+        self.assertEqual(self.rows["villages"][0]["id"], "bakheta")
         self.assertEqual(self.rows["families"][0]["root_person_id"], "ramkrishan")
 
     def test_rows_have_every_column(self):
@@ -27,8 +27,15 @@ class TestImporter(unittest.TestCase):
         self.assertEqual(self.by_id["ankur"]["family_id"], "bakheta")
         self.assertEqual(self.by_id["ankur"]["father_id"], "vijay")
         self.assertIsNone(self.by_id["attro"]["family_id"])
-        self.assertEqual(self.by_id["attro"]["origin_village"], "Bal Pabana")
-        self.assertEqual(self.by_id["jagdishchand_wife"]["origin_village"], "Pugthala")
+        self.assertEqual(self.by_id["attro"]["origin_village_id"], "bal_pabana")
+        self.assertEqual(self.by_id["jagdishchand_wife"]["origin_village_id"], "pugthala")
+
+    def test_origins_become_villages(self):
+        villages = {v["id"]: v for v in self.rows["villages"]}
+        self.assertEqual(villages["bal_pabana"], {"id": "bal_pabana", "name": "Bal Pabana",
+                                                  "district": "Karnal", "state": "Haryana"})
+        self.assertEqual(villages["rajakhedi"]["district"], "Panipat")
+        self.assertEqual(self.by_id["ramkrishan"]["origin_village_id"], "bakheta")
 
     def test_mother_linked_child_gets_her_husband_as_father(self):
         self.assertEqual(self.by_id["santosh"]["mother_id"], "chalti")

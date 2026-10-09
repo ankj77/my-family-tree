@@ -11,7 +11,6 @@ TEXT_FIELDS = {
     key: 200 for key in (
         "name", "name_hi", "father_name", "mother_name",
         "address_line", "address_locality", "address_city", "address_state", "address_country",
-        "origin_village", "origin_district", "origin_state",
     )
 }
 TEXT_FIELDS.update({"born": 100, "died": 100, "note": 2000})
@@ -21,7 +20,7 @@ CHOICES = {
     "status": {"uncertain", "needs-parent", "gap"},
 }
 LINK_FIELDS = ("father_id", "mother_id", "family_id")
-EDIT_FIELDS = tuple(TEXT_FIELDS) + tuple(CHOICES) + ("sort_order",)
+EDIT_FIELDS = tuple(TEXT_FIELDS) + tuple(CHOICES) + ("sort_order", "origin_village_id")
 
 
 def display(row: dict) -> str:

@@ -252,6 +252,14 @@ def person_extras(graph, access, pending, pid):
     }
 
 
+def clean_person_fields(graph, data, allowed):
+    fields = rules.clean_fields(data, allowed)
+    village = fields.get("origin_village_id")
+    if village is not None and village not in graph.villages:
+        raise ApiError(404, "No such village: %s" % village)
+    return fields
+
+
 @app.get("/villages")
 def list_villages():
     _, graph, _ = context()
@@ -316,7 +324,7 @@ def create_person():
     if not access.can_edit(anchor):
         raise ApiError(403, "You cannot edit %s" % name_of(graph, anchor))
     allowed = rules.EDIT_FIELDS + (("family_id",) if kind == "spouse" else ())
-    fields = rules.clean_fields(data, allowed)
+    fields = clean_person_fields(graph, data, allowed)
     if kind == "child":
         fields.update(child_links(graph, anchor))
     else:
@@ -353,7 +361,7 @@ def update_person(pid):
     data = body()
     if set(data) & set(rules.LINK_FIELDS) and not access.is_admin_over(pid):
         raise ApiError(403, "Only an admin can move a person to other parents or another family")
-    fields = rules.clean_fields(data, rules.EDIT_FIELDS + rules.LINK_FIELDS)
+    fields = clean_person_fields(graph, data, rules.EDIT_FIELDS + rules.LINK_FIELDS)
     for key in ("father_id", "mother_id"):
         if fields.get(key) is not None and fields[key] not in graph.people:
             raise ApiError(404, "No such person: %s" % fields[key])
@@ -693,7 +701,7 @@ def create_family():
         raise ApiError(403, "You cannot add families to this village")
     name = required_text(data, "name", "Family name")
     root = data.get("root") if isinstance(data.get("root"), dict) else {}
-    root_fields = rules.clean_fields(root, rules.EDIT_FIELDS)
+    root_fields = clean_person_fields(graph, root, rules.EDIT_FIELDS)
     fid = naming.slug(name, set(graph.families), fallback="family")
     pid = naming.slug(root_fields.get("name") or root_fields.get("name_hi") or "", set(graph.people))
     cur = conn().cursor()

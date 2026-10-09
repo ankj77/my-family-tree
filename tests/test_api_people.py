@@ -22,7 +22,7 @@ class TestViewing(ApiCase):
     def test_villages_and_people(self):
         self.login("amit")
         villages = self.get("/villages").get_json()
-        self.assertEqual([v["id"] for v in villages], ["bakheta", "pugthala"])
+        self.assertEqual([v["id"] for v in villages], ["bakheta", "kakroi", "pugthala"])
         self.assertEqual(villages[0]["families"][0]["id"], "bakheta")
         people = self.get("/people").get_json()
         self.assertEqual(len(people), 9)
@@ -126,6 +126,14 @@ class TestEditing(ApiCase):
         entry = self.query("SELECT action, before_json, after_json FROM change_log WHERE person_id='amit'")[0]
         self.assertEqual(entry["action"], "update")
         self.assertIn("1990", entry["after_json"])
+
+    def test_home_village_must_be_a_village(self):
+        self.login("jagdish")
+        self.assertEqual(self.patch("/people/amit", {"origin_village_id": "nowhere"}).status_code, 404)
+        r = self.patch("/people/amit", {"origin_village_id": "pugthala"})
+        self.assertEqual(r.status_code, 200, r.get_json())
+        tree = self.get("/families/bakheta/tree").get_json()["tree"]
+        self.assertEqual(find(tree, "amit")["origin"], {"village": "Pugthala", "state": "Haryana"})
 
     def test_edit_values_include_links_for_admin(self):
         self.login("mohan")

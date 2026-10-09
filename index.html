@@ -1828,7 +1828,7 @@ FT.views.poster = {
     var select = document.createElement('select');
     select.id = 'family-picker';
     select.setAttribute('aria-label', 'Family');
-    villages.forEach(function (v) {
+    villages.filter(function (v) { return v.families.length; }).forEach(function (v) {
       var group = document.createElement('optgroup');
       group.label = v.name;
       v.families.forEach(function (f) {
@@ -1917,8 +1917,8 @@ FT.views.poster = {
     name: 'Name', name_hi: 'Hindi name', gender: 'Gender', life: 'Living or deceased',
     born: 'Born', died: 'Died', status: 'Name status', sort_order: 'Order among brothers and sisters',
     address_line: 'Address', address_locality: 'Locality', address_city: 'City',
-    address_state: 'State', address_country: 'Country', origin_village: 'Home village',
-    origin_district: 'Home district', origin_state: 'Home state', father_name: 'Father (name only)',
+    address_state: 'State', address_country: 'Country', origin_village_id: 'Home village',
+    father_name: 'Father (name only)',
     mother_name: 'Mother (name only)', note: 'Note', family_id: 'Born in family',
     father_id: 'Father', mother_id: 'Mother'
   };
@@ -1930,7 +1930,7 @@ FT.views.poster = {
   var EDIT_MOVE = ['father_id', 'mother_id', 'family_id'];
   var EDIT_ALL = ['name', 'name_hi', 'gender', 'life', 'born', 'died', 'status', 'sort_order',
     'address_line', 'address_locality', 'address_city', 'address_state', 'address_country',
-    'origin_village', 'origin_district', 'origin_state', 'father_name', 'mother_name', 'note'];
+    'origin_village_id', 'father_name', 'mother_name', 'note'];
   var NEW_CHILD = EDIT_ALL.filter(function (n) { return n !== 'father_name' && n !== 'mother_name'; });
   var NEW_SPOUSE = EDIT_ALL.concat(['family_id']);
 
@@ -2038,6 +2038,13 @@ FT.views.poster = {
     return out;
   }
 
+  edit.villageOptions = function (villages) {
+    return [['', 'Not recorded']].concat(villages.map(function (v) {
+      var where = [v.district, v.state].filter(Boolean).join(', ');
+      return [v.id, where ? v.name + ' (' + where + ')' : v.name];
+    }).sort(function (a, b) { return a[1].localeCompare(b[1]); }));
+  };
+
   function peopleOptions(people, skip) {
     return [['', '—']].concat(people.filter(function (p) { return p.id !== skip; }).map(function (p) {
       return [p.id, nameOf(p)];
@@ -2068,7 +2075,7 @@ FT.views.poster = {
       var load = person.can_move ? api.call('GET', '/people') : Promise.resolve(null);
       load.then(function (people) {
         var names = edit.editNames(!!people);
-        var options = {};
+        var options = { origin_village_id: edit.villageOptions(api.villages || []) };
         if (people) {
           options.father_id = options.mother_id = peopleOptions(people, person.id);
           options.family_id = familyOptions();
@@ -2080,14 +2087,15 @@ FT.views.poster = {
         }, back);
       }, function (err) { body.insertAdjacentHTML('beforeend', '<p class="form-msg">' + esc(err.message) + '</p>'); });
     } else if (kind === 'child') {
-      openForm(body, formHtml('Add a child of ' + nameOf(person), NEW_CHILD, { life: 'living' }, {}, 'Add'), function (values) {
+      openForm(body, formHtml('Add a child of ' + nameOf(person), NEW_CHILD, { life: 'living' },
+        { origin_village_id: edit.villageOptions(api.villages || []) }, 'Add'), function (values) {
         return api.call('POST', '/people', Object.assign({ as: 'child', parent_id: person.id }, values))
           .then(function (r) { api.reloadAt(r.id); });
       }, back);
     } else if (kind === 'spouse') {
       var gender = person.gender === 'male' ? 'female' : person.gender === 'female' ? 'male' : '';
       openForm(body, formHtml(spouseLabel(person) + ' for ' + nameOf(person), NEW_SPOUSE,
-        { gender: gender, life: 'living' }, { family_id: familyOptions() }, 'Add'), function (values) {
+        { gender: gender, life: 'living' }, { family_id: familyOptions(), origin_village_id: edit.villageOptions(api.villages || []) }, 'Add'), function (values) {
         return api.call('POST', '/people', Object.assign({ as: 'spouse', spouse_id: person.id }, values))
           .then(function (r) { api.reloadAt(r.id); });
       }, back);

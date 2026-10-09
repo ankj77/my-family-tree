@@ -103,7 +103,7 @@
     var select = document.createElement('select');
     select.id = 'family-picker';
     select.setAttribute('aria-label', 'Family');
-    villages.forEach(function (v) {
+    villages.filter(function (v) { return v.families.length; }).forEach(function (v) {
       var group = document.createElement('optgroup');
       group.label = v.name;
       v.families.forEach(function (f) {
