@@ -495,13 +495,18 @@ FT.boot = function (data) {
     return FT.visibleChildren(n);
   };
 
+  FT.hasHiddenKids = function (n) {
+    var only = FT.state.only;
+    return !!only && !FT.state.collapsed[n.id] && (n.children || []).some(function (c) { return !only[c.id]; });
+  };
+
   FT.toggleKids = function (n, depth) {
-    if (FT.kidsAt(n, depth).length) {
+    var only = FT.state.only;
+    if (FT.kidsAt(n, depth).length && !FT.hasHiddenKids(n)) {
       FT.state.collapsed[n.id] = true;
     } else {
       FT.state.collapsed[n.id] = false;
       FT.state.grown[n.id] = true;
-      var only = FT.state.only;
       if (only) (n.children || []).forEach(function (c) { only[c.id] = true; });
     }
     FT.render();
@@ -992,7 +997,7 @@ FT.boot = function (data) {
     var sign = el('text', {
       'class': 'toggle-sign', x: cx, y: cy + 5, 'text-anchor': 'middle'
     }, g);
-    sign.textContent = FT.kidsAt(n, n.depth || 0).length ? '\u2212' : '+';
+    sign.textContent = FT.kidsAt(n, n.depth || 0).length && !FT.hasHiddenKids(n) ? '\u2212' : '+';
     hit.addEventListener('click', function (ev) {
       ev.stopPropagation();
       FT.toggleKids(n, n.depth || 0);
