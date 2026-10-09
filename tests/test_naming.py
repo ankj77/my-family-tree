@@ -22,6 +22,7 @@ class TestNaming(unittest.TestCase):
     def test_username_uses_dots_and_plain_numbers(self):
         self.assertEqual(username("Jagdish Chand", set()), "jagdish.chand")
         self.assertEqual(username("Jagdish Chand", {"jagdish.chand"}), "jagdish.chand2")
+        self.assertEqual(username("Naveen", {"t-naveen"}, "t-"), "t-naveen2")
 
     def test_long_names_are_cut(self):
         self.assertLessEqual(len(slug("a" * 300, set())), 56)

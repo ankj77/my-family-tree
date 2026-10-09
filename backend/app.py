@@ -714,10 +714,11 @@ def create_account():
         raise RuleError("Only living people get a login; mark %s as living first" % name_of(graph, pid))
     cur = conn().cursor()
     taken = set(usernames(cur).values()) | guest_usernames(cur)
-    username = clean_username(data["username"]) if data.get("username") else naming.username(name_of(graph, pid), taken)
+    temporary = data.get("temporary") is True
+    prefix = "t-" if temporary else ""
+    username = clean_username(data["username"]) if data.get("username") else naming.username(name_of(graph, pid), taken, prefix)
     if username in taken:
         raise RuleError("The username %s is taken" % username)
-    temporary = data.get("temporary") is True
     minutes = temporary_minutes(data) if temporary else None
     password = temporary_password(data) if temporary else auth.new_password()
     expires_at = now() + timedelta(minutes=minutes) if temporary else None

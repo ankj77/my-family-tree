@@ -22,5 +22,5 @@ def slug(text, taken, fallback="person"):
     return _unique("_".join(_words(text)) or fallback, taken, "_")
 
 
-def username(text, taken):
-    return _unique(".".join(_words(text)) or "user", taken, "")
+def username(text, taken, prefix=""):
+    return _unique(prefix + (".".join(_words(text)) or "user"), taken, "")
