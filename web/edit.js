@@ -102,6 +102,7 @@
   function openForm(body, html, onSubmit, onCancel) {
     body.innerHTML = html;
     var form = body.querySelector('form');
+    FT.api.autoHindi(form, 'name', 'name_hi');
     form.querySelector('[data-cancel]').addEventListener('click', onCancel);
     form.addEventListener('submit', function (e) {
       e.preventDefault();

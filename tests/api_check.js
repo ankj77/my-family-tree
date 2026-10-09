@@ -31,6 +31,10 @@ assert.strictEqual(api.urlFor('bal pabana', 'a&b'), '?family=bal%20pabana&person
 assert.strictEqual(api.base('localhost'), 'http://localhost:5001');
 assert.strictEqual(api.base('jainparivar.online'), 'https://api.jainparivar.online');
 
+assert.strictEqual(api.firstHindi(['SUCCESS', [['Gautam', ['गौतम', 'गौत्तम'], [], {}]]]), 'गौतम');
+assert.strictEqual(api.firstHindi(['FAILED_TO_PROCESS']), '');
+assert.strictEqual(api.firstHindi(null), '');
+assert.ok(api.hindiUrl('Ram Krishan').indexOf('text=Ram%20Krishan') > 0);
 assert.strictEqual(api.treeLabel({ name: 'Pathri' }, { name: 'Jain', root_name: 'Ram Lal' }), 'Pathri · Ram Lal');
 assert.strictEqual(api.treeLabel({ name: 'Pathri' }, { name: 'Jain', root_name: null }), 'Pathri · Jain');
 assert.strictEqual(api.treeLabelHtml({ name: 'A<b>' }, { name: 'X', root_name: 'Ram' }), '<b>A&lt;b&gt;</b> · Ram');

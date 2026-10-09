@@ -5,6 +5,31 @@
       : 'https://api.jainparivar.online';
   };
 
+  api.hindiUrl = function (text) {
+    return 'https://inputtools.google.com/request?itc=hi-t-i0-und&num=1&cp=0&cs=1&ie=utf-8&oe=utf-8&app=jainparivar&text=' +
+      encodeURIComponent(text);
+  };
+
+  api.firstHindi = function (reply) {
+    var match = reply && reply[0] === 'SUCCESS' && reply[1] && reply[1][0];
+    return (match && match[1] && match[1][0]) || '';
+  };
+
+  api.autoHindi = function (form, from, to) {
+    var source = form.elements[from], target = form.elements[to];
+    if (!source || !target) return;
+    var auto = !target.value;
+    target.addEventListener('input', function () { auto = !target.value; });
+    source.addEventListener('change', function () {
+      var text = source.value.trim();
+      if (!auto || !text) return;
+      fetch(api.hindiUrl(text)).then(function (r) { return r.json(); }).then(function (reply) {
+        var hindi = api.firstHindi(reply);
+        if (hindi && auto) target.value = hindi;
+      }).catch(function () {});
+    });
+  };
+
   api.pickFamily = function (requested, stored, home, villages) {
     var ids = [];
     villages.forEach(function (v) { v.families.forEach(function (f) { ids.push(f.id); }); });

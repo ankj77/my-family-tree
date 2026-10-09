@@ -167,6 +167,8 @@
     main.innerHTML = '<p>Loading…</p>';
     return tabs[state.tab]().then(function (html) {
       main.innerHTML = html;
+      var familyForm = main.querySelector('form[data-form="family"]');
+      if (familyForm) api().autoHindi(familyForm, 'root_name', 'root_name_hi');
       var logPerson = document.getElementById('log-person');
       if (logPerson) {
         logPerson.addEventListener('change', function () {
