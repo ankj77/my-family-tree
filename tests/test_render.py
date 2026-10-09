@@ -424,11 +424,11 @@ class TestHeaderAndControls(unittest.TestCase):
 
 
 class TestSearchFindsMarriedInPeople(unittest.TestCase):
-    def test_search_looks_at_spouses_and_opens_their_sheet(self):
+    def test_search_looks_at_spouses_and_shows_the_tree_not_the_sheet(self):
         html = _payload_html()
         self.assertIn("[n].concat(n.spouses || []).forEach", html)
         self.assertIn("data-person=", html)
-        self.assertIn("if (personId && personId !== id) FT.select(personId, FT.byId[id]);", html)
+        self.assertNotIn("FT.select(personId", html)
 
     def test_search_finds_parents_named_on_married_in_people(self):
         html = _payload_html()

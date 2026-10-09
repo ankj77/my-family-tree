@@ -324,7 +324,7 @@ FT.boot = function (data) {
     if (!owner) return;
     FT.state.picks = [owner.id];
     FT.showPicks();
-    if (owner.id !== id) FT.select(id, owner);
+    FT.select(id, owner);
   };
 
   FT.lineage = function (id) {
@@ -419,7 +419,7 @@ FT.boot = function (data) {
     tx = r.width / 2 - (n.x + FT.jointX(n)) * scale;
     ty = r.height / 2 - n.y * scale;
     apply();
-    FT.select(ids[0], n);
+    FT.closeSheet();
   };
 
   document.getElementById('sheet-close').addEventListener('click', FT.closeSheet);
@@ -1170,7 +1170,7 @@ FT.boot = function (data) {
 
   function choose(row) {
     var v = row.getAttribute('data-place');
-    if (!v) { go(row.getAttribute('data-goto'), row.getAttribute('data-person')); return; }
+    if (!v) { go(row.getAttribute('data-goto')); return; }
     hideSuggest();
     searchBox.value = '';
     searchBox.blur();
@@ -1178,7 +1178,7 @@ FT.boot = function (data) {
     FT.showPlace(v);
   }
 
-  function go(id, personId) {
+  function go(id) {
     hideSuggest();
     searchBox.value = '';
     searchBox.blur();
@@ -1192,7 +1192,6 @@ FT.boot = function (data) {
     }
     pickNote = '';
     FT.showPicks();
-    if (personId && personId !== id) FT.select(personId, FT.byId[id]);
   }
 
   searchBox.addEventListener('input', renderSuggest);
