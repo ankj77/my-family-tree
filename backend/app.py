@@ -113,7 +113,16 @@ def log(cur, actor, person_id, action, before=None, after=None):
     )
 
 
+def drop_empty_families(cur):
+    cur.execute("SELECT f.id, f.name, f.village_id FROM families f LEFT JOIN people p ON p.family_id = f.id "
+                "WHERE p.id IS NULL")
+    for family in cur.fetchall():
+        cur.execute("DELETE FROM families WHERE id=%s", (family["id"],))
+        log(cur, "system", None, "family_remove", family, None)
+
+
 def commit_checked(cur):
+    drop_empty_families(cur)
     graph, _ = db.load_graph(cur)
     rules.check(graph)
     conn().commit()

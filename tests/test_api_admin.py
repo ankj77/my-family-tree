@@ -180,6 +180,8 @@ class TestVillagesAndFamilies(ApiCase):
         tree = self.get("/families/%s/tree" % fid).get_json()["tree"]
         self.assertEqual(tree["name"], "Lala")
         self.assertEqual(self.get("/families/%s/tree" % fid).get_json()["family"]["name"], "Pugthala")
+        self.assertEqual(self.patch("/people/%s" % r.get_json()["root_person_id"], {"family_id": None}).status_code, 200)
+        self.assertEqual(self.get("/families/%s/tree" % fid).status_code, 404)
         self.assertEqual(self.post("/families", {"village_id": "bakheta",
                                                  "root": {"name": "Y"}}).status_code, 403)
 
