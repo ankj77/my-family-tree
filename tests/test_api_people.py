@@ -153,7 +153,7 @@ class TestEditing(ApiCase):
     def test_add_father_refused_when_linked_through_mother(self):
         self.login("mohan")
         kid = self.post("/people", {"as": "child", "parent_id": "neha", "name": "Kiran"}).get_json()["id"]
-        self.assertEqual(self.patch("/people/%s" % kid, {"father_id": None}).status_code, 200)
+        self.assertEqual(self.patch("/people/%s" % kid, {"father_id": None, "family_id": "bakheta"}).status_code, 200)
         r = self.post("/people/%s/father" % kid, {"name": "X"})
         self.assertEqual(r.status_code, 409)
         self.assertIn("through the mother", r.get_json()["error"])
@@ -300,6 +300,13 @@ class TestScope(ApiCase):
         self.assertEqual(self.patch("/people/rashmi", {"family_id": "bakheta"}).status_code, 403)
         self.assertEqual(self.patch("/people/rashmi", {"father_id": "jagdish"}).status_code, 403)
         self.assertEqual(self.query("SELECT father_id FROM people WHERE id='rashmi'")[0]["father_id"], "bash")
+
+    def test_child_of_daughter_stays_out_of_her_family_when_father_has_none(self):
+        self.login("mohan")
+        r = self.post("/people", {"as": "child", "parent_id": "neha", "name": "Kiran", "gender": "female"})
+        self.assertEqual(r.status_code, 201, r.get_json())
+        row = self.query("SELECT family_id, father_id, mother_id FROM people WHERE id='kiran'")[0]
+        self.assertEqual(row, {"family_id": None, "father_id": "vikram", "mother_id": "neha"})
 
     def test_child_under_pugthala_wife_joins_fathers_family(self):
         self.login("jagdish")

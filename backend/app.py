@@ -385,7 +385,7 @@ def child_links(graph, parent_id):
     else:
         links = {"father_id": parent_id, "mother_id": spouse}
     father = graph.people.get(links["father_id"])
-    links["family_id"] = (father and father.get("family_id")) or graph.home_family(parent_id)
+    links["family_id"] = father.get("family_id") if father else graph.home_family(parent_id)
     return links
 
 
