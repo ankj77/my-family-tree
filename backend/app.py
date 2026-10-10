@@ -324,8 +324,19 @@ def person_extras(graph, access, pending, pid):
         "delete_reason": blocker,
         "delete_pending": pid in pending,
         "links": [link for link in views.family_links(graph, pid) if access.can_read_family(link["family_id"])],
+        "parent_families": parent_families(graph, access, pid),
         "edit": {k: row.get(k) for k in rules.EDIT_FIELDS + rules.LINK_FIELDS} if can_edit else None,
     }
+
+
+def parent_families(graph, access, pid):
+    out = {}
+    for key in ("father_id", "mother_id"):
+        parent = graph.people[pid].get(key)
+        family = graph.people[parent].get("family_id") if parent in graph.people else None
+        if family is not None and access.can_read_family(family):
+            out[key[:-3]] = {"id": parent, "family_id": family}
+    return out
 
 
 def clean_person_fields(graph, data, allowed):

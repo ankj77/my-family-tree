@@ -32,6 +32,17 @@ class TestViewing(ApiCase):
         self.assertEqual(self.get("/families/pugthala/tree").status_code, 403)
         self.assertTrue(next(p for p in people if p["id"] == "amit")["has_account"])
 
+    def test_married_in_wife_links_to_her_fathers_family(self):
+        self.login("mohan")
+        tree = self.get("/families/bakheta/tree").get_json()["tree"]
+        rashmi = find(tree, "rashmi")
+        self.assertEqual(rashmi["father"], "Bash")
+        self.assertEqual(rashmi["parent_families"], {"father": {"id": "bash", "family_id": "pugthala"}})
+        self.post("/logout")
+        self.login("amit")
+        tree = self.get("/families/bakheta/tree").get_json()["tree"]
+        self.assertEqual(find(tree, "rashmi")["parent_families"], {})
+
     def test_tree_flags_for_branch_rep(self):
         self.login("jagdish")
         tree = self.get("/families/bakheta/tree").get_json()["tree"]
