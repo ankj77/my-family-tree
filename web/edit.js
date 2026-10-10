@@ -186,7 +186,7 @@
   var NEW_VILLAGE = '__new';
   var NEW_VILLAGE_FIELDS = ['new_village_name', 'new_village_district', 'new_village_state'];
   LABELS.new_village_name = 'New village name';
-  LABELS.new_village_district = 'District';
+  LABELS.new_village_district = 'District (optional)';
   LABELS.new_village_state = 'State';
 
   edit.villageOptions = function (villages) {
@@ -202,6 +202,7 @@
     NEW_VILLAGE_FIELDS.forEach(function (n) { delete values[n]; });
     if (!wanted) return Promise.resolve(values);
     if (!place.name) return Promise.reject(new Error('Enter the new village name'));
+    if (!place.state) return Promise.reject(new Error('Choose the state of the new village'));
     return call('POST', '/villages', place).then(function (r) {
       values.origin_village_id = r.id;
       if (FT.api.villages && !FT.api.villages.some(function (v) { return v.id === r.id; })) {

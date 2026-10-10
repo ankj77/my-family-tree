@@ -894,15 +894,14 @@ def create_village():
         raise ApiError(403, "Only people who can edit the tree can add villages")
     data = body()
     name = required_text(data, "name", "Village name")
+    state = required_text(data, "state", "State")
     same = [v for v in graph.villages.values() if same_place(v["name"], name)]
     if same:
         return jsonify(id=same[0]["id"], existing=True)
-    extra = {}
-    for key, label in (("district", "District"), ("state", "State")):
-        value = str(data.get(key) or "").strip()
-        if len(value) > 200:
-            raise RuleError("%s is longer than 200 characters" % label)
-        extra[key] = value or None
+    district = str(data.get("district") or "").strip()
+    if len(district) > 200:
+        raise RuleError("District is longer than 200 characters")
+    extra = {"district": district or None, "state": state}
     vid = naming.slug(name, set(graph.villages), fallback="village")
     cur = conn().cursor()
     db.insert_rows(cur, "villages", [dict(extra, id=vid, name=name)])

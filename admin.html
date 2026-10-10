@@ -652,8 +652,8 @@
     }).join('') + '</select></label>';
   }
 
-  function text(name, title) {
-    return '<label>' + esc(title) + '<input name="' + name + '" autocomplete="off"></label>';
+  function text(name, title, required) {
+    return '<label>' + esc(title) + '<input name="' + name + '" autocomplete="off"' + (required ? ' required' : '') + '></label>';
   }
 
   function adminOf(villageId) {
@@ -724,7 +724,7 @@
       }).join('');
       if (state.me.is_global) {
         html += '<h3>Add a village</h3><form data-form="village" class="admin-form">' +
-          text('name', 'Village name') + text('district', 'District') + text('state', 'State') +
+          text('name', 'Village name', true) + text('district', 'District (optional)') + text('state', 'State', true) +
           '<button type="submit">Add village</button></form>';
       }
       var mine = state.villages.filter(function (v) { return adminOf(v.id); }).map(function (v) { return [v.id, v.name]; });

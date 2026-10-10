@@ -65,6 +65,8 @@ edit.withNewVillage({ origin_village_id: '__new', new_village_name: 'Kheri', new
   });
 edit.withNewVillage({ origin_village_id: '__new', new_village_name: null }, fakeCall)
   .then(function () { assert.fail('should refuse'); }, function (e) { assert.strictEqual(e.message, 'Enter the new village name'); });
+edit.withNewVillage({ origin_village_id: '__new', new_village_name: 'Kheri', new_village_state: '' }, fakeCall)
+  .then(function () { assert.fail('should refuse'); }, function (e) { assert.strictEqual(e.message, 'Choose the state of the new village'); });
 assert.strictEqual(edit.villageOptions([])[0][1], 'Choose village');
 assert.deepStrictEqual(edit.villageOptions([]).slice(-1)[0], ['__new', '+ Add a new village']);
 
