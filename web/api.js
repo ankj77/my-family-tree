@@ -49,7 +49,20 @@
     try { return text ? JSON.parse(text) : {}; } catch (e) { return {}; }
   }
 
+  var pending = 0;
+  function busy(change) {
+    pending += change;
+    var root = typeof document !== 'undefined' && document.documentElement;
+    if (root) root.classList.toggle('api-busy', pending > 0);
+  }
+
   api.call = function (method, path, body) {
+    busy(1);
+    return send(method, path, body).then(function (data) { busy(-1); return data; },
+      function (err) { busy(-1); throw err; });
+  };
+
+  function send(method, path, body) {
     var options = { method: method, credentials: 'include', headers: {} };
     if (body !== undefined) {
       options.headers['Content-Type'] = 'application/json';
@@ -69,7 +82,7 @@
       err.status = 0;
       throw err;
     });
-  };
+  }
 
   function param(name) {
     var m = new RegExp('[?&]' + name + '=([^&#]*)').exec(location.search);
