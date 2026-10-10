@@ -25,8 +25,11 @@ class TestViewing(ApiCase):
         self.assertEqual([v["id"] for v in villages], ["bakheta", "kakroi", "pugthala"])
         self.assertEqual(villages[0]["families"][0]["id"], "bakheta")
         self.assertEqual(villages[0]["families"][0]["root_name"], "Ram")
+        self.assertEqual(villages[2]["families"], [])
         people = self.get("/people").get_json()
-        self.assertEqual(len(people), 9)
+        self.assertEqual(sorted(p["id"] for p in people),
+                         ["amit", "jagdish", "mohan", "neha", "ram", "sita", "vikram"])
+        self.assertEqual(self.get("/families/pugthala/tree").status_code, 403)
         self.assertTrue(next(p for p in people if p["id"] == "amit")["has_account"])
 
     def test_tree_flags_for_branch_rep(self):
@@ -135,6 +138,9 @@ class TestEditing(ApiCase):
         r = self.post("/people/vikram/father", {"name": "Dev"})
         self.assertEqual(r.status_code, 201, r.get_json())
         self.assertEqual(r.get_json()["family_id"], "kakroi")
+        self.assertEqual(self.get("/families/kakroi/tree").status_code, 403)
+        self.post("/logout")
+        self.login("mohan")
         tree = self.get("/families/kakroi/tree").get_json()["tree"]
         self.assertEqual(tree["name"], "Dev")
         self.assertEqual([c["id"] for c in tree["children"]], ["vikram"])
@@ -230,7 +236,7 @@ class TestDeleting(ApiCase):
         self.assertTrue(find(tree, "amit")["delete_pending"])
         self.post("/logout")
         self.login("bash")
-        self.assertEqual(self.get("/delete-requests").get_json(), [])
+        self.assertEqual(self.get("/delete-requests").status_code, 403)
         self.post("/logout")
         self.login("mohan")
         pending = self.get("/delete-requests").get_json()

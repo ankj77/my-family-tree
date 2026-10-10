@@ -1916,9 +1916,10 @@ FT.views.poster = {
     if (me.guest) return 'Guest (view only)';
     if (me.is_global) return 'Global admin';
     var scopes = me.roles.map(function (r) { return r.scope; });
-    if (scopes.indexOf('village') >= 0) return 'Village admin';
-    if (scopes.indexOf('branch') >= 0) return 'Branch rep';
-    return 'Member';
+    if (scopes.indexOf('family') >= 0) return 'Family tree admin';
+    if (scopes.indexOf('branch') >= 0) return 'Node admin';
+    if (scopes.indexOf('reader') >= 0) return 'Global reader';
+    return 'Family reader';
   };
 
   function parse(text) {

@@ -7,7 +7,7 @@ from tests.sample import sample_rows
 ORIGIN = {"Origin": "https://jainparivar.online"}
 ACCOUNTS = {
     "mohan": [("global", "")],
-    "bash": [("village", "pugthala")],
+    "bash": [("family", "pugthala")],
     "jagdish": [("branch", "jagdish")],
     "amit": [],
     "rashmi": [],

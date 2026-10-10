@@ -113,18 +113,20 @@ class TestAccounts(ApiCase):
 class TestRoles(ApiCase):
     def test_grant_and_revoke(self):
         self.login("mohan")
-        r = self.post("/role-grants", {"person_id": "amit", "scope": "village", "scope_id": "bakheta"})
+        r = self.post("/role-grants", {"person_id": "amit", "scope": "family", "scope_id": "bakheta"})
         self.assertEqual(r.status_code, 201, r.get_json())
-        self.assertEqual(self.post("/role-grants", {"person_id": "amit", "scope": "village",
+        self.assertEqual(self.post("/role-grants", {"person_id": "amit", "scope": "family",
                                                     "scope_id": "bakheta"}).status_code, 409)
         grants = self.get("/role-grants").get_json()
         made = next(g for g in grants if g["person_id"] == "amit")
-        self.assertEqual(made["scope_name"], "Bakheta")
+        self.assertEqual(made["scope_name"], "Bakheta · Ram")
+        r = self.post("/role-grants", {"person_id": "amit", "scope": "reader"})
+        self.assertEqual(r.status_code, 201, r.get_json())
         self.assertEqual(self.delete("/role-grants/%d" % made["id"]).status_code, 200)
 
     def test_village_admin_limits(self):
         self.login("bash")
-        self.assertEqual(self.post("/role-grants", {"person_id": "rashmi", "scope": "village",
+        self.assertEqual(self.post("/role-grants", {"person_id": "rashmi", "scope": "family",
                                                     "scope_id": "pugthala"}).status_code, 403)
         self.assertEqual(self.post("/role-grants", {"person_id": "rashmi", "scope": "branch",
                                                     "scope_id": "rashmi"}).status_code, 201)
@@ -170,9 +172,14 @@ class TestVillagesAndFamilies(ApiCase):
         self.post("/logout")
         self.login("amit")
         self.assertEqual(self.post("/villages", {"name": "X"}).status_code, 403)
+        self.query("INSERT INTO role_grants (person_id, scope, scope_id) VALUES ('amit', 'reader', '')")
+        self.assertEqual(self.post("/villages", {"name": "X", "state": "Haryana"}).status_code, 403)
 
     def test_family_create(self):
         self.login("bash")
+        self.assertEqual(self.post("/families", {"village_id": "pugthala", "root": {"name": "Y"}}).status_code, 403)
+        self.post("/logout")
+        self.login("mohan")
         r = self.post("/families", {"village_id": "pugthala",
                                     "root": {"name": "Lala", "gender": "male"}})
         self.assertEqual(r.status_code, 201, r.get_json())
@@ -182,8 +189,6 @@ class TestVillagesAndFamilies(ApiCase):
         self.assertEqual(self.get("/families/%s/tree" % fid).get_json()["family"]["name"], "Pugthala")
         self.assertEqual(self.patch("/people/%s" % r.get_json()["root_person_id"], {"family_id": None}).status_code, 200)
         self.assertEqual(self.get("/families/%s/tree" % fid).status_code, 404)
-        self.assertEqual(self.post("/families", {"village_id": "bakheta",
-                                                 "root": {"name": "Y"}}).status_code, 403)
 
 
 class TestChangeLog(ApiCase):
@@ -218,7 +223,7 @@ class TestFinalFixes(ApiCase):
         self.assertEqual(self.get("/me").status_code, 200)
 
     def test_peer_village_admin_cannot_be_removed(self):
-        self.conn.cursor().execute("INSERT INTO role_grants (person_id, scope, scope_id) VALUES ('rashmi', 'village', 'pugthala')")
+        self.conn.cursor().execute("INSERT INTO role_grants (person_id, scope, scope_id) VALUES ('rashmi', 'family', 'pugthala')")
         self.conn.commit()
         self.login("bash")
         self.assertEqual(self.delete("/accounts/rashmi").status_code, 403)
@@ -231,21 +236,21 @@ class TestFinalFixes(ApiCase):
             cur.execute("INSERT INTO people (id, name, family_id, father_id, gender, life) "
                         "VALUES ('kaka', 'Kaka', 'pugthala', 'bash', 'male', 'living')")
             cur.execute("INSERT INTO accounts (person_id, username, password_hash) VALUES ('kaka', 'kaka', 'x')")
-            cur.execute("INSERT INTO role_grants (person_id, scope, scope_id) VALUES ('kaka', 'village', 'pugthala')")
+            cur.execute("INSERT INTO role_grants (person_id, scope, scope_id) VALUES ('kaka', 'family', 'pugthala')")
         self.conn.commit()
         self.login("bash")
         self.assertEqual(self.delete("/people/kaka").status_code, 403)
         self.assertEqual(self.query("SELECT COUNT(*) AS n FROM people WHERE id='kaka'")[0]["n"], 1)
 
-    def test_village_admin_sees_own_deletions_in_log(self):
+    def test_family_admin_delete_is_a_request_seen_in_log(self):
         with self.conn.cursor() as cur:
             cur.execute("INSERT INTO people (id, name, family_id, father_id, gender, life) "
                         "VALUES ('kaka', 'Kaka', 'pugthala', 'bash', 'male', 'living')")
         self.conn.commit()
         self.login("bash")
-        self.assertEqual(self.delete("/people/kaka").status_code, 200)
+        self.assertEqual(self.delete("/people/kaka").status_code, 202)
         actions = [(e["action"], e["person_id"]) for e in self.get("/change-log?limit=1").get_json()]
-        self.assertEqual(actions, [("delete", "kaka")])
+        self.assertEqual(actions, [("delete_request", "kaka")])
         self.post("/logout")
         self.login("jagdish")
         self.assertEqual(self.get("/change-log").status_code, 403)
@@ -265,19 +270,22 @@ class TestFinalFixes(ApiCase):
 class TestGuests(ApiCase):
     def make(self, data=None):
         self.login("mohan")
-        r = self.post("/guests", data or {"minutes": 10})
+        r = self.post("/guests", data or {"minutes": 10, "scope": "family", "family_id": "bakheta"})
         self.assertEqual(r.status_code, 201, r.get_json())
         self.post("/logout")
         return r.get_json()
 
     def test_guest_sees_tree_without_addresses_and_cannot_change_anything(self):
         self.query("UPDATE people SET address_city='Delhi', note='private' WHERE id='amit'")
-        made = self.make({"username": "demo1", "password": "135790", "minutes": 15})
+        made = self.make({"username": "demo1", "password": "135790", "minutes": 15, "scope": "family",
+                          "family_id": "bakheta"})
         self.assertEqual(made, {"username": "demo1", "password": "135790", "minutes": 15, "unused_hours": 24})
         r = self.post("/login", {"username": "demo1", "password": "135790"})
         self.assertEqual(r.status_code, 200, r.get_json())
         self.assertTrue(r.get_json()["guest"])
         self.assertTrue(self.get("/me").get_json()["guest"])
+        self.assertEqual(self.get("/me").get_json()["home_family"], "bakheta")
+        self.assertEqual(self.get("/families/pugthala/tree").status_code, 403)
         tree = self.get("/families/bakheta/tree").get_json()["tree"]
         self.assertNotIn("Delhi", str(tree))
         self.assertNotIn("private", str(tree))
@@ -298,9 +306,10 @@ class TestGuests(ApiCase):
         self.query("UPDATE guest_sessions SET expires_at = UTC_TIMESTAMP() - INTERVAL 1 MINUTE")
         self.assertEqual(self.get("/me").status_code, 401)
         self.assertEqual(self.post("/login", made).status_code, 401)
-        second = self.make({"minutes": 5})
+        second = self.make({"minutes": 5, "scope": "reader"})
         self.login("mohan")
-        self.assertEqual([g["username"] for g in self.get("/guests").get_json()], [second["username"]])
+        self.assertEqual([(g["username"], g["covers"]) for g in self.get("/guests").get_json()],
+                         [(second["username"], "All families")])
         self.assertEqual(self.delete("/guests/" + second["username"]).status_code, 200)
         self.assertEqual(self.get("/guests").get_json(), [])
 
@@ -311,5 +320,6 @@ class TestGuests(ApiCase):
         self.login("mohan")
         self.assertEqual(self.post("/guests", {"username": "amit", "minutes": 5}).status_code, 409)
         self.assertEqual(self.post("/guests", {"minutes": 20}).status_code, 409)
-        self.assertEqual(self.post("/guests", {"username": "demo2", "minutes": 5}).status_code, 201)
+        self.assertEqual(self.post("/guests", {"username": "demo2", "minutes": 5, "scope": "family"}).status_code, 409)
+        self.assertEqual(self.post("/guests", {"username": "demo2", "minutes": 5, "scope": "reader"}).status_code, 201)
         self.assertEqual(self.post("/accounts", {"person_id": "neha", "username": "demo2"}).status_code, 409)

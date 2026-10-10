@@ -1,7 +1,7 @@
 (function (admin) {
   var TABS = [['accounts', 'Accounts'], ['roles', 'Roles'], ['deletes', 'Pending deletes'],
     ['families', 'Villages & families'], ['log', 'Change log']];
-  var ROLE = { global: 'Global admin', village: 'Village admin', branch: 'Branch rep' };
+  var ROLE = { global: 'Global admin', family: 'Family tree admin', branch: 'Node admin', reader: 'Global reader' };
   var state = {};
   var main;
 
@@ -88,10 +88,12 @@
     return '<label>' + esc(title) + '<input name="' + name + '" autocomplete="off"' + (required ? ' required' : '') + '></label>';
   }
 
-  function adminOf(villageId) {
-    return state.me.is_global || state.me.roles.some(function (r) {
-      return r.scope === 'village' && r.scope_id === villageId;
+  function familyOptions() {
+    var out = [];
+    state.villages.forEach(function (v) {
+      v.families.forEach(function (f) { out.push([f.id, v.name + ' · ' + (f.root_name || f.name)]); });
     });
+    return out;
   }
 
   var tabs = {
@@ -131,8 +133,9 @@
     roles: function () {
       return api().call('GET', '/role-grants').then(function (list) {
         var holders = state.people.filter(function (p) { return p.has_account; }).map(function (p) { return [p.id, label(p)]; });
-        var scopes = (state.me.is_global ? [['village', 'Village admin'], ['global', 'Global admin']] : []).concat([['branch', 'Branch rep']]);
-        var villages = state.villages.filter(function (v) { return adminOf(v.id); }).map(function (v) { return [v.id, v.name]; });
+        var scopes = state.me.is_global
+          ? [['family', ROLE.family], ['branch', ROLE.branch], ['reader', ROLE.reader], ['global', ROLE.global]]
+          : [['branch', ROLE.branch]];
         var everyone = state.people.map(function (p) { return [p.id, label(p) + (p.family_id ? ' (' + familyName(p.family_id) + ')' : '')]; });
         return table(['Person', 'Role', 'Covers', ''], list.map(function (g) {
           return '<tr><td>' + esc(g.person) + '</td><td>' + esc(ROLE[g.scope]) + '</td><td>' + esc(g.scope_name) +
@@ -141,13 +144,15 @@
           '<h3>Give a role</h3><form data-form="grant" class="admin-form">' +
           select('person_id', 'Person (must have a login)', holders) +
           select('scope', 'Role', scopes) +
-          select('village_id', 'Village (for village admin)', villages) +
-          select('branch_id', 'Branch starts at (for branch rep)', everyone) +
+          (state.me.is_global ? select('family_id', 'Family tree (for family tree admin)', familyOptions()) : '') +
+          select('branch_id', 'Node: this person, his wife and all descendants (for node admin)', everyone) +
           '<button type="submit">Give role</button></form>';
       });
     },
     families: function () {
-      var html = state.villages.map(function (v) {
+      var html = state.villages.filter(function (v) {
+        return state.me.is_global || v.families.length;
+      }).map(function (v) {
         var families = v.families.length ? v.families.map(function (f) {
           return '<li><a href="./?family=' + encodeURIComponent(f.id) + '">' + esc(f.name) + '</a> — starts at ' +
             esc(personName(f.root_person_id)) + '</li>';
@@ -159,10 +164,9 @@
           text('name', 'Village name', true) + text('district', 'District (optional)') + text('state', 'State', true) +
           '<button type="submit">Add village</button></form>';
       }
-      var mine = state.villages.filter(function (v) { return adminOf(v.id); }).map(function (v) { return [v.id, v.name]; });
-      if (mine.length) {
+      if (state.me.is_global) {
         html += '<h3>Add new family tree</h3><form data-form="family" class="admin-form">' +
-          select('village_id', 'Village', mine) +
+          select('village_id', 'Village', state.villages.map(function (v) { return [v.id, v.name]; })) +
           text('root_name', 'Eldest known ancestor') +
           select('root_gender', 'Ancestor gender', [['male', 'Male'], ['female', 'Female']]) +
           '<button type="submit">Add new family tree</button></form>';
@@ -189,6 +193,10 @@
     }
   };
 
+  function visibleTabs() {
+    return TABS.filter(function (t) { return t[0] !== 'deletes' || state.me.is_global; });
+  }
+
   function reload() {
     return Promise.all([api().call('GET', '/people'), api().call('GET', '/villages')]).then(function (r) {
       state.people = r[0];
@@ -199,7 +207,7 @@
   }
 
   function open(tab) {
-    state.tab = tabs[tab] ? tab : TABS[0][0];
+    state.tab = tabs[tab] && visibleTabs().some(function (t) { return t[0] === tab; }) ? tab : TABS[0][0];
     history.replaceState(null, '', '#' + state.tab);
     Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function (b) {
       b.setAttribute('aria-current', b.getAttribute('data-tab') === state.tab ? 'page' : 'false');
@@ -292,17 +300,29 @@
 
   function guestSection(guests) {
     if (!guests) return '';
-    var rows = guests.length ? table(['Guest username', 'Time left', ''], guests.map(function (g) {
-      return '<tr><td>' + esc(g.username) + '</td><td>' + timer(g) + '</td><td>' +
+    var rows = guests.length ? table(['Guest username', 'Can see', 'Time left', ''], guests.map(function (g) {
+      return '<tr><td>' + esc(g.username) + '</td><td>' + esc(g.covers) + '</td><td>' + timer(g) + '</td><td>' +
         '<button type="button" data-guest-remove="' + esc(g.username) + '">Remove</button></td></tr>';
     })) : '<p>No guest logins right now.</p>';
     return '<h3>Guest logins</h3><p class="relation">For people outside the family, e.g. a demo. ' +
-      'Guests can look at the trees but cannot change anything, and do not see addresses or notes.</p>' +
+      'Guests can look at trees but cannot change anything, and do not see addresses or notes.</p>' +
       rows + '<form data-form="guest" class="temp-form">' + tempFields() +
+      '<select name="scope" aria-label="Guest can see"><option value="family">Family reader: one family</option>' +
+      '<option value="reader">Global reader: all families</option></select>' +
+      '<select name="family_id" aria-label="Family for a family reader">' + familyOptions().map(function (o) {
+        return '<option value="' + esc(o[0]) + '">' + esc(o[1]) + '</option>';
+      }).join('') + '</select>' +
       '<button type="submit">Create guest login</button></form>';
   }
 
   admin.guestLogin = function (v) {
+    var out = admin.timedLogin(v);
+    out.scope = v.scope;
+    if (v.scope === 'family') out.family_id = v.family_id;
+    return out;
+  };
+
+  admin.timedLogin = function (v) {
     var out = { minutes: Number(v.minutes) };
     if (v.username) out.username = v.username;
     if (v.password) out.password = v.password;
@@ -318,7 +338,7 @@
   }
 
   admin.tempLogin = function (id, v) {
-    var out = admin.guestLogin(v);
+    var out = admin.timedLogin(v);
     out.person_id = id;
     out.temporary = true;
     return out;
@@ -365,7 +385,7 @@
     } else if (kind === 'grant') {
       request = api().call('POST', '/role-grants', {
         person_id: v.person_id, scope: v.scope,
-        scope_id: v.scope === 'village' ? v.village_id : v.scope === 'branch' ? v.branch_id : ''
+        scope_id: v.scope === 'family' ? v.family_id : v.scope === 'branch' ? v.branch_id : ''
       });
     } else if (kind === 'village') {
       request = api().call('POST', '/villages', { name: v.name, district: v.district || null, state: v.state || null });
@@ -390,7 +410,7 @@
       state.me = me;
       if (!me.is_admin) { main.innerHTML = '<p>Only admins can open this page.</p>'; return null; }
       var nav = document.getElementById('tabs');
-      nav.innerHTML = TABS.map(function (t) {
+      nav.innerHTML = visibleTabs().map(function (t) {
         return '<button type="button" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>';
       }).join('');
       nav.addEventListener('click', function (e) {

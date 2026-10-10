@@ -70,7 +70,7 @@ CREATE TABLE accounts (
 CREATE TABLE role_grants (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   person_id VARCHAR(64) NOT NULL,
-  scope ENUM('global','village','branch') NOT NULL,
+  scope ENUM('global','family','branch','reader') NOT NULL,
   scope_id VARCHAR(64) NOT NULL DEFAULT '',
   UNIQUE KEY uq_grant (person_id, scope, scope_id),
   CONSTRAINT fk_grant_account FOREIGN KEY (person_id) REFERENCES accounts(person_id) ON DELETE CASCADE
@@ -90,8 +90,11 @@ CREATE TABLE guest_logins (
   locked_until DATETIME NULL,
   expires_at DATETIME NOT NULL,
   temp_minutes INT NULL,
+  scope ENUM('family','reader') NOT NULL DEFAULT 'family',
+  family_id VARCHAR(64) NULL,
   created_by VARCHAR(64) NOT NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_guest_family FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE guest_sessions (

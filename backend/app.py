@@ -117,6 +117,7 @@ def drop_empty_families(cur):
     cur.execute("SELECT f.id, f.name, f.village_id FROM families f LEFT JOIN people p ON p.family_id = f.id "
                 "WHERE p.id IS NULL")
     for family in cur.fetchall():
+        cur.execute("DELETE FROM role_grants WHERE scope='family' AND scope_id=%s", (family["id"],))
         cur.execute("DELETE FROM families WHERE id=%s", (family["id"],))
         log(cur, "system", None, "family_remove", family, None)
 
@@ -154,13 +155,19 @@ def is_guest(actor):
     return actor.startswith(GUEST_PREFIX)
 
 
-def guest_me_json(actor):
-    username = actor[len(GUEST_PREFIX):]
+def guest_row(actor):
     cur = conn().cursor()
-    cur.execute("SELECT expires_at, temp_minutes FROM guest_logins WHERE username=%s", (username,))
-    return {"id": None, "name": "Guest", "name_hi": None, "username": username, "roles": [],
-            "is_admin": False, "is_global": False, "home_family": None, "guest": True,
-            "login_ends": login_ends(cur.fetchone())}
+    cur.execute("SELECT username, expires_at, temp_minutes, scope, family_id FROM guest_logins WHERE username=%s",
+                (actor[len(GUEST_PREFIX):],))
+    return cur.fetchone() or {"username": actor[len(GUEST_PREFIX):], "expires_at": None, "temp_minutes": None,
+                              "scope": "family", "family_id": None}
+
+
+def guest_me_json(actor):
+    row = guest_row(actor)
+    return {"id": None, "name": "Guest", "name_hi": None, "username": row["username"], "roles": [],
+            "is_admin": False, "is_global": False, "home_family": row["family_id"], "guest": True,
+            "login_ends": login_ends(row)}
 
 
 def login_ends(row):
@@ -172,7 +179,7 @@ def login_ends(row):
 def context():
     actor = current_person()
     graph, grants = db.load_graph(conn().cursor())
-    return actor, graph, Access(graph, grants, actor)
+    return actor, graph, Access(graph, grants, actor, guest_row(actor) if is_guest(actor) else None)
 
 
 def me_json(pid):
@@ -316,7 +323,7 @@ def person_extras(graph, access, pending, pid):
         "can_delete": mode if mode and not blocker else False,
         "delete_reason": blocker,
         "delete_pending": pid in pending,
-        "links": views.family_links(graph, pid),
+        "links": [link for link in views.family_links(graph, pid) if access.can_read_family(link["family_id"])],
         "edit": {k: row.get(k) for k in rules.EDIT_FIELDS + rules.LINK_FIELDS} if can_edit else None,
     }
 
@@ -331,13 +338,14 @@ def clean_person_fields(graph, data, allowed):
 
 @app.get("/villages")
 def list_villages():
-    _, graph, _ = context()
+    _, graph, access = context()
+    readable = access.readable_families()
     out = []
     for village in graph.villages.values():
         families = [
             {"id": f["id"], "name": f["name"], "root_person_id": graph.roots[f["id"]],
              "root_name": name_of(graph, graph.roots[f["id"]])}
-            for f in graph.families.values() if f["village_id"] == village["id"]
+            for f in graph.families.values() if f["village_id"] == village["id"] and f["id"] in readable
         ]
         out.append(dict(village, families=families))
     return jsonify(out)
@@ -345,11 +353,11 @@ def list_villages():
 
 @app.get("/people")
 def list_people():
-    _, graph, _ = context()
+    _, graph, access = context()
     return jsonify([
         {"id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"), "gender": row.get("gender"),
          "life": row.get("life"), "family_id": row.get("family_id"), "has_account": pid in graph.account_ids}
-        for pid, row in graph.people.items()
+        for pid, row in graph.people.items() if access.can_read_person(pid)
     ])
 
 
@@ -358,6 +366,8 @@ def family_tree(family_id):
     actor, graph, access = context()
     if family_id not in graph.families:
         raise ApiError(404, "No such family")
+    if not access.can_read_family(family_id):
+        raise ApiError(403, "You cannot see the %s family tree" % graph.families[family_id]["name"])
     cur = conn().cursor()
     cur.execute("SELECT person_id FROM delete_requests WHERE status='pending'")
     pending = {r["person_id"] for r in cur.fetchall()}
@@ -489,9 +499,7 @@ def update_person(pid):
         if fields.get(key) is not None and not access.is_admin_over(fields[key]):
             raise ApiError(403, "You cannot move %s under %s" % (name_of(graph, pid), name_of(graph, fields[key])))
     family_id = fields.get("family_id")
-    if family_id is not None and not (
-        access.is_global or graph.families[family_id]["village_id"] in access.admin_villages()
-    ):
+    if family_id is not None and not (access.is_global or family_id in access.admin_families()):
         raise ApiError(403, "You cannot move people into the %s family" % graph.families[family_id]["name"])
     if not fields:
         return jsonify(id=pid)
@@ -556,15 +564,15 @@ def remove_person(pid):
 @app.get("/delete-requests")
 def list_delete_requests():
     _, graph, access = context()
-    if not access.is_admin():
-        raise ApiError(403, "Only admins see delete requests")
+    if not access.is_global:
+        raise ApiError(403, "Only global admins decide delete requests")
     cur = conn().cursor()
     cur.execute("SELECT id, person_id, requested_by, created_at FROM delete_requests "
                 "WHERE status='pending' ORDER BY created_at, id")
     return jsonify([
         {"id": r["id"], "person_id": r["person_id"], "person": name_of(graph, r["person_id"]),
          "requested_by": name_of(graph, r["requested_by"]), "created_at": r["created_at"].isoformat()}
-        for r in cur.fetchall() if access.is_admin_over(r["person_id"])
+        for r in cur.fetchall()
     ])
 
 
@@ -579,8 +587,8 @@ def decide_delete(request_id, decision):
     if row is None:
         raise ApiError(404, "No such pending request")
     pid = row["person_id"]
-    if not access.is_admin_over(pid):
-        raise ApiError(403, "You cannot decide this request")
+    if not access.is_global:
+        raise ApiError(403, "Only global admins decide delete requests")
     if decision == "approve":
         delete_guard(graph, access, pid)
     if decision == "reject":
@@ -657,15 +665,24 @@ def list_guests():
     purge_expired_guests(cur)
     _, _, access = context()
     require_global(access)
-    cur.execute("SELECT username, expires_at, temp_minutes FROM guest_logins ORDER BY expires_at")
-    return jsonify([dict(temp_status(r), username=r["username"]) for r in cur.fetchall()])
+    _, graph, _ = context()
+    cur.execute("SELECT username, expires_at, temp_minutes, scope, family_id FROM guest_logins ORDER BY expires_at")
+    return jsonify([dict(temp_status(r), username=r["username"], scope=r["scope"],
+                         covers=family_label(graph, r["family_id"]) if r["scope"] == "family" else "All families")
+                    for r in cur.fetchall()])
 
 
 @app.post("/guests")
 def create_guest():
-    actor, _, access = context()
+    actor, graph, access = context()
     require_global(access)
     data = body()
+    scope = data.get("scope", "family")
+    if scope not in ("family", "reader"):
+        raise RuleError("A guest is a family reader or a global reader")
+    family_id = data.get("family_id") if scope == "family" else None
+    if scope == "family" and family_id not in graph.families:
+        raise RuleError("Choose the family this guest can see")
     cur = conn().cursor()
     purge_expired_guests(cur)
     taken = set(usernames(cur).values()) | guest_usernames(cur)
@@ -679,8 +696,9 @@ def create_guest():
     password = temporary_password(data)
     db.insert_rows(cur, "guest_logins", [{"username": username, "password_hash": auth.make_hash(password),
                                          "expires_at": unused_deadline(), "temp_minutes": minutes,
-                                         "created_by": actor}])
-    log(cur, actor, None, "guest_create", None, {"username": username, "minutes": minutes})
+                                         "scope": scope, "family_id": family_id, "created_by": actor}])
+    log(cur, actor, None, "guest_create", None,
+        {"username": username, "minutes": minutes, "scope": scope, "family_id": family_id})
     conn().commit()
     return jsonify(username=username, password=password, minutes=minutes, unused_hours=UNUSED_TEMP_LOGIN_HOURS), 201
 
@@ -814,12 +832,20 @@ def delete_account(pid):
     return jsonify(status="deleted")
 
 
+def family_label(graph, family_id):
+    family = graph.families.get(family_id)
+    if family is None:
+        return family_id
+    return "%s · %s" % (family["name"], name_of(graph, graph.roots[family_id]))
+
+
 def scope_name(graph, grant):
-    if grant["scope"] == "village":
-        village = graph.villages.get(grant["scope_id"])
-        return village["name"] if village else grant["scope_id"]
+    if grant["scope"] == "family":
+        return family_label(graph, grant["scope_id"])
     if grant["scope"] == "branch":
         return name_of(graph, grant["scope_id"])
+    if grant["scope"] == "reader":
+        return "All families (read only)"
     return "Everything"
 
 
@@ -839,15 +865,15 @@ def create_grant():
     actor, graph, access = context()
     data = body()
     pid, scope = data.get("person_id"), data.get("scope")
-    scope_id = "" if scope == "global" else str(data.get("scope_id") or "")
+    scope_id = "" if scope in ("global", "reader") else str(data.get("scope_id") or "")
     if scope not in RANK:
-        raise RuleError("scope must be global, village or branch")
+        raise RuleError("scope must be global, family, branch or reader")
     if pid not in graph.people:
         raise ApiError(404, "No such person")
     if pid not in graph.account_ids:
         raise RuleError("%s needs a login before getting a role" % name_of(graph, pid))
-    if scope == "village" and scope_id not in graph.villages:
-        raise ApiError(404, "No such village")
+    if scope == "family" and scope_id not in graph.families:
+        raise ApiError(404, "No such family")
     if scope == "branch" and scope_id not in graph.people:
         raise ApiError(404, "No such person to root the branch")
     if not access.can_manage_account(pid):
@@ -899,7 +925,7 @@ def same_place(a, b):
 @app.post("/villages")
 def create_village():
     actor, graph, access = context()
-    if not access.mine:
+    if not any(g["scope"] != "reader" for g in access.mine):
         raise ApiError(403, "Only people who can edit the tree can add villages")
     data = body()
     name = required_text(data, "name", "Village name")
@@ -951,9 +977,9 @@ def change_visible(graph, access, row):
     if row["person_id"] in graph.people:
         return access.is_admin_over(row["person_id"])
     for snapshot in (_loads(row["before_json"]), _loads(row["after_json"])):
-        family = graph.families.get((snapshot or {}).get("family_id"))
-        if family:
-            return family["village_id"] in access.admin_villages()
+        family_id = (snapshot or {}).get("family_id")
+        if family_id in graph.families:
+            return family_id in access.admin_families()
     return False
 
 

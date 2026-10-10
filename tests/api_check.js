@@ -42,9 +42,10 @@ assert.strictEqual(api.timeLeft('2026-10-09T10:04:32', Date.UTC(2026, 9, 9, 10, 
 assert.strictEqual(api.timeLeft('2026-10-09T09:00:00', Date.UTC(2026, 9, 9, 10, 0, 0)), '');
 assert.strictEqual(api.roleText({ guest: true, is_global: false, roles: [] }), 'Guest (view only)');
 assert.strictEqual(api.roleText({ is_global: true, roles: [] }), 'Global admin');
-assert.strictEqual(api.roleText({ is_global: false, roles: [{ scope: 'village' }] }), 'Village admin');
-assert.strictEqual(api.roleText({ is_global: false, roles: [{ scope: 'branch' }] }), 'Branch rep');
-assert.strictEqual(api.roleText({ is_global: false, roles: [] }), 'Member');
+assert.strictEqual(api.roleText({ is_global: false, roles: [{ scope: 'family' }] }), 'Family tree admin');
+assert.strictEqual(api.roleText({ is_global: false, roles: [{ scope: 'branch' }] }), 'Node admin');
+assert.strictEqual(api.roleText({ is_global: false, roles: [] }), 'Family reader');
+assert.strictEqual(api.roleText({ is_global: false, roles: [{ scope: 'reader' }] }), 'Global reader');
 
 var loggedOut = 0;
 api.root = 'http://x';

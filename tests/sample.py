@@ -40,7 +40,7 @@ SAMPLE_ACCOUNTS = {"mohan", "jagdish", "amit", "rashmi", "bash"}
 
 SAMPLE_GRANTS = [
     {"id": 1, "person_id": "mohan", "scope": "global", "scope_id": ""},
-    {"id": 2, "person_id": "bash", "scope": "village", "scope_id": "pugthala"},
+    {"id": 2, "person_id": "bash", "scope": "family", "scope_id": "pugthala"},
     {"id": 3, "person_id": "jagdish", "scope": "branch", "scope_id": "jagdish"},
 ]
 
