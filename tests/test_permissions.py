@@ -63,10 +63,6 @@ class TestAccess(unittest.TestCase):
         self.assertFalse(self.access("bash").can_grant("branch", "jagdish"))
         self.assertFalse(self.access("jagdish").can_grant("branch", "amit"))
 
-    def test_creating_families(self):
-        self.assertFalse(self.access("bash").can_create_family("pugthala"))
-        self.assertTrue(self.access("mohan").can_create_family("bakheta"))
-
     def test_unknown_person(self):
         self.assertIsNone(self.access("mohan").level("nobody"))
 

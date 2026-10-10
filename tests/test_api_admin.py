@@ -175,20 +175,43 @@ class TestVillagesAndFamilies(ApiCase):
         self.query("INSERT INTO role_grants (person_id, scope, scope_id) VALUES ('amit', 'reader', '')")
         self.assertEqual(self.post("/villages", {"name": "X", "state": "Haryana"}).status_code, 403)
 
-    def test_family_create(self):
+    def test_family_left_empty_is_removed(self):
+        with self.conn.cursor() as cur:
+            cur.execute("INSERT INTO families (id, village_id, name) VALUES ('kakroi', 'kakroi', 'Kakroi')")
+            cur.execute("INSERT INTO people (id, name, family_id, gender, life) VALUES ('lala', 'Lala', 'kakroi', 'male', 'living')")
+        self.conn.commit()
+        self.login("mohan")
+        self.assertEqual(self.get("/families/kakroi/tree").get_json()["tree"]["name"], "Lala")
+        self.assertEqual(self.patch("/people/lala", {"family_id": None}).status_code, 200)
+        self.assertEqual(self.get("/families/kakroi/tree").status_code, 404)
+        self.assertEqual(self.post("/families", {"village_id": "kakroi"}).status_code, 404)
+
+    def test_global_admin_edits_and_deletes_villages(self):
         self.login("bash")
-        self.assertEqual(self.post("/families", {"village_id": "pugthala", "root": {"name": "Y"}}).status_code, 403)
+        self.assertEqual(self.patch("/villages/kakroi", {"name": "K", "state": "Haryana"}).status_code, 403)
         self.post("/logout")
         self.login("mohan")
-        r = self.post("/families", {"village_id": "pugthala",
-                                    "root": {"name": "Lala", "gender": "male"}})
-        self.assertEqual(r.status_code, 201, r.get_json())
-        fid = r.get_json()["id"]
-        tree = self.get("/families/%s/tree" % fid).get_json()["tree"]
-        self.assertEqual(tree["name"], "Lala")
-        self.assertEqual(self.get("/families/%s/tree" % fid).get_json()["family"]["name"], "Pugthala")
-        self.assertEqual(self.patch("/people/%s" % r.get_json()["root_person_id"], {"family_id": None}).status_code, 200)
-        self.assertEqual(self.get("/families/%s/tree" % fid).status_code, 404)
+        self.assertEqual(self.patch("/villages/bakheta", {"name": "Bakheta", "state": ""}).status_code, 409)
+        self.assertEqual(self.patch("/villages/bakheta", {"name": "pugthala", "state": "Haryana"}).status_code, 409)
+        r = self.patch("/villages/bakheta", {"name": "Bakhta", "district": "Sonipat", "state": "Haryana"})
+        self.assertEqual(r.status_code, 200, r.get_json())
+        village = next(v for v in self.get("/villages").get_json() if v["id"] == "bakheta")
+        self.assertEqual((village["name"], village["district"], village["families"][0]["name"]),
+                         ("Bakhta", "Sonipat", "Bakhta"))
+        self.assertEqual(village["people_from"], 1)
+        self.assertEqual(self.delete("/villages/bakheta").status_code, 409)
+        self.assertEqual(self.delete("/villages/kakroi").status_code, 409)
+        self.query("UPDATE people SET origin_village_id=NULL WHERE origin_village_id='kakroi'")
+        self.assertEqual(self.delete("/villages/kakroi").status_code, 200)
+        self.assertNotIn("kakroi", [v["id"] for v in self.get("/villages").get_json()])
+
+    def test_accounts_show_roles(self):
+        self.login("mohan")
+        roles = {a["person_id"]: a["roles"] for a in self.get("/accounts").get_json()}
+        self.assertEqual(roles["mohan"], ["Global admin"])
+        self.assertEqual(roles["bash"], ["Family tree admin (Pugthala · Bash)"])
+        self.assertEqual(roles["jagdish"], ["Node admin (Jagdish)"])
+        self.assertEqual(roles["amit"], [])
 
 
 class TestChangeLog(ApiCase):

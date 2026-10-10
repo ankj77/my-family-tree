@@ -26,4 +26,7 @@ var t0 = Date.UTC(2026, 9, 9, 10, 0, 0);
 assert.strictEqual(admin.timeLeft('2026-10-09T10:04:32', t0), '4:32 left');
 assert.strictEqual(admin.timeLeft('2026-10-09T10:00:05', t0), '0:05 left');
 assert.strictEqual(admin.timeLeft('2026-10-09T09:59:00', t0), 'Ended');
+assert.strictEqual(admin.roleList({ username: null, roles: [] }), '—');
+assert.strictEqual(admin.roleList({ username: 'amit', roles: [] }), 'Family reader');
+assert.strictEqual(admin.roleList({ username: 'mohan', roles: ['Global admin', 'Node admin (Ram)'] }), 'Global admin, Node admin (Ram)');
 console.log('admin_check ok');

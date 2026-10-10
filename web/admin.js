@@ -21,6 +21,11 @@
     }).join('; ');
   };
 
+  admin.roleList = function (account) {
+    if (!account.username) return '—';
+    return account.roles.length ? account.roles.join(', ') : 'Family reader';
+  };
+
   admin.villageTitle = function (v) {
     var where = [v.district && 'District ' + v.district, v.state && 'State ' + v.state].filter(Boolean).join(' · ');
     return where ? v.name + ' — ' + where : v.name;
@@ -112,7 +117,7 @@
       return Promise.all([api().call('GET', '/accounts'), guests]).then(function (r) {
         var list = r[0];
         return guestSection(r[1]) + '<h3>Family members</h3><input id="acct-search" placeholder="Search living people" aria-label="Search living people">' +
-          table(['Person', 'Family', 'Username', ''], list.map(function (a) {
+          table(['Person', 'Family', 'Username', 'Role', ''], list.map(function (a) {
             var id = esc(a.person_id);
             var own = a.person_id === state.me.id;
             var buttons = !a.can_manage ? '' : a.username
@@ -126,7 +131,7 @@
               (a.relation ? ' <span class="relation">(' + esc(a.relation) + ')</span>' : '') + '</td><td>' +
               esc(familyName(a.family_id)) + '</td><td class="uname">' + esc(a.username || '—') +
               (a.temporary ? ' <span class="relation">(temporary · ' + timer(a.temporary) + ')</span>' : '') +
-              '</td><td>' + buttons + '</td></tr>';
+              '</td><td>' + esc(admin.roleList(a)) + '</td><td>' + buttons + '</td></tr>';
           }));
       });
     },
@@ -150,26 +155,23 @@
       });
     },
     families: function () {
-      var html = state.villages.filter(function (v) {
-        return state.me.is_global || v.families.length;
-      }).map(function (v) {
-        var families = v.families.length ? v.families.map(function (f) {
-          return '<li><a href="./?family=' + encodeURIComponent(f.id) + '">' + esc(f.name) + '</a> — starts at ' +
-            esc(personName(f.root_person_id)) + '</li>';
-        }).join('') : '<li>No family tree yet</li>';
-        return '<h3>' + esc(admin.villageTitle(v)) + '</h3><ul>' + families + '</ul>';
-      }).join('');
-      if (state.me.is_global) {
+      var global = state.me.is_global;
+      var rows = state.villages.filter(function (v) { return global || v.families.length; }).map(function (v) {
+        var trees = v.families.map(function (f) {
+          return '<a href="./?family=' + encodeURIComponent(f.id) + '">' + esc(f.root_name || f.name) + '</a>';
+        }).join(', ') || '—';
+        var buttons = global ? '<button type="button" data-village-edit="' + esc(v.id) + '">Edit</button> ' +
+          '<button type="button" data-village-delete="' + esc(v.id) + '">Delete</button>' : '';
+        return '<tr data-village="' + esc(v.id) + '"><td>' + esc(v.name) + '</td><td>' + esc(v.district || '—') +
+          '</td><td>' + esc(v.state || '—') + '</td><td>' + trees + '</td><td>' + esc(v.people_from) + '</td><td>' +
+          buttons + '</td></tr>';
+      });
+      var html = table(['Village', 'District', 'State', 'Family trees (starts at)', 'People from here', ''], rows);
+      if (global) {
         html += '<h3>Add a village</h3><form data-form="village" class="admin-form">' +
           text('name', 'Village name', true) + text('district', 'District (optional)') + text('state', 'State', true) +
-          '<button type="submit">Add village</button></form>';
-      }
-      if (state.me.is_global) {
-        html += '<h3>Add new family tree</h3><form data-form="family" class="admin-form">' +
-          select('village_id', 'Village', state.villages.map(function (v) { return [v.id, v.name]; })) +
-          text('root_name', 'Eldest known ancestor') +
-          select('root_gender', 'Ancestor gender', [['male', 'Male'], ['female', 'Female']]) +
-          '<button type="submit">Add new family tree</button></form>';
+          '<button type="submit">Add village</button></form>' +
+          '<p class="relation">A new family tree starts by itself when you add the father of someone whose home village is set.</p>';
       }
       return Promise.resolve(html);
     },
@@ -329,6 +331,18 @@
     return out;
   };
 
+  function startVillageEdit(button, id) {
+    var v = state.villages.filter(function (x) { return x.id === id; })[0];
+    var field = function (name, title, value, required) {
+      return '<input name="' + name + '" aria-label="' + title + '" placeholder="' + title + '" value="' + esc(value || '') +
+        '"' + (required ? ' required' : '') + '>';
+    };
+    button.closest('tr').innerHTML = '<td colspan="6"><form data-form="village-edit" data-id="' + esc(id) + '" class="temp-form">' +
+      field('name', 'Village name', v.name, true) + field('district', 'District (optional)', v.district) +
+      field('state', 'State', v.state, true) +
+      '<button type="submit">Save</button> <button type="button" data-cancel>Cancel</button></form></td>';
+  }
+
   function startTemp(button, id) {
     var cell = button.closest('td');
     cell.innerHTML = '<form data-form="temp" data-id="' + esc(id) + '" class="temp-form">' +
@@ -361,6 +375,8 @@
     else if ((id = b.getAttribute('data-guest-remove')) && armed(b)) done(api().call('DELETE', '/guests/' + encodeURIComponent(id)), null, b);
     else if ((id = b.getAttribute('data-remove')) && armed(b)) done(api().call('DELETE', '/accounts/' + encodeURIComponent(id)), null, b);
     else if ((id = b.getAttribute('data-revoke')) && armed(b)) done(api().call('DELETE', '/role-grants/' + id), null, b);
+    else if ((id = b.getAttribute('data-village-edit'))) startVillageEdit(b, id);
+    else if ((id = b.getAttribute('data-village-delete')) && armed(b)) done(api().call('DELETE', '/villages/' + encodeURIComponent(id)), null, b);
   }
 
   function onSubmit(e) {
@@ -389,13 +405,11 @@
       });
     } else if (kind === 'village') {
       request = api().call('POST', '/villages', { name: v.name, district: v.district || null, state: v.state || null });
+    } else if (kind === 'village-edit') {
+      request = api().call('PATCH', '/villages/' + encodeURIComponent(form.getAttribute('data-id')),
+        { name: v.name, district: v.district || null, state: v.state });
     } else {
-      request = api().hindi(v.root_name).then(function (hindi) {
-        return api().call('POST', '/families', {
-          village_id: v.village_id,
-          root: { name: v.root_name || null, name_hi: hindi || null, gender: v.root_gender }
-        });
-      });
+      return;
     }
     done(request, function () { say('Saved.'); }, form.querySelector('button[type=submit]'));
   }

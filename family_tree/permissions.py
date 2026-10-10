@@ -90,6 +90,3 @@ class Access:
         if scope == "branch":
             return self.is_admin_over(scope_id)
         return False
-
-    def can_create_family(self, village_id: str) -> bool:
-        return self.is_global

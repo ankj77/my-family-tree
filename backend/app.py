@@ -347,7 +347,8 @@ def list_villages():
              "root_name": name_of(graph, graph.roots[f["id"]])}
             for f in graph.families.values() if f["village_id"] == village["id"] and f["id"] in readable
         ]
-        out.append(dict(village, families=families))
+        people_from = sum(1 for row in graph.people.values() if row.get("origin_village_id") == village["id"])
+        out.append(dict(village, families=families, people_from=people_from))
     return jsonify(out)
 
 
@@ -747,6 +748,7 @@ def list_accounts():
         {"person_id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"),
          "family_id": graph.home_family(pid), "username": names.get(pid), "temporary": temporary.get(pid),
          "relation": views.relation_text(graph, pid),
+         "roles": [role_text(graph, g) for g in access.grants if g["person_id"] == pid],
          "can_manage": access.can_manage_account(pid)}
         for pid, row in graph.people.items()
         if (row.get("life") == "living" or pid in names) and access.is_admin_over(pid)
@@ -837,6 +839,16 @@ def family_label(graph, family_id):
     if family is None:
         return family_id
     return "%s · %s" % (family["name"], name_of(graph, graph.roots[family_id]))
+
+
+ROLE_NAMES = {"global": "Global admin", "family": "Family tree admin", "branch": "Node admin",
+              "reader": "Global reader"}
+
+
+def role_text(graph, grant):
+    if grant["scope"] in ("family", "branch"):
+        return "%s (%s)" % (ROLE_NAMES[grant["scope"]], scope_name(graph, grant))
+    return ROLE_NAMES[grant["scope"]]
 
 
 def scope_name(graph, grant):
@@ -945,26 +957,50 @@ def create_village():
     return jsonify(id=vid), 201
 
 
-@app.post("/families")
-def create_family():
+def village_for_global(vid):
     actor, graph, access = context()
-    data = body()
-    village_id = data.get("village_id")
-    if village_id not in graph.villages:
+    if not access.is_global:
+        raise ApiError(403, "Only a global admin can change villages")
+    if vid not in graph.villages:
         raise ApiError(404, "No such village")
-    if not access.can_create_family(village_id):
-        raise ApiError(403, "You cannot add families to this village")
-    name = graph.villages[village_id]["name"]
-    root = data.get("root") if isinstance(data.get("root"), dict) else {}
-    root_fields = clean_person_fields(graph, root, rules.EDIT_FIELDS)
-    fid = naming.slug(name, set(graph.families), fallback="family")
-    pid = naming.slug(root_fields.get("name") or root_fields.get("name_hi") or "", set(graph.people))
+    return actor, graph
+
+
+@app.patch("/villages/<vid>")
+def update_village(vid):
+    actor, graph = village_for_global(vid)
+    data = body()
+    name = required_text(data, "name", "Village name")
+    state = required_text(data, "state", "State")
+    if any(same_place(v["name"], name) for v in graph.villages.values() if v["id"] != vid):
+        raise RuleError("A village called %s already exists" % name)
+    district = str(data.get("district") or "").strip()
+    if len(district) > 200:
+        raise RuleError("District is longer than 200 characters")
+    change = {"name": name, "district": district or None, "state": state}
+    before = {k: graph.villages[vid].get(k) for k in change}
     cur = conn().cursor()
-    db.insert_rows(cur, "families", [{"id": fid, "village_id": village_id, "name": name}])
-    db.insert_rows(cur, "people", [dict(root_fields, id=pid, family_id=fid, updated_by=actor)])
-    log(cur, actor, pid, "family_create", None, {"family": fid, "name": name, "village": village_id})
-    commit_checked(cur)
-    return jsonify(id=fid, root_person_id=pid), 201
+    cur.execute("UPDATE villages SET name=%s, district=%s, state=%s WHERE id=%s", (name, district or None, state, vid))
+    cur.execute("UPDATE families SET name=%s WHERE village_id=%s AND name=%s", (name, vid, before["name"]))
+    log(cur, actor, None, "village_update", dict(before, id=vid), dict(change, id=vid))
+    conn().commit()
+    return jsonify(id=vid)
+
+
+@app.delete("/villages/<vid>")
+def delete_village(vid):
+    actor, graph = village_for_global(vid)
+    village = graph.villages[vid]
+    if any(f["village_id"] == vid for f in graph.families.values()):
+        raise RuleError("%s still has a family tree; move or remove its people first" % village["name"])
+    from_here = [name_of(graph, pid) for pid, row in graph.people.items() if row.get("origin_village_id") == vid]
+    if from_here:
+        raise RuleError("%s is the home village of %s; change theirs first" % (village["name"], ", ".join(from_here[:5])))
+    cur = conn().cursor()
+    cur.execute("DELETE FROM villages WHERE id=%s", (vid,))
+    log(cur, actor, None, "village_delete", village, None)
+    conn().commit()
+    return jsonify(status="deleted")
 
 
 def _loads(value):
