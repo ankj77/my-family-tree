@@ -326,66 +326,7 @@ def person_extras(graph, access, pending, pid):
         "links": [link for link in views.family_links(graph, pid) if access.can_read_family(link["family_id"])],
         "parent_families": parent_families(graph, access, pid),
         "edit": {k: row.get(k) for k in rules.EDIT_FIELDS + rules.LINK_FIELDS} if can_edit else None,
-        "can_remove_marriage": pid in graph.spouse and marriage_admin(graph, access, pid),
-        "marriage_children": [name_of(graph, k) for k in shared_children(graph, pid)],
     }
-
-
-def marriage_admin(graph, access, pid):
-    return access.is_admin_over(pid) or access.is_admin_over(graph.spouse[pid])
-
-
-def shared_children(graph, pid):
-    spouse = graph.spouse.get(pid)
-    if spouse is None:
-        return []
-    return [k for k in graph.children_of(pid) if {graph.people[k].get("father_id"), graph.people[k].get("mother_id")} == {pid, spouse}]
-
-
-def birth_tree(graph, pid):
-    row = graph.people[pid]
-    for key in ("father_id", "mother_id"):
-        parent = row.get(key)
-        if parent in graph.people and graph.people[parent].get("family_id"):
-            return graph.people[parent]["family_id"]
-    return None
-
-
-@app.post("/people/<pid>/remove-marriage")
-def remove_marriage(pid):
-    actor, graph, access = context()
-    if pid not in graph.people:
-        raise ApiError(404, "No such person")
-    if pid not in graph.spouse:
-        raise ApiError(404, "%s has no marriage recorded" % name_of(graph, pid))
-    if not marriage_admin(graph, access, pid):
-        raise ApiError(403, "Only an admin can remove a marriage")
-    spouse = graph.spouse[pid]
-    husband, wife = (pid, spouse) if (pid, spouse) in graph.marriages else (spouse, pid)
-    moves = {}
-    for person in (husband, wife):
-        if graph.people[person].get("family_id") is None:
-            tree = birth_tree(graph, person)
-            if tree is None:
-                raise RuleError("%s joined the tree only through this marriage; delete %s instead"
-                                % (name_of(graph, person), name_of(graph, person)))
-            moves[person] = tree
-    cur = conn().cursor()
-    cur.execute("DELETE FROM marriages WHERE husband_id=%s AND wife_id=%s", (husband, wife))
-    log(cur, actor, husband, "update", {"wife": wife}, {"wife": None})
-    log(cur, actor, wife, "update", {"husband": husband}, {"husband": None})
-    for person, tree in moves.items():
-        cur.execute("UPDATE people SET family_id=%s, updated_by=%s WHERE id=%s", (tree, actor, person))
-        log(cur, actor, person, "update", {"family_id": None}, {"family_id": tree})
-    if body().get("unlink_children"):
-        for kid in shared_children(graph, pid):
-            family = graph.people[kid].get("family_id")
-            outsider = wife if graph.people[husband].get("family_id") == family else husband
-            key = "mother_id" if outsider == wife else "father_id"
-            cur.execute("UPDATE people SET %s=NULL, updated_by=%%s WHERE id=%%s" % key, (actor, kid))
-            log(cur, actor, kid, "update", {key: outsider}, {key: None})
-    commit_checked(cur)
-    return jsonify(status="removed")
 
 
 def parent_families(graph, access, pid):

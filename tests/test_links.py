@@ -177,8 +177,8 @@ class TestChainLayout(unittest.TestCase):
             self.assertNotIn(secret, text)
 
     def test_relation_words(self):
-        self.assertEqual(links.relation_words(self.graph, "amit"), "son of Jagdish")
-        self.assertEqual(links.relation_words(self.graph, "rashmi"), "daughter of Bash")
-        self.assertEqual(links.relation_words(self.graph, "sita"), "daughter of Hari")
-        self.assertEqual(links.relation_words(self.graph, "vikram"), "husband of Neha")
+        self.assertEqual(links.relation_words(self.graph, "amit"), "s/o Jagdish")
+        self.assertEqual(links.relation_words(self.graph, "rashmi"), "d/o Bash")
+        self.assertEqual(links.relation_words(self.graph, "sita"), "d/o Hari")
+        self.assertEqual(links.relation_words(self.graph, "vikram"), "h/o Neha")
         self.assertEqual(links.relation_words(self.graph, "ram"), "")

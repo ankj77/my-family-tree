@@ -349,52 +349,9 @@ class TestSpouseIsNotABloodRelative(ApiCase):
         self.assertIn("blood relatives", r.get_json()["error"])
 
 
-class TestRemoveMarriage(ApiCase):
-    def marriages(self):
-        return self.query("SELECT husband_id, wife_id FROM marriages ORDER BY husband_id")
-
-    def test_admin_removes_and_wife_returns_to_her_birth_tree(self):
+class TestDeletingASpouseRemovesTheMarriage(ApiCase):
+    def test_new_spouse_can_be_added_after_delete(self):
         self.login("mohan")
-        r = self.post("/people/jagdish/remove-marriage", {"unlink_children": True})
-        self.assertEqual(r.status_code, 200, r.get_json())
-        self.assertNotIn(("jagdish", "rashmi"), [(m["husband_id"], m["wife_id"]) for m in self.marriages()])
-        mothers = self.query("SELECT id, mother_id FROM people WHERE id IN ('amit','neha') ORDER BY id")
-        self.assertEqual([m["mother_id"] for m in mothers], [None, None])
-        self.assertEqual(self.post("/people", {"as": "spouse", "spouse_id": "jagdish", "name": "New"}).status_code, 201)
-
-    def test_children_keep_both_parents_unless_asked(self):
-        self.login("mohan")
-        self.assertEqual(self.post("/people/rashmi/remove-marriage", {}).status_code, 200)
-        self.assertEqual(self.query("SELECT mother_id FROM people WHERE id='amit'")[0]["mother_id"], "rashmi")
-
-    def test_married_in_spouse_with_a_parent_in_a_tree_moves_into_it(self):
-        self.query("UPDATE people SET father_id='bash' WHERE id='sita'")
-        self.login("mohan")
-        self.assertEqual(self.post("/people/mohan/remove-marriage", {}).status_code, 200)
-        self.assertEqual(self.query("SELECT family_id FROM people WHERE id='sita'")[0]["family_id"], "pugthala")
-
-    def test_refused_when_the_spouse_would_be_left_with_no_link(self):
-        self.login("mohan")
-        r = self.post("/people/mohan/remove-marriage", {})
-        self.assertEqual(r.status_code, 409)
-        self.assertIn("delete Sita instead", r.get_json()["error"])
-
-    def test_only_admins(self):
-        for who in ("amit", "jagdish"):
-            self.login(who)
-            self.assertEqual(self.post("/people/jagdish/remove-marriage", {}).status_code, 403)
-            self.post("/logout")
-
-    def test_no_marriage(self):
-        self.login("mohan")
-        self.assertEqual(self.post("/people/amit/remove-marriage", {}).status_code, 404)
-
-    def test_tree_offers_it_to_admins_with_shared_children(self):
-        self.login("mohan")
-        tree = self.get("/families/bakheta/tree").get_json()["tree"]
-        jagdish = find(tree, "jagdish")
-        self.assertTrue(jagdish["can_remove_marriage"])
-        self.assertEqual(jagdish["marriage_children"], ["Amit", "Neha"])
-        self.post("/logout")
-        self.login("jagdish")
-        self.assertFalse(find(self.get("/families/bakheta/tree").get_json()["tree"], "jagdish")["can_remove_marriage"])
+        self.assertEqual(self.delete("/people/vikram").status_code, 200)
+        self.assertEqual(list(self.query("SELECT * FROM marriages WHERE wife_id='neha'")), [])
+        self.assertEqual(self.post("/people", {"as": "spouse", "spouse_id": "neha", "name": "Rohit"}).status_code, 201)

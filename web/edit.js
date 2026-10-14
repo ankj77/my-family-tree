@@ -46,7 +46,6 @@
       if (!hasSpouse) out.push('spouse');
     }
     if (p.can_add_father) out.push('father');
-    if (p.can_remove_marriage) out.push('unmarry');
     if (p.delete_pending) out.push('pending');
     else if (p.can_delete === 'direct') out.push('delete');
     else if (p.can_delete === 'request') out.push('request');
@@ -274,20 +273,6 @@
           location.assign(location.pathname + api.urlFor(r.family_id, person.id));
         });
       }, back);
-    } else if (kind === 'unmarry') {
-      var kids = person.marriage_children || [];
-      var cancel = confirmBox(body, 'Remove the marriage of ' + nameOf(person) + '? Both people stay in the records.',
-        'Yes, remove marriage', function () {
-          var tick = body.querySelector('[name="unlink_children"]');
-          return api.call('POST', path + '/remove-marriage', { unlink_children: !!(tick && tick.checked) })
-            .then(function () { api.reloadAt(person.id); });
-        });
-      if (kids.length) {
-        body.querySelector('.sheet-actions [data-yes]').insertAdjacentHTML('beforebegin',
-          '<label class="sheet-why"><input type="checkbox" name="unlink_children"> Also remove the spouse who married in ' +
-          'as parent of: ' + esc(kids.join(', ')) + '</label>');
-      }
-      cancel.addEventListener('click', back);
     } else if (kind === 'delete' || kind === 'request') {
       var stay = person === node ? (FT.parentOf[node.id] || {}).id : node.id;
       var text = kind === 'delete' ? 'Delete ' + nameOf(person) + '? This cannot be undone.'
@@ -307,8 +292,7 @@
       return '<button type="button" disabled title="' + esc(person.delete_reason) + '">Delete</button>' +
         '<p class="sheet-why">' + esc(person.delete_reason) + '</p>';
     }
-    var labels = { edit: 'Edit', child: 'Add child', spouse: spouseLabel(person), father: 'Add father',
-      unmarry: 'Remove marriage', 'delete': 'Delete', request: 'Request delete' };
+    var labels = { edit: 'Edit', child: 'Add child', spouse: spouseLabel(person), father: 'Add father', 'delete': 'Delete', request: 'Request delete' };
     return '<button type="button" data-act="' + kind + '">' + esc(labels[kind]) + '</button>';
   }
 
