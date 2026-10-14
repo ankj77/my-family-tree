@@ -100,14 +100,15 @@ def segments(steps: List[dict]) -> List[List[int]]:
 def relation_words(graph: Graph, pid: str) -> str:
     row = graph.people[pid]
     gender = row.get("gender")
-    parts = []
-    parent = parent_text(graph, row, "father_id", "father_name") or parent_text(graph, row, "mother_id", "mother_name")
-    if parent:
-        parts.append("%s of %s" % ({"male": "son", "female": "daughter"}.get(gender, "child"), parent))
+    child = {"male": "son", "female": "daughter"}.get(gender, "child")
+    father = parent_text(graph, row, "father_id", "father_name")
+    if father:
+        return "%s of %s" % (child, father)
     if pid in graph.spouse:
-        parts.append("%s of %s" % ({"male": "husband", "female": "wife"}.get(gender, "spouse"),
-                                   display(graph.people[graph.spouse[pid]])))
-    return " · ".join(parts)
+        return "%s of %s" % ({"male": "husband", "female": "wife"}.get(gender, "spouse"),
+                             display(graph.people[graph.spouse[pid]]))
+    mother = parent_text(graph, row, "mother_id", "mother_name")
+    return "%s of %s" % (child, mother) if mother else ""
 
 
 PRIVATE_CARD_FIELDS = ("address", "note", "born", "died")

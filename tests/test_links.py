@@ -178,6 +178,7 @@ class TestChainLayout(unittest.TestCase):
 
     def test_relation_words(self):
         self.assertEqual(links.relation_words(self.graph, "amit"), "son of Jagdish")
-        self.assertEqual(links.relation_words(self.graph, "rashmi"), "daughter of Bash · wife of Jagdish")
-        self.assertEqual(links.relation_words(self.graph, "sita"), "daughter of Hari · wife of Mohan")
+        self.assertEqual(links.relation_words(self.graph, "rashmi"), "daughter of Bash")
+        self.assertEqual(links.relation_words(self.graph, "sita"), "daughter of Hari")
         self.assertEqual(links.relation_words(self.graph, "vikram"), "husband of Neha")
+        self.assertEqual(links.relation_words(self.graph, "ram"), "")
