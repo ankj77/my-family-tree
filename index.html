@@ -181,7 +181,12 @@
   .curl{stroke:#B35A0E;stroke-width:.7px;}
   .rose{fill:#B3121B;stroke:#7A0A10;stroke-width:.7px;}
   .rose-core{fill:#D62A33;}
-  .spouse-link{stroke:var(--bark);stroke-width:2px;}
+  .spouse-link{stroke:var(--rail-f);stroke-width:3px;}
+  .ft-arrow{fill:var(--bark);}
+  .pick-who{font-family:var(--font);font-size:12px;color:var(--ink-muted);}
+  .link-person b{font-family:var(--serif);font-size:15px;}
+  .link-person small{font-size:12px;color:var(--ink-muted);}
+  .link-sentence{margin-top:4px;}
   .chart-edge{fill:none;stroke:var(--connector);stroke-width:2.5px;}
   .chart-label{font-family:var(--font);font-size:15px;font-weight:600;fill:var(--ink-muted);pointer-events:none;}
   .chart-marriage{stroke:var(--rail-f);stroke-width:3px;}
@@ -333,7 +338,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
   <div id="picks"></div>
   <p class="summary" id="summary"></p>
 </div>
-<div id="stage"><svg><g id="viewport"></g></svg>
+<div id="stage"><svg><defs><marker id="ft-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" orient="auto"><path class="ft-arrow" d="M0,0 L10,5 L0,10 Z"/></marker></defs><g id="viewport"></g></svg>
   <div id="controls">
     <button id="controls-toggle" type="button" aria-label="View options" aria-expanded="false">⚙</button>
     <div id="controls-body">
@@ -490,7 +495,10 @@ FT.boot = function (data) {
     var partners = FT.partners(n).length;
     return 1 + partners;
   };
-  FT.COUPLE_GAP = 44;
+  FT.COUPLE_GAP = 110;
+  FT.childWord = function (n) {
+    return { male: 'son', female: 'daughter' }[n.gender] || 'child';
+  };
   FT.spouseOf = function (n) { return FT.state.bloodline ? null : (n.spouses || [])[0] || null; };
   FT.nodeW = function (n) {
     return FT.spouseOf(n) ? 2 * FT.CARD_W + FT.COUPLE_GAP : FT.CARD_W;
@@ -1106,6 +1114,8 @@ FT.boot = function (data) {
     var spX = FT.CARD_W + FT.COUPLE_GAP;
     if (sp) {
       el('line', { 'class': 'spouse-link', x1: FT.CARD_W, y1: H / 2, x2: spX, y2: H / 2 }, g);
+      el('text', { 'class': 'chart-label chart-married', x: FT.CARD_W + FT.COUPLE_GAP / 2, y: H / 2 - 10 }, g)
+        .textContent = 'married';
       var sg = el('g', { 'class': 'spouse-card ' + (sp.gender || ''),
         transform: 'translate(' + spX + ',0)' }, g);
       cardFace(sg, sp, H, [['Father', sp.father ? { name: sp.father } : null, 'male'],
@@ -1558,7 +1568,7 @@ FT.boot = function (data) {
     }
     if (others.length) {
       html += '<p class="sg-head">Other family trees</p>' + others.map(function (m) {
-        return '<button class="sg-row" data-url="' + esc(m.person.url) + '">' +
+        return '<button class="sg-row" data-other="' + esc(m.person.id) + '" data-url="' + esc(m.person.url || '') + '">' +
           '<span class="sg-name">' + esc(m.text) + '</span>' +
           '<span class="sg-hint">' + esc(m.person.tree) + '</span></button>';
       }).join('');
@@ -1596,6 +1606,7 @@ FT.boot = function (data) {
     }
     var html = ids.map(function (id) {
       return '<span class="pick">' + esc(FT.label(FT.byId[id])[0]) +
+        (FT.who && FT.who[id] ? ' <small class="pick-who">' + esc(FT.who[id]) + '</small>' : '') +
         '<button data-drop="' + esc(id) + '" aria-label="Remove">×</button></span>';
     }).join('');
     if (ids.length > 1) {
@@ -1629,8 +1640,14 @@ FT.boot = function (data) {
   });
 
   function choose(row) {
-    var url = row.getAttribute('data-url');
-    if (url) { location.assign(location.pathname + url); return; }
+    var other = row.getAttribute('data-other');
+    if (other) {
+      var from = linkFrom();
+      var url = row.getAttribute('data-url');
+      if (!from && url) location.assign(location.pathname + url);
+      else if (FT.onLink) FT.onLink(from || FT.meId, other);
+      return;
+    }
     var v = row.getAttribute('data-place');
     if (!v) { go(row.getAttribute('data-goto')); return; }
     hideSuggest();
@@ -1640,10 +1657,16 @@ FT.boot = function (data) {
     FT.showPlace(v);
   }
 
+  function linkFrom() {
+    return FT.state.ends.length ? FT.state.ends[0] : FT.state.picks[0] || null;
+  }
+
   function go(id) {
     hideSuggest();
     searchBox.value = '';
     searchBox.blur();
+    var from = linkFrom();
+    if (FT.onLink && from && from !== id) { FT.onLink(from, id); return; }
     if (FT.state.picks.indexOf(id) < 0) {
       if (FT.state.picks.length >= FT.MAX_PICKS) {
         pickNote = 'Up to ' + FT.MAX_PICKS + ' people — remove one first.';
@@ -1892,6 +1915,7 @@ FT.views.poster = {
       var my = y1 + (y2 - y1) * 0.62;
       var p = FT.edge(g, 'M' + x1 + ',' + y1 + ' Q' + mx + ',' + my + ' ' + x2 + ',' + y2, id);
       p.setAttribute('class', 'edge poster-branch');
+      p.setAttribute('marker-end', 'url(#ft-arrow)');
       p.style.strokeWidth = weight + 'px';
       view.leaves(g, x1, y1, mx, my, x2, y2, id);
     }
@@ -1905,6 +1929,8 @@ FT.views.poster = {
         var thickness = fromTrunk ? 2.4 : 1.7;
         branch(x1, y1, c.x + FT.jointX(c), c.y + FT.nodeH(c),
           Math.max(fromTrunk ? 6 : 3.5, Math.sqrt(FT.leafCount(c)) * thickness), c.id);
+        FT.el('text', { 'class': 'chart-label', x: c.x + FT.CARD_W / 2 + 14, y: c.y + FT.nodeH(c) + 34 }, g)
+          .textContent = FT.childWord(c);
         walk(c, depth + 1);
       });
     })(root, 0);
@@ -1956,9 +1982,10 @@ FT.views.chart = {
       var px = a.x + FT.CARD_W / 2, py = a.y + FT.nodeH(a);
       var cx = b.x + FT.CARD_W / 2, cy = b.y;
       var mid = py + (cy - py) / 2;
-      FT.edge(g, 'M' + px + ',' + py + ' V' + mid + ' H' + cx + ' V' + cy, b.id)
-        .setAttribute('class', 'edge chart-edge');
-      view.caption(g, cx + 8, cy - 14, e.label);
+      var line = FT.edge(g, 'M' + px + ',' + py + ' V' + mid + ' H' + cx + ' V' + cy, b.id);
+      line.setAttribute('class', 'edge chart-edge');
+      line.setAttribute('marker-end', 'url(#ft-arrow)');
+      view.caption(g, cx + 12, cy - 16, e.label);
     });
   }
 };
@@ -2020,18 +2047,36 @@ FT.views.chart = {
       (personId ? '&person=' + encodeURIComponent(personId) : '');
   };
 
-  api.otherTrees = function (people, villages, currentFamily) {
+  api.who = function (p) {
+    return [p.relation, p.village || 'Village not recorded'].filter(Boolean).join(' · ');
+  };
+
+  api.otherTrees = function (people, villages, currentFamily, shown) {
     var trees = {};
     villages.forEach(function (v) {
       v.families.forEach(function (f) { trees[f.id] = api.treeLabel(v, f); });
     });
     return people.filter(function (p) {
-      return p.home_family !== currentFamily && trees[p.home_family];
+      return p.home_family !== currentFamily && !(shown && shown[p.id]);
     }).map(function (p) {
-      return { id: p.id, name: p.name, name_hi: p.name_hi, tree: trees[p.home_family],
-               url: api.urlFor(p.home_family, p.id) };
+      var where = trees[p.home_family] || p.village || 'Village not recorded';
+      return { id: p.id, name: p.name, name_hi: p.name_hi,
+               tree: [p.relation, where].filter(Boolean).join(' · '),
+               url: trees[p.home_family] ? api.urlFor(p.home_family, p.id) : null };
     });
   };
+
+  function loadOthers(me, currentFamily) {
+    if (me.guest) return;
+    FT.onLink = function (a, b) { location.assign(location.pathname + api.linkTreeUrl(a, b)); };
+    FT.meId = me.id;
+    api.call('GET', '/directory').then(function (people) {
+      FT.who = {};
+      people.forEach(function (p) { FT.who[p.id] = api.who(p); });
+      if (FT.renderPicks) FT.renderPicks();
+      FT.otherTrees = api.otherTrees(people, api.villages || [], currentFamily, FT.byId);
+    }, function () {});
+  }
 
   api.roleText = function (me) {
     if (me.guest) return 'Guest (view only)';
@@ -2219,7 +2264,7 @@ FT.views.chart = {
     document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
     document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
     if (!me.guest) menuItem('Change password', passwordSheet);
-    if (!me.guest) menuItem('Links', function () { location.assign('links.html'); });
+    if (!me.guest) menuItem('Village links', function () { location.assign('links.html'); });
     if (me.is_admin) menuItem('Admin', function () { location.assign('admin.html'); });
     menuItem('Log out', function () {
       api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
@@ -2231,9 +2276,8 @@ FT.views.chart = {
   };
 
   function startLink(me, a, b) {
-    var back = 'links.html?tab=people&a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b);
     return api.call('GET', '/links/tree?a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b)).then(function (r) {
-      if (!r.found) { location.assign(back); return; }
+      if (!r.found) { location.assign('./?nolink=1'); return; }
       document.getElementById('login').classList.add('hidden');
       FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
       FT.state.ends = [a, b];
@@ -2243,12 +2287,28 @@ FT.views.chart = {
       FT.expandAll();
       accountMenu(me);
       api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
+      loadOthers(me, null);
       var bar = document.getElementById('summary');
-      bar.textContent = FT.links.sentence(r, me.id) + ' ';
+      var first = r.steps[0], last = r.steps[r.steps.length - 1];
+      bar.innerHTML = '';
+      [first, last].forEach(function (p, i) {
+        var who = document.createElement('span');
+        who.className = 'link-person';
+        who.innerHTML = '<b></b> <small></small>';
+        who.firstChild.textContent = p.name || p.name_hi;
+        who.lastChild.textContent = api.who(p);
+        bar.appendChild(who);
+        if (!i) bar.appendChild(document.createTextNode(' ↔ '));
+      });
+      var line = document.createElement('div');
+      line.className = 'link-sentence';
+      line.textContent = FT.links.sentence(r, me.id) + ' Search another name to link it to ' +
+        (first.name || first.name_hi) + '. ';
+      bar.appendChild(line);
       var link = document.createElement('a');
-      link.href = back;
-      link.textContent = '← Change people';
-      bar.appendChild(link);
+      link.href = './';
+      link.textContent = '× Back to the tree';
+      line.appendChild(link);
     });
   }
 
@@ -2273,9 +2333,8 @@ FT.views.chart = {
         accountMenu(me);
         api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
         if (me.login_ends) countDown(me);
-        api.call('GET', '/people').then(function (people) {
-          FT.otherTrees = api.otherTrees(people, api.villages, api.familyId);
-        }, function () {});
+        loadOthers(me, api.familyId);
+        if (param('nolink')) document.getElementById('summary').textContent = 'No link found in the records between those two people.';
         var person = param('person');
         if (person) FT.openPerson(person);
         else {
@@ -2611,8 +2670,8 @@ FT.views.chart = {
 })(typeof FT !== 'undefined' ? (FT.edit = {}) : module.exports);
 
 (function (links) {
-  var state = { tab: 'people', a: null, b: null, va: null, vb: null };
-  var directory = [], villages = [], me = null;
+  var state = { va: null, vb: null };
+  var villages = [], me = null;
 
   function esc(s) {
     return String(s === null || s === undefined ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -2621,18 +2680,6 @@ FT.views.chart = {
   }
 
   function nameOf(p) { return p.name || p.name_hi || p.id; }
-
-  links.matches = function (people, q, limit) {
-    var needle = q.trim().toLowerCase();
-    if (!needle) return [];
-    var starts = [], inside = [];
-    people.forEach(function (p) {
-      var hay = [(p.name || '').toLowerCase(), (p.name_hi || '').toLowerCase()];
-      if (hay.some(function (h) { return h.indexOf(needle) === 0; })) starts.push(p);
-      else if (hay.some(function (h) { return h.indexOf(needle) > 0; })) inside.push(p);
-    });
-    return starts.concat(inside).slice(0, limit || 8);
-  };
 
   links.sentence = function (result, meId) {
     if (!result.found) return 'No link found in the records.';
@@ -2644,16 +2691,11 @@ FT.views.chart = {
     return nameOf(b) + ' is ' + whose + ' ' + result.summary.en + hi + '.';
   };
 
-  links.whoLine = function (p) {
-    return [p.relation, p.village || 'Village not recorded'].filter(Boolean).join(' · ');
-  };
-
   links.query = function (s) {
-    var parts = ['tab=' + s.tab];
-    var pair = s.tab === 'people' ? [s.a, s.b] : [s.va, s.vb];
-    if (pair[0]) parts.push('a=' + encodeURIComponent(pair[0]));
-    if (pair[1]) parts.push('b=' + encodeURIComponent(pair[1]));
-    return '?' + parts.join('&');
+    var parts = [];
+    if (s.va) parts.push('a=' + encodeURIComponent(s.va));
+    if (s.vb) parts.push('b=' + encodeURIComponent(s.vb));
+    return parts.length ? '?' + parts.join('&') : '';
   };
 
   function api() { return FT.api; }
@@ -2661,30 +2703,6 @@ FT.views.chart = {
   function param(name) {
     var m = new RegExp('[?&]' + name + '=([^&#]*)').exec(location.search);
     return m ? decodeURIComponent(m[1]) : null;
-  }
-
-  function byId(id) {
-    for (var i = 0; i < directory.length; i++) if (directory[i].id === id) return directory[i];
-    return null;
-  }
-
-  function picker(slot, label, value, onPick) {
-    var p = value && byId(value);
-    slot.innerHTML = '<label class="lk-pick"><span>' + esc(label) + '</span>' +
-      '<input type="search" autocomplete="off" placeholder="Type a name" value="' + esc(p ? nameOf(p) : '') + '">' +
-      (p ? '<small>' + esc(links.whoLine(p)) + '</small>' : '') + '</label><div class="lk-results"></div>';
-    var input = slot.querySelector('input');
-    var results = slot.querySelector('.lk-results');
-    input.addEventListener('input', function () {
-      results.innerHTML = links.matches(directory, input.value).map(function (m) {
-        return '<button type="button" data-id="' + esc(m.id) + '"><b>' + esc(nameOf(m)) + '</b> ' +
-          (m.name && m.name_hi ? esc(m.name_hi) : '') + '<span>' + esc(links.whoLine(m)) + '</span></button>';
-      }).join('');
-    });
-    results.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-id]');
-      if (b) onPick(b.getAttribute('data-id'));
-    });
   }
 
   function villageSelect(label, value, blank) {
@@ -2697,37 +2715,6 @@ FT.views.chart = {
 
   function show(html) { document.getElementById('lk-result').innerHTML = html; }
   function fail(err) { show('<p class="lk-msg">' + esc(err.message) + '</p>'); }
-
-  function sync() {
-    history.replaceState(null, '', location.pathname + links.query(state));
-    Array.prototype.forEach.call(document.querySelectorAll('#lk-tabs [data-tab]'), function (b) {
-      b.setAttribute('aria-current', b.getAttribute('data-tab') === state.tab ? 'page' : 'false');
-    });
-  }
-
-  function renderPeople() {
-    var form = document.getElementById('lk-form');
-    form.innerHTML = '<div id="lk-a"></div><div id="lk-b"></div>';
-    picker(document.getElementById('lk-a'), 'First person', state.a, function (id) { state.a = id; pickedPeople(); });
-    picker(document.getElementById('lk-b'), 'Second person', state.b, function (id) { state.b = id; pickedPeople(); });
-    sync();
-    if (!state.a || !state.b) { show('<p class="lk-msg">Pick two people to see how they are linked.</p>'); return; }
-    api().call('GET', '/links/people?a=' + encodeURIComponent(state.a) + '&b=' + encodeURIComponent(state.b))
-      .then(function (r) {
-        show('<p class="lk-summary">' + esc(links.sentence(r, me.id)) + '</p>' +
-          (r.found && r.steps.length > 1
-            ? '<a class="lk-go" href="./' + api().linkTreeUrl(state.a, state.b) + '">Show the link as a tree →</a>' : ''));
-      }, fail);
-  }
-
-  function pickedPeople() {
-    if (state.a && state.b && state.a !== state.b) {
-      sync();
-      location.assign('./' + api().linkTreeUrl(state.a, state.b));
-      return;
-    }
-    renderPeople();
-  }
 
   function personCard(p) {
     var life = p.life === 'deceased' ? 'Deceased' : p.life === 'living' ? 'Living' : '';
@@ -2742,14 +2729,14 @@ FT.views.chart = {
       personCard(c.wife) + '</div>';
   }
 
-  function renderVillages() {
+  function render() {
     var form = document.getElementById('lk-form');
     form.innerHTML = villageSelect('Village', state.va, 'Choose a village') +
       villageSelect('Linked to', state.vb, 'Any village');
     var selects = form.querySelectorAll('select');
-    selects[0].addEventListener('change', function () { state.va = this.value || null; state.vb = null; renderVillages(); });
-    selects[1].addEventListener('change', function () { state.vb = this.value || null; renderVillages(); });
-    sync();
+    selects[0].addEventListener('change', function () { state.va = this.value || null; state.vb = null; render(); });
+    selects[1].addEventListener('change', function () { state.vb = this.value || null; render(); });
+    history.replaceState(null, '', location.pathname + links.query(state));
     if (!state.va) { show('<p class="lk-msg">Pick a village to see which villages it is linked to.</p>'); return; }
     if (!state.vb) {
       api().call('GET', '/villages/' + encodeURIComponent(state.va) + '/links').then(function (list) {
@@ -2770,33 +2757,20 @@ FT.views.chart = {
       }, fail);
   }
 
-  function render() {
-    if (state.tab === 'villages') renderVillages();
-    else renderPeople();
-  }
-
   links.start = function () {
     api().root = api().base(location.hostname);
-    state.tab = param('tab') === 'villages' ? 'villages' : 'people';
     api().call('GET', '/me').then(function (who) {
       me = who;
       if (me.guest) { show('<p class="lk-msg">Guest logins cannot see links.</p>'); return null; }
-      if (state.tab === 'villages') { state.va = param('a'); state.vb = param('b'); }
-      else { state.a = param('a') || me.id; state.b = param('b'); }
-      return Promise.all([api().call('GET', '/directory'), api().call('GET', '/villages')]).then(function (r) {
-        directory = r[0];
-        villages = r[1].slice().sort(function (x, y) { return x.name.localeCompare(y.name); });
-        document.getElementById('lk-tabs').addEventListener('click', function (e) {
-          var b = e.target.closest('[data-tab]');
-          if (!b) return;
-          state.tab = b.getAttribute('data-tab');
-          render();
-        });
+      state.va = param('a');
+      state.vb = param('b');
+      return api().call('GET', '/villages').then(function (list) {
+        villages = list.slice().sort(function (x, y) { return x.name.localeCompare(y.name); });
         document.getElementById('lk-result').addEventListener('click', function (e) {
           var b = e.target.closest('[data-village]');
           if (!b) return;
           state.vb = b.getAttribute('data-village');
-          renderVillages();
+          render();
         });
         render();
       });

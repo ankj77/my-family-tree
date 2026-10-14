@@ -127,7 +127,10 @@ FT.boot = function (data) {
     var partners = FT.partners(n).length;
     return 1 + partners;
   };
-  FT.COUPLE_GAP = 44;
+  FT.COUPLE_GAP = 110;
+  FT.childWord = function (n) {
+    return { male: 'son', female: 'daughter' }[n.gender] || 'child';
+  };
   FT.spouseOf = function (n) { return FT.state.bloodline ? null : (n.spouses || [])[0] || null; };
   FT.nodeW = function (n) {
     return FT.spouseOf(n) ? 2 * FT.CARD_W + FT.COUPLE_GAP : FT.CARD_W;
@@ -743,6 +746,8 @@ FT.boot = function (data) {
     var spX = FT.CARD_W + FT.COUPLE_GAP;
     if (sp) {
       el('line', { 'class': 'spouse-link', x1: FT.CARD_W, y1: H / 2, x2: spX, y2: H / 2 }, g);
+      el('text', { 'class': 'chart-label chart-married', x: FT.CARD_W + FT.COUPLE_GAP / 2, y: H / 2 - 10 }, g)
+        .textContent = 'married';
       var sg = el('g', { 'class': 'spouse-card ' + (sp.gender || ''),
         transform: 'translate(' + spX + ',0)' }, g);
       cardFace(sg, sp, H, [['Father', sp.father ? { name: sp.father } : null, 'male'],
@@ -1195,7 +1200,7 @@ FT.boot = function (data) {
     }
     if (others.length) {
       html += '<p class="sg-head">Other family trees</p>' + others.map(function (m) {
-        return '<button class="sg-row" data-url="' + esc(m.person.url) + '">' +
+        return '<button class="sg-row" data-other="' + esc(m.person.id) + '" data-url="' + esc(m.person.url || '') + '">' +
           '<span class="sg-name">' + esc(m.text) + '</span>' +
           '<span class="sg-hint">' + esc(m.person.tree) + '</span></button>';
       }).join('');
@@ -1233,6 +1238,7 @@ FT.boot = function (data) {
     }
     var html = ids.map(function (id) {
       return '<span class="pick">' + esc(FT.label(FT.byId[id])[0]) +
+        (FT.who && FT.who[id] ? ' <small class="pick-who">' + esc(FT.who[id]) + '</small>' : '') +
         '<button data-drop="' + esc(id) + '" aria-label="Remove">×</button></span>';
     }).join('');
     if (ids.length > 1) {
@@ -1266,8 +1272,14 @@ FT.boot = function (data) {
   });
 
   function choose(row) {
-    var url = row.getAttribute('data-url');
-    if (url) { location.assign(location.pathname + url); return; }
+    var other = row.getAttribute('data-other');
+    if (other) {
+      var from = linkFrom();
+      var url = row.getAttribute('data-url');
+      if (!from && url) location.assign(location.pathname + url);
+      else if (FT.onLink) FT.onLink(from || FT.meId, other);
+      return;
+    }
     var v = row.getAttribute('data-place');
     if (!v) { go(row.getAttribute('data-goto')); return; }
     hideSuggest();
@@ -1277,10 +1289,16 @@ FT.boot = function (data) {
     FT.showPlace(v);
   }
 
+  function linkFrom() {
+    return FT.state.ends.length ? FT.state.ends[0] : FT.state.picks[0] || null;
+  }
+
   function go(id) {
     hideSuggest();
     searchBox.value = '';
     searchBox.blur();
+    var from = linkFrom();
+    if (FT.onLink && from && from !== id) { FT.onLink(from, id); return; }
     if (FT.state.picks.indexOf(id) < 0) {
       if (FT.state.picks.length >= FT.MAX_PICKS) {
         pickNote = 'Up to ' + FT.MAX_PICKS + ' people — remove one first.';

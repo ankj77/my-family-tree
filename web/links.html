@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jain Parivar Online · Links</title>
+<title>Jain Parivar Online · Village links</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#F7F2E4">
 <link rel="icon" href="web/icons/icon-192.png">
@@ -15,25 +15,13 @@
   #links a{color:var(--hl);}
   #links h1{font-family:var(--serif);font-size:26px;margin:8px 0 12px;color:#7A1F1F;
     display:flex;align-items:center;gap:8px;}
-  #lk-tabs{display:flex;gap:6px;margin-bottom:12px;}
-  #lk-tabs button{min-height:44px;padding:6px 14px;font-size:14px;cursor:pointer;border:1px solid var(--edge);
-    background:var(--card);font-family:var(--font);}
-  #lk-tabs button[aria-current="page"]{background:var(--hl);color:#fff;border-color:var(--hl);}
   #lk-form{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
   #lk-form>div{flex:1 1 260px;position:relative;}
   .lk-pick{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--ink-muted);flex:1 1 220px;}
   .lk-pick input,.lk-pick select{min-height:44px;font-size:16px;padding:6px 10px;border:1px solid var(--edge);
     background:var(--card);font-family:var(--font);box-sizing:border-box;width:100%;}
-  .lk-results{display:flex;flex-direction:column;}
-  .lk-results button{min-height:44px;text-align:left;padding:6px 10px;border:1px solid var(--rule);border-top:0;
-    background:var(--card);cursor:pointer;font-family:var(--font);font-size:14px;}
-  .lk-results button span{display:block;color:var(--ink-muted);font-size:12px;}
-  .lk-results button:hover{background:var(--canvas);}
   .lk-summary{font-family:var(--serif);font-size:19px;margin:0 0 16px;color:var(--name-ink);}
   .lk-msg{color:var(--ink-muted);}
-  .lk-pick small{font-size:13px;color:var(--ink-muted);}
-  .lk-go{display:inline-block;min-height:44px;line-height:44px;padding:0 18px;background:var(--hl);color:#fff !important;
-    text-decoration:none;border-radius:6px;font-size:16px;}
   .lk-couples{display:flex;flex-direction:column;gap:14px;}
   .lk-couple{display:flex;flex-wrap:wrap;align-items:center;gap:10px;}
   .lk-card{display:flex;flex-direction:column;gap:2px;width:260px;box-sizing:border-box;padding:10px 14px;
@@ -54,11 +42,8 @@
 <body>
 <div id="links">
   <p><a href="./">← Back to the tree</a></p>
-  <h1><img class="brand-logo" src="web/icons/emblem.png" alt="">How are we linked?</h1>
-  <nav id="lk-tabs" aria-label="Link type">
-    <button type="button" data-tab="people">People</button>
-    <button type="button" data-tab="villages">Villages</button>
-  </nav>
+  <h1><img class="brand-logo" src="web/icons/emblem.png" alt="">Village links</h1>
+  <p class="lk-msg">To see how two people are linked, search the first person on the tree page, then the second.</p>
   <div id="lk-form"></div>
   <main id="lk-result" aria-live="polite"></main>
 </div>

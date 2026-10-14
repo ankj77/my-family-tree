@@ -74,9 +74,15 @@ api.call('PATCH', '/people/amit', { born: '1990' }).then(function () {
 
 var other = api.otherTrees([
   { id: 'amit', name: 'Amit', home_family: 'bakheta' },
-  { id: 'bash', name: 'Bash', name_hi: 'बश', home_family: 'pugthala' },
-  { id: 'lost', name: 'Lost', home_family: null }
+  { id: 'bash', name: 'Bash', name_hi: 'बश', home_family: 'pugthala', relation: 'son of Ram', village: 'Pugthala' },
+  { id: 'far', name: 'Far', home_family: 'hidden', relation: '', village: 'Kakroi' },
+  { id: 'shown', name: 'Shown', home_family: 'kakroi' }
 ], [{ name: 'Pugthala', families: [{ id: 'pugthala', root_name: 'Bash' }] },
-    { name: 'Bakheta', families: [{ id: 'bakheta', root_name: 'Ram' }] }], 'bakheta');
-assert.deepStrictEqual(other, [{ id: 'bash', name: 'Bash', name_hi: 'बश', tree: 'Pugthala · Bash',
-                                 url: '?family=pugthala&person=bash' }]);
+    { name: 'Bakheta', families: [{ id: 'bakheta', root_name: 'Ram' }] }], 'bakheta', { shown: true });
+assert.deepStrictEqual(other, [
+  { id: 'bash', name: 'Bash', name_hi: 'बश', tree: 'son of Ram · Pugthala · Bash', url: '?family=pugthala&person=bash' },
+  { id: 'far', name: 'Far', name_hi: undefined, tree: 'Kakroi', url: null }
+]);
+assert.strictEqual(api.who({ relation: 'son of Vijay · husband of Ridhi', village: 'Bakheta' }), 'son of Vijay · husband of Ridhi · Bakheta');
+assert.strictEqual(api.who({ relation: '', village: null }), 'Village not recorded');
+assert.strictEqual(api.linkTreeUrl('a b', 'c'), '?la=a%20b&lb=c');

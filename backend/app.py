@@ -385,7 +385,8 @@ def link_person(graph, pid):
     row = graph.people[pid]
     village = links.birth_village(graph, pid) or graph.village_of(pid)
     return {"id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"), "gender": row.get("gender"),
-            "life": row.get("life"), "relation": links.relation_words(graph, pid), "village_id": village,
+            "life": row.get("life"), "relation": links.relation_words(graph, pid), "home_family": graph.home_family(pid),
+            "village_id": village,
             "village": graph.villages[village]["name"] if village in graph.villages else None}
 
 

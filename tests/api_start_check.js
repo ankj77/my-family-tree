@@ -99,7 +99,7 @@ async function loggedInBoots() {
   assert.strictEqual(brand.children[0].children[1].id, 'family-picker');
   assert.strictEqual(elements.who.textContent, 'Asha · Family reader');
   assert.strictEqual(elements.avatar.textContent, 'A');
-  assert.deepStrictEqual(menuLabels(), ['Change password', 'Links', 'Log out']);
+  assert.deepStrictEqual(menuLabels(), ['Change password', 'Village links', 'Log out']);
   assert.ok(elements.login.classList.contains('hidden'));
   assert.deepStrictEqual(opened, ['branch:gf']);
   assert.strictEqual(store['ft-family'], 'f1');
@@ -110,7 +110,7 @@ async function adminSeesAdminItem() {
   elements = {};
   FT.api.start();
   await settle();
-  assert.deepStrictEqual(menuLabels(), ['Change password', 'Links', 'Admin', 'Log out']);
+  assert.deepStrictEqual(menuLabels(), ['Change password', 'Village links', 'Admin', 'Log out']);
   assert.strictEqual(elements.who.textContent, 'Bhanu · Global admin');
 }
 

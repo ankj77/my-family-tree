@@ -1,6 +1,6 @@
 from tests.apicase import ApiCase
 
-PERSON_KEYS = {"id", "name", "name_hi", "gender", "life", "relation", "village_id", "village"}
+PERSON_KEYS = {"id", "name", "name_hi", "gender", "life", "relation", "home_family", "village_id", "village"}
 
 
 class TestLinksApi(ApiCase):

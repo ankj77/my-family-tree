@@ -59,6 +59,7 @@ FT.views.poster = {
       var my = y1 + (y2 - y1) * 0.62;
       var p = FT.edge(g, 'M' + x1 + ',' + y1 + ' Q' + mx + ',' + my + ' ' + x2 + ',' + y2, id);
       p.setAttribute('class', 'edge poster-branch');
+      p.setAttribute('marker-end', 'url(#ft-arrow)');
       p.style.strokeWidth = weight + 'px';
       view.leaves(g, x1, y1, mx, my, x2, y2, id);
     }
@@ -72,6 +73,8 @@ FT.views.poster = {
         var thickness = fromTrunk ? 2.4 : 1.7;
         branch(x1, y1, c.x + FT.jointX(c), c.y + FT.nodeH(c),
           Math.max(fromTrunk ? 6 : 3.5, Math.sqrt(FT.leafCount(c)) * thickness), c.id);
+        FT.el('text', { 'class': 'chart-label', x: c.x + FT.CARD_W / 2 + 14, y: c.y + FT.nodeH(c) + 34 }, g)
+          .textContent = FT.childWord(c);
         walk(c, depth + 1);
       });
     })(root, 0);

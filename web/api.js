@@ -36,18 +36,36 @@
       (personId ? '&person=' + encodeURIComponent(personId) : '');
   };
 
-  api.otherTrees = function (people, villages, currentFamily) {
+  api.who = function (p) {
+    return [p.relation, p.village || 'Village not recorded'].filter(Boolean).join(' · ');
+  };
+
+  api.otherTrees = function (people, villages, currentFamily, shown) {
     var trees = {};
     villages.forEach(function (v) {
       v.families.forEach(function (f) { trees[f.id] = api.treeLabel(v, f); });
     });
     return people.filter(function (p) {
-      return p.home_family !== currentFamily && trees[p.home_family];
+      return p.home_family !== currentFamily && !(shown && shown[p.id]);
     }).map(function (p) {
-      return { id: p.id, name: p.name, name_hi: p.name_hi, tree: trees[p.home_family],
-               url: api.urlFor(p.home_family, p.id) };
+      var where = trees[p.home_family] || p.village || 'Village not recorded';
+      return { id: p.id, name: p.name, name_hi: p.name_hi,
+               tree: [p.relation, where].filter(Boolean).join(' · '),
+               url: trees[p.home_family] ? api.urlFor(p.home_family, p.id) : null };
     });
   };
+
+  function loadOthers(me, currentFamily) {
+    if (me.guest) return;
+    FT.onLink = function (a, b) { location.assign(location.pathname + api.linkTreeUrl(a, b)); };
+    FT.meId = me.id;
+    api.call('GET', '/directory').then(function (people) {
+      FT.who = {};
+      people.forEach(function (p) { FT.who[p.id] = api.who(p); });
+      if (FT.renderPicks) FT.renderPicks();
+      FT.otherTrees = api.otherTrees(people, api.villages || [], currentFamily, FT.byId);
+    }, function () {});
+  }
 
   api.roleText = function (me) {
     if (me.guest) return 'Guest (view only)';
@@ -235,7 +253,7 @@
     document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
     document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
     if (!me.guest) menuItem('Change password', passwordSheet);
-    if (!me.guest) menuItem('Links', function () { location.assign('links.html'); });
+    if (!me.guest) menuItem('Village links', function () { location.assign('links.html'); });
     if (me.is_admin) menuItem('Admin', function () { location.assign('admin.html'); });
     menuItem('Log out', function () {
       api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
@@ -247,9 +265,8 @@
   };
 
   function startLink(me, a, b) {
-    var back = 'links.html?tab=people&a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b);
     return api.call('GET', '/links/tree?a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b)).then(function (r) {
-      if (!r.found) { location.assign(back); return; }
+      if (!r.found) { location.assign('./?nolink=1'); return; }
       document.getElementById('login').classList.add('hidden');
       FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
       FT.state.ends = [a, b];
@@ -259,12 +276,28 @@
       FT.expandAll();
       accountMenu(me);
       api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
+      loadOthers(me, null);
       var bar = document.getElementById('summary');
-      bar.textContent = FT.links.sentence(r, me.id) + ' ';
+      var first = r.steps[0], last = r.steps[r.steps.length - 1];
+      bar.innerHTML = '';
+      [first, last].forEach(function (p, i) {
+        var who = document.createElement('span');
+        who.className = 'link-person';
+        who.innerHTML = '<b></b> <small></small>';
+        who.firstChild.textContent = p.name || p.name_hi;
+        who.lastChild.textContent = api.who(p);
+        bar.appendChild(who);
+        if (!i) bar.appendChild(document.createTextNode(' ↔ '));
+      });
+      var line = document.createElement('div');
+      line.className = 'link-sentence';
+      line.textContent = FT.links.sentence(r, me.id) + ' Search another name to link it to ' +
+        (first.name || first.name_hi) + '. ';
+      bar.appendChild(line);
       var link = document.createElement('a');
-      link.href = back;
-      link.textContent = '← Change people';
-      bar.appendChild(link);
+      link.href = './';
+      link.textContent = '× Back to the tree';
+      line.appendChild(link);
     });
   }
 
@@ -289,9 +322,8 @@
         accountMenu(me);
         api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
         if (me.login_ends) countDown(me);
-        api.call('GET', '/people').then(function (people) {
-          FT.otherTrees = api.otherTrees(people, api.villages, api.familyId);
-        }, function () {});
+        loadOthers(me, api.familyId);
+        if (param('nolink')) document.getElementById('summary').textContent = 'No link found in the records between those two people.';
         var person = param('person');
         if (person) FT.openPerson(person);
         else {

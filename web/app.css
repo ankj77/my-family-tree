@@ -171,7 +171,12 @@
   .curl{stroke:#B35A0E;stroke-width:.7px;}
   .rose{fill:#B3121B;stroke:#7A0A10;stroke-width:.7px;}
   .rose-core{fill:#D62A33;}
-  .spouse-link{stroke:var(--bark);stroke-width:2px;}
+  .spouse-link{stroke:var(--rail-f);stroke-width:3px;}
+  .ft-arrow{fill:var(--bark);}
+  .pick-who{font-family:var(--font);font-size:12px;color:var(--ink-muted);}
+  .link-person b{font-family:var(--serif);font-size:15px;}
+  .link-person small{font-size:12px;color:var(--ink-muted);}
+  .link-sentence{margin-top:4px;}
   .chart-edge{fill:none;stroke:var(--connector);stroke-width:2.5px;}
   .chart-label{font-family:var(--font);font-size:15px;font-weight:600;fill:var(--ink-muted);pointer-events:none;}
   .chart-marriage{stroke:var(--rail-f);stroke-width:3px;}

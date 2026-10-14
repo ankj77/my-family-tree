@@ -151,3 +151,13 @@ needed. Search is over a few thousand people at most.
 - Showing more than one chain between two people.
 - A drawn map of villages.
 - Editing anything from the Links page.
+
+## Update (2026-10-14, after first use)
+
+- Two people are linked from the main search, not a separate page: pick one person, then a second
+  (from this tree or "Other family trees", which now lists every member with "son of … · village").
+  The tree page switches to a link chart (`?la=<id>&lb=<id>`).
+- The link chart shows each person once on the family-page card: parents above children, a couple
+  side by side, and every line named (son, daughter, married) with an arrow from parent to child.
+- The family tree itself also names every line (son, daughter, married) and points parent → child.
+- `links.html` is now **Village links** only.

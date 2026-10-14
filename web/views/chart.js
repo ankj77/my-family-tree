@@ -40,9 +40,10 @@ FT.views.chart = {
       var px = a.x + FT.CARD_W / 2, py = a.y + FT.nodeH(a);
       var cx = b.x + FT.CARD_W / 2, cy = b.y;
       var mid = py + (cy - py) / 2;
-      FT.edge(g, 'M' + px + ',' + py + ' V' + mid + ' H' + cx + ' V' + cy, b.id)
-        .setAttribute('class', 'edge chart-edge');
-      view.caption(g, cx + 8, cy - 14, e.label);
+      var line = FT.edge(g, 'M' + px + ',' + py + ' V' + mid + ' H' + cx + ' V' + cy, b.id);
+      line.setAttribute('class', 'edge chart-edge');
+      line.setAttribute('marker-end', 'url(#ft-arrow)');
+      view.caption(g, cx + 12, cy - 16, e.label);
     });
   }
 };
