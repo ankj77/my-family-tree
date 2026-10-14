@@ -385,7 +385,7 @@ def link_person(graph, pid):
     row = graph.people[pid]
     village = links.birth_village(graph, pid) or graph.village_of(pid)
     return {"id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"), "gender": row.get("gender"),
-            "life": row.get("life"), "village_id": village,
+            "life": row.get("life"), "relation": links.relation_words(graph, pid), "village_id": village,
             "village": graph.villages[village]["name"] if village in graph.villages else None}
 
 
@@ -425,6 +425,28 @@ def link_people():
         return jsonify({"found": False, "steps": [], "segments": [], "summary": kinship.describe(None)})
     return jsonify({"found": True, "steps": [dict(link_person(graph, s["id"]), rel=s["rel"]) for s in steps],
                     "segments": links.segments(steps), "summary": kinship.describe(steps)})
+
+
+@app.get("/links/tree")
+def link_tree():
+    actor, graph = member_graph()
+    a = known_person(graph, request.args.get("a"))
+    b = known_person(graph, request.args.get("b"))
+    steps = links.person_path(graph, a, b)
+    if steps is None:
+        return jsonify({"found": False, "steps": [], "summary": kinship.describe(None)})
+    people = [graph.people[s["id"]] for s in steps]
+    return jsonify({
+        "found": True,
+        "steps": [link_person(graph, s["id"]) for s in steps],
+        "summary": kinship.describe(steps),
+        "tree": {"id": "__link__", "hidden": True, "name": None, "name_hi": None, "spouses": [],
+                 "placeholder": None, "child_groups": [], "children": links.link_trees(graph, steps)},
+        "unlinked": [],
+        "counts": {"total": len(people), "generations": 0, "uncertain": 0, "needs_parent": 0,
+                   "male": sum(p.get("gender") == "male" for p in people),
+                   "female": sum(p.get("gender") == "female" for p in people)},
+    })
 
 
 @app.get("/villages/<vid>/links")

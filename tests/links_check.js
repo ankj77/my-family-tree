@@ -8,11 +8,6 @@ var steps = [
   { id: 'ram', name: 'Ram', rel: 'father' },
   { id: 'mohan', name: 'Mohan', rel: 'son' }
 ];
-assert.deepStrictEqual(links.legs(steps, [0, 1]), { top: 0, left: [], right: [1] });
-assert.deepStrictEqual(links.legs(steps, [2, 3, 4]), { top: 3, left: [2], right: [4] });
-var up = [{ id: 'a', rel: null }, { id: 'p', rel: 'father' }, { id: 'g', rel: 'father' }, { id: 'u', rel: 'son' }];
-assert.deepStrictEqual(links.legs(up, [0, 1, 2, 3]), { top: 2, left: [1, 0], right: [3] });
-
 var result = { found: true, steps: steps, summary: { en: "daughter's husband's brother", hi: null } };
 assert.strictEqual(links.sentence(result, 'bash'), "Mohan is your daughter's husband's brother.");
 assert.strictEqual(links.sentence(result, 'amit'), "Mohan is Bash's daughter's husband's brother.");
@@ -28,4 +23,6 @@ assert.deepStrictEqual(links.matches(people, '  '), []);
 
 assert.strictEqual(links.query({ tab: 'people', a: 'x y', b: 'z' }), '?tab=people&a=x%20y&b=z');
 assert.strictEqual(links.query({ tab: 'villages', va: 'bakheta', vb: null }), '?tab=villages&a=bakheta');
+assert.strictEqual(links.whoLine({ relation: 'son of Vijay', village: 'Bakheta' }), 'son of Vijay · Bakheta');
+assert.strictEqual(links.whoLine({ relation: '', village: null }), 'Village not recorded');
 console.log('links_check ok');

@@ -52,7 +52,7 @@ def summary_json(summary: Summary) -> dict:
     }
 
 
-APP_SCRIPTS = ["app.js"] + ["views/%s" % name for name in VIEW_FILES] + ["filters.js", "api.js", "edit.js"]
+APP_SCRIPTS = ["app.js"] + ["views/%s" % name for name in VIEW_FILES] + ["filters.js", "api.js", "edit.js", "links.js"]
 ADMIN_SCRIPTS = ["api.js", "admin.js"]
 LINKS_SCRIPTS = ["api.js", "links.js"]
 

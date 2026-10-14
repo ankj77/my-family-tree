@@ -1,6 +1,6 @@
 from tests.apicase import ApiCase
 
-PERSON_KEYS = {"id", "name", "name_hi", "gender", "life", "village_id", "village"}
+PERSON_KEYS = {"id", "name", "name_hi", "gender", "life", "relation", "village_id", "village"}
 
 
 class TestLinksApi(ApiCase):
@@ -52,3 +52,14 @@ class TestLinksApi(ApiCase):
         self.assertEqual(self.get("/links/people?a=amit").status_code, 404)
         self.assertEqual(self.get("/villages/nowhere/links").status_code, 404)
         self.assertEqual(self.get("/links/villages?a=bakheta&b=nowhere").status_code, 404)
+
+    def test_link_tree_for_the_tree_page(self):
+        self.query("UPDATE people SET note='private' WHERE id='mohan'")
+        self.login("amit")
+        r = self.get("/links/tree?a=bash&b=mohan").get_json()
+        self.assertTrue(r["found"])
+        self.assertTrue(r["tree"]["hidden"])
+        self.assertEqual([t["id"] for t in r["tree"]["children"]], ["bash", "ram"])
+        self.assertEqual(r["counts"]["total"], 5)
+        self.assertNotIn("private", str(r))
+        self.assertEqual(self.get("/links/tree?a=bash").status_code, 404)

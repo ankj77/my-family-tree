@@ -2,11 +2,16 @@ from collections import Counter, defaultdict, deque
 from typing import Dict, List, Optional, Tuple
 
 from family_tree.graph import Graph
+from family_tree.render import _person_json
+from family_tree.rules import display
+from family_tree.views import _person, parent_text
 
 PARENT = {"male": "father", "female": "mother"}
 CHILD = {"male": "son", "female": "daughter"}
 SPOUSE = {"male": "husband", "female": "wife"}
 MARRIAGE = {"husband", "wife", "spouse"}
+UP = {"father", "mother", "parent"}
+DOWN = {"son", "daughter", "child"}
 
 
 def _word(graph: Graph, words: dict, pid: str, neutral: str) -> str:
@@ -66,6 +71,65 @@ def segments(steps: List[dict]) -> List[List[int]]:
             out.append([])
         out[-1].append(i)
     return out
+
+
+def relation_words(graph: Graph, pid: str) -> str:
+    row = graph.people[pid]
+    gender = row.get("gender")
+    parts = []
+    parent = parent_text(graph, row, "father_id", "father_name") or parent_text(graph, row, "mother_id", "mother_name")
+    if parent:
+        parts.append("%s of %s" % ({"male": "son", "female": "daughter"}.get(gender, "child"), parent))
+    if pid in graph.spouse:
+        parts.append("%s of %s" % ({"male": "husband", "female": "wife"}.get(gender, "spouse"),
+                                   display(graph.people[graph.spouse[pid]])))
+    return " · ".join(parts)
+
+
+PRIVATE_CARD_FIELDS = ("address", "note", "born", "died")
+
+
+def _card(graph: Graph, pid: str, as_spouse: bool) -> dict:
+    card = _person_json(_person(graph, pid, None, None, as_spouse))
+    for key in PRIVATE_CARD_FIELDS:
+        card.pop(key, None)
+    return card
+
+
+def _legs(steps: List[dict], segment: List[int]) -> Tuple[int, List[int], List[int]]:
+    level = highest = top = 0
+    for i, index in enumerate(segment[1:], 1):
+        rel = steps[index]["rel"]
+        level += 1 if rel in UP else -1 if rel in DOWN else 0
+        if level > highest:
+            highest, top = level, i
+    return segment[top], segment[:top][::-1], segment[top + 1:]
+
+
+def link_trees(graph: Graph, steps: List[dict]) -> List[dict]:
+    parts = segments(steps)
+    spouse_at = {}
+    for k in range(1, len(parts)):
+        joined = parts[k][0]
+        spouse_at[joined - 1] = joined
+        spouse_at[joined] = joined - 1
+
+    def node(index: int, below: List[int]) -> dict:
+        card = _card(graph, steps[index]["id"], False)
+        spouse = spouse_at.get(index)
+        card.update(spouses=[_card(graph, steps[spouse]["id"], True)] if spouse is not None else [],
+                    placeholder=None, child_groups=[], children=[])
+        if below:
+            card["children"] = [node(below[0], below[1:])]
+        return card
+
+    trees = []
+    for segment in parts:
+        top, left, right = _legs(steps, segment)
+        tree = node(top, [])
+        tree["children"] = [node(leg[0], leg[1:]) for leg in (left, right) if leg]
+        trees.append(tree)
+    return trees
 
 
 def birth_village(graph: Graph, pid: str) -> Optional[str]:

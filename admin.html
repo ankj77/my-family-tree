@@ -184,7 +184,7 @@
   .spouse-link{stroke:var(--bark);stroke-width:2px;}
   .spouse-card{cursor:pointer;}
   .gap-bg{fill:transparent;stroke:var(--ink-muted);stroke-width:1.6px;stroke-dasharray:7 5;cursor:pointer;}
-  .place-hit .card-bg{stroke:#D9731A;stroke-width:2.5px;}
+  .card .place-hit .card-bg{stroke:#D9731A;stroke-width:3px;}
   .sg-place .sg-name::before{content:'\2302  ';color:#D9731A;}
   .sg-place.area .sg-name::before,.sg-place.city .sg-name::before{content:'\25C9  ';color:var(--rail-m);}
   .spouse-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
@@ -572,11 +572,36 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     });
   }
 
+  api.linkTreeUrl = function (a, b) {
+    return '?la=' + encodeURIComponent(a) + '&lb=' + encodeURIComponent(b);
+  };
+
+  function startLink(me, a, b) {
+    var back = 'links.html?tab=people&a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b);
+    return api.call('GET', '/links/tree?a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b)).then(function (r) {
+      if (!r.found) { location.assign(back); return; }
+      document.getElementById('login').classList.add('hidden');
+      FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
+      FT.state.ends = [a, b];
+      FT.init();
+      FT.expandAll();
+      accountMenu(me);
+      api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
+      var bar = document.getElementById('summary');
+      bar.textContent = FT.links.sentence(r, me.id) + ' ';
+      var link = document.createElement('a');
+      link.href = back;
+      link.textContent = '← Change people';
+      bar.appendChild(link);
+    });
+  }
+
   api.start = function () {
     api.root = api.base(location.hostname);
     wireLogin();
     api.call('GET', '/me').then(function (me) {
       api.me = me;
+      if (param('la') && param('lb') && !me.guest) return startLink(me, param('la'), param('lb'));
       return api.call('GET', '/villages').then(function (villages) {
         api.villages = villages;
         var id = api.pickFamily(param('family'), stored('ft-family'), me.home_family, villages);

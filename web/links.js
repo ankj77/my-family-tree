@@ -1,6 +1,4 @@
 (function (links) {
-  var UP = { father: 1, mother: 1, parent: 1 };
-  var DOWN = { son: 1, daughter: 1, child: 1 };
   var state = { tab: 'people', a: null, b: null, va: null, vb: null };
   var directory = [], villages = [], me = null;
 
@@ -24,19 +22,6 @@
     return starts.concat(inside).slice(0, limit || 8);
   };
 
-  links.legs = function (steps, segment) {
-    var level = 0, top = 0, highest = 0;
-    segment.forEach(function (index, i) {
-      if (i > 0) level += UP[steps[index].rel] ? 1 : DOWN[steps[index].rel] ? -1 : 0;
-      if (level > highest) { highest = level; top = i; }
-    });
-    return {
-      top: segment[top],
-      left: segment.slice(0, top).reverse(),
-      right: segment.slice(top + 1)
-    };
-  };
-
   links.sentence = function (result, meId) {
     if (!result.found) return 'No link found in the records.';
     var steps = result.steps;
@@ -45,6 +30,10 @@
     var whose = a.id === meId ? 'your' : nameOf(a) + '\'s';
     var hi = result.summary.hi ? ' (' + result.summary.hi + ')' : '';
     return nameOf(b) + ' is ' + whose + ' ' + result.summary.en + hi + '.';
+  };
+
+  links.whoLine = function (p) {
+    return [p.relation, p.village || 'Village not recorded'].filter(Boolean).join(' · ');
   };
 
   links.query = function (s) {
@@ -67,49 +56,17 @@
     return null;
   }
 
-  function card(p, end) {
-    return '<div class="lk-card ' + esc(p.gender || '') + (end ? ' lk-end' : '') + '">' +
-      '<b>' + esc(nameOf(p)) + '</b>' +
-      (p.name && p.name_hi ? '<span class="lk-hi">' + esc(p.name_hi) + '</span>' : '') +
-      '<span class="lk-village">' + esc(p.village || 'Village not recorded') + '</span></div>';
-  }
-
-  function segmentHtml(steps, segment, last) {
-    var legs = links.legs(steps, segment);
-    function isEnd(i) { return i === 0 || i === last; }
-    function leg(list) {
-      return '<div class="lk-leg">' + list.map(function (i) { return card(steps[i], isEnd(i)); }).join('') + '</div>';
-    }
-    var lower = [legs.left, legs.right].filter(function (l) { return l.length; });
-    return '<div class="lk-seg">' + card(steps[legs.top], isEnd(legs.top)) +
-      (lower.length ? '<div class="lk-legs' + (lower.length > 1 ? ' two' : '') + '">' +
-        lower.map(leg).join('') + '</div>' : '') + '</div>';
-  }
-
-  function marryHtml(a, b) {
-    return '<p class="lk-marry"><b>' + esc(nameOf(a)) + '</b> <span>══ married ══</span> <b>' +
-      esc(nameOf(b)) + '</b></p>';
-  }
-
-  function chainHtml(result) {
-    var last = result.steps.length - 1;
-    return '<div class="lk-chain">' + result.segments.map(function (segment, k) {
-      return (k ? marryHtml(result.steps[segment[0] - 1], result.steps[segment[0]]) : '') +
-        segmentHtml(result.steps, segment, last);
-    }).join('') + '</div>';
-  }
-
   function picker(slot, label, value, onPick) {
     var p = value && byId(value);
     slot.innerHTML = '<label class="lk-pick"><span>' + esc(label) + '</span>' +
       '<input type="search" autocomplete="off" placeholder="Type a name" value="' + esc(p ? nameOf(p) : '') + '">' +
-      (p ? '<small>' + esc(p.village || '') + '</small>' : '') + '</label><div class="lk-results"></div>';
+      (p ? '<small>' + esc(links.whoLine(p)) + '</small>' : '') + '</label><div class="lk-results"></div>';
     var input = slot.querySelector('input');
     var results = slot.querySelector('.lk-results');
     input.addEventListener('input', function () {
       results.innerHTML = links.matches(directory, input.value).map(function (m) {
         return '<button type="button" data-id="' + esc(m.id) + '"><b>' + esc(nameOf(m)) + '</b> ' +
-          (m.name && m.name_hi ? esc(m.name_hi) + ' ' : '') + '<span>' + esc(m.village || '—') + '</span></button>';
+          (m.name && m.name_hi ? esc(m.name_hi) : '') + '<span>' + esc(links.whoLine(m)) + '</span></button>';
       }).join('');
     });
     results.addEventListener('click', function (e) {
@@ -139,19 +96,29 @@
   function renderPeople() {
     var form = document.getElementById('lk-form');
     form.innerHTML = '<div id="lk-a"></div><div id="lk-b"></div>';
-    picker(document.getElementById('lk-a'), 'First person', state.a, function (id) { state.a = id; renderPeople(); });
-    picker(document.getElementById('lk-b'), 'Second person', state.b, function (id) { state.b = id; renderPeople(); });
+    picker(document.getElementById('lk-a'), 'First person', state.a, function (id) { state.a = id; pickedPeople(); });
+    picker(document.getElementById('lk-b'), 'Second person', state.b, function (id) { state.b = id; pickedPeople(); });
     sync();
     if (!state.a || !state.b) { show('<p class="lk-msg">Pick two people to see how they are linked.</p>'); return; }
     api().call('GET', '/links/people?a=' + encodeURIComponent(state.a) + '&b=' + encodeURIComponent(state.b))
       .then(function (r) {
         show('<p class="lk-summary">' + esc(links.sentence(r, me.id)) + '</p>' +
-          (r.found && r.steps.length > 1 ? chainHtml(r) : ''));
+          (r.found && r.steps.length > 1
+            ? '<a class="lk-go" href="./' + api().linkTreeUrl(state.a, state.b) + '">Show the link as a tree →</a>' : ''));
       }, fail);
   }
 
+  function pickedPeople() {
+    if (state.a && state.b && state.a !== state.b) {
+      sync();
+      location.assign('./' + api().linkTreeUrl(state.a, state.b));
+      return;
+    }
+    renderPeople();
+  }
+
   function personLink(p) {
-    return '<a href="' + links.query({ tab: 'people', a: me.id, b: p.id }) + '">' + esc(nameOf(p)) + '</a>';
+    return '<a href="./' + api().linkTreeUrl(me.id, p.id) + '">' + esc(nameOf(p)) + '</a>';
   }
 
   function coupleHtml(c) {

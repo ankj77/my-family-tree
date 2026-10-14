@@ -242,11 +242,36 @@
     });
   }
 
+  api.linkTreeUrl = function (a, b) {
+    return '?la=' + encodeURIComponent(a) + '&lb=' + encodeURIComponent(b);
+  };
+
+  function startLink(me, a, b) {
+    var back = 'links.html?tab=people&a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b);
+    return api.call('GET', '/links/tree?a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b)).then(function (r) {
+      if (!r.found) { location.assign(back); return; }
+      document.getElementById('login').classList.add('hidden');
+      FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
+      FT.state.ends = [a, b];
+      FT.init();
+      FT.expandAll();
+      accountMenu(me);
+      api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
+      var bar = document.getElementById('summary');
+      bar.textContent = FT.links.sentence(r, me.id) + ' ';
+      var link = document.createElement('a');
+      link.href = back;
+      link.textContent = '← Change people';
+      bar.appendChild(link);
+    });
+  }
+
   api.start = function () {
     api.root = api.base(location.hostname);
     wireLogin();
     api.call('GET', '/me').then(function (me) {
       api.me = me;
+      if (param('la') && param('lb') && !me.guest) return startLink(me, param('la'), param('lb'));
       return api.call('GET', '/villages').then(function (villages) {
         api.villages = villages;
         var id = api.pickFamily(param('family'), stored('ft-family'), me.home_family, villages);

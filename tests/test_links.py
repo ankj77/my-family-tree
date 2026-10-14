@@ -116,3 +116,36 @@ class TestKinship(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestLinkTrees(unittest.TestCase):
+    def setUp(self):
+        self.graph = sample_graph()
+
+    def shape(self, card):
+        return [card["id"], [s["id"] for s in card["spouses"]], [self.shape(c) for c in card["children"]]]
+
+    def test_one_tree_per_family_joined_by_the_couple(self):
+        trees = links.link_trees(self.graph, links.person_path(self.graph, "bash", "mohan"))
+        self.assertEqual([self.shape(t) for t in trees], [
+            ["bash", [], [["rashmi", ["jagdish"], []]]],
+            ["ram", [], [["jagdish", ["rashmi"], []], ["mohan", [], []]]],
+        ])
+
+    def test_straight_line_up(self):
+        trees = links.link_trees(self.graph, links.person_path(self.graph, "amit", "ram"))
+        self.assertEqual([self.shape(t) for t in trees], [["ram", [], [["jagdish", [], [["amit", [], []]]]]]])
+
+    def test_cards_hide_private_fields(self):
+        rows = sample_rows()
+        next(p for p in rows["people"] if p["id"] == "mohan").update(note="private", born="1950", address_city="Delhi")
+        graph = Graph(rows["people"], rows["marriages"], rows["families"], rows["villages"])
+        text = str(links.link_trees(graph, links.person_path(graph, "amit", "mohan")))
+        for secret in ("private", "1950", "Delhi"):
+            self.assertNotIn(secret, text)
+
+    def test_relation_words(self):
+        self.assertEqual(links.relation_words(self.graph, "amit"), "son of Jagdish")
+        self.assertEqual(links.relation_words(self.graph, "rashmi"), "daughter of Bash · wife of Jagdish")
+        self.assertEqual(links.relation_words(self.graph, "sita"), "daughter of Hari · wife of Mohan")
+        self.assertEqual(links.relation_words(self.graph, "vikram"), "husband of Neha")

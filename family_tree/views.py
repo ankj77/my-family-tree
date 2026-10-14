@@ -29,7 +29,7 @@ def origin_of(graph: Graph, pid: str, seen=None) -> Tuple[dict, bool]:
     return {}, False
 
 
-def _parent_text(graph: Graph, row: dict, id_key: str, name_key: str):
+def parent_text(graph: Graph, row: dict, id_key: str, name_key: str):
     parent = row.get(id_key)
     if parent in graph.people:
         return display(graph.people[parent])
@@ -52,8 +52,8 @@ def _person(graph: Graph, pid: str, relation, relation_id, as_spouse: bool) -> P
         died=row.get("died"),
         note=row.get("note"),
         status=row.get("status"),
-        father=_parent_text(graph, row, "father_id", "father_name") if as_spouse else None,
-        mother=_parent_text(graph, row, "mother_id", "mother_name") if as_spouse else None,
+        father=parent_text(graph, row, "father_id", "father_name") if as_spouse else None,
+        mother=parent_text(graph, row, "mother_id", "mother_name") if as_spouse else None,
         address=Address(
             line=row.get("address_line"),
             locality=row.get("address_locality"),
@@ -108,7 +108,7 @@ def relation_text(graph: Graph, pid: str) -> str:
     row = graph.people[pid]
     child_of = {"male": "s/o", "female": "d/o"}.get(row.get("gender"), "c/o")
     for id_key, name_key in (("father_id", "father_name"), ("mother_id", "mother_name")):
-        parent = _parent_text(graph, row, id_key, name_key)
+        parent = parent_text(graph, row, id_key, name_key)
         if parent:
             return "%s %s" % (child_of, parent)
     spouse = graph.spouse.get(pid)

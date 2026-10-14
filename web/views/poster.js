@@ -12,7 +12,7 @@ FT.views.poster = {
   layout: function (root) {
     var view = this;
     var cursor = 0;
-    this.plain = root !== FT.nodes[0];
+    this.plain = root !== FT.nodes[0] || !!root.hidden;
     function shiftRight(n, depth, dx) {
       n.x += dx;
       FT.kidsAt(n, depth).forEach(function (c) { shiftRight(c, depth + 1, dx); });
@@ -65,6 +65,7 @@ FT.views.poster = {
 
     (function walk(n, depth) {
       FT.kidsAt(n, depth).forEach(function (c) {
+        if (n.hidden) { walk(c, depth + 1); return; }
         var fromTrunk = trunk && depth === 0;
         var x1 = fromTrunk ? cx : n.x + FT.jointX(n);
         var y1 = fromTrunk ? TRUNK_TOP + 10 : n.y;

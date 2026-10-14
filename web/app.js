@@ -33,7 +33,7 @@ FT.boot = function (data) {
   (function walk(n, parent) {
     FT.nodes.push(n);
     FT.byId[n.id] = n;
-    if (parent) FT.parentOf[n.id] = parent;
+    if (parent && !parent.hidden) FT.parentOf[n.id] = parent;
     (n.children || []).forEach(function (c) { walk(c, n); });
   })(tree, null);
 
@@ -273,7 +273,7 @@ FT.boot = function (data) {
     if (p.note) rows += '<dt>Note</dt><dd>' + esc(p.note) + '</dd>';
     if (rows) h += '<dl>' + rows + '</dl>';
     if (FT.api && FT.api.me && !FT.api.me.guest && FT.api.me.id !== p.id) {
-      h += '<p><a class="sheet-linked" href="links.html?tab=people&b=' + encodeURIComponent(p.id) + '">How am I linked?</a></p>';
+      h += '<p><a class="sheet-linked" href="' + FT.api.linkTreeUrl(FT.api.me.id, p.id) + '">How am I linked?</a></p>';
     }
 
     var rel = '';
@@ -797,6 +797,7 @@ FT.boot = function (data) {
   };
 
   FT.drawNode = function (parent, n) {
+    if (n.hidden) return null;
     var view = FT.views[FT.state.viewId];
     if (view && view.cardStyle === 'parents') return FT.drawParentCard(parent, n);
     var g = el('g', {
@@ -848,6 +849,7 @@ FT.boot = function (data) {
       FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
     })(top, 0);
     branchControls(nodes);
+    markEnds();
     if (FT.state.picks.length) {
       clearHl();
       FT.state.picks.forEach(hlPath);
@@ -1072,6 +1074,18 @@ FT.boot = function (data) {
       x += FT.nodeW(n) + FT.H_GAP;
     });
     return owners;
+  }
+
+  FT.state.ends = [];
+
+  function markEnds() {
+    FT.state.ends.forEach(function (id) {
+      var owner = FT.ownerOf(id);
+      var card = owner && vp.querySelector('[data-id="' + CSS.escape(owner.id) + '"]');
+      if (!card) return;
+      var face = owner.id === id ? card.firstChild : card.querySelector('.spouse-card');
+      if (face) face.classList.add('place-hit');
+    });
   }
 
   function markPlace() {
