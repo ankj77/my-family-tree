@@ -173,10 +173,10 @@
   .rose-core{fill:#D62A33;}
   .spouse-link{stroke:var(--rail-f);stroke-width:3px;}
   .ft-arrow{fill:var(--bark);}
+  .pick-x{min-width:34px;min-height:34px;display:inline-flex;align-items:center;justify-content:center;
+    border-radius:50%;font-size:18px;color:var(--ink-muted);text-decoration:none;}
+  a.pick-clear{display:inline-flex;align-items:center;text-decoration:none;color:inherit;}
   .pick-who{font-family:var(--font);font-size:12px;color:var(--ink-muted);}
-  .link-person b{font-family:var(--serif);font-size:15px;}
-  .link-person small{font-size:12px;color:var(--ink-muted);}
-  .link-sentence{margin-top:4px;}
   .chart-edge{fill:none;stroke:var(--connector);stroke-width:2.5px;}
   .chart-label{font-family:var(--font);font-size:15px;font-weight:600;fill:var(--ink-muted);pointer-events:none;}
   .chart-marriage{stroke:var(--rail-f);stroke-width:3px;}

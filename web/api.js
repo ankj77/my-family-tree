@@ -268,6 +268,36 @@
     return '?la=' + encodeURIComponent(a) + '&lv=' + encodeURIComponent(v);
   };
 
+  function linkChips(first, last, note) {
+    var bar = document.getElementById('picks');
+    bar.innerHTML = '';
+    [first, last].forEach(function (p) {
+      var chip = document.createElement('span');
+      chip.className = 'pick';
+      chip.appendChild(document.createTextNode(p.name || p.name_hi));
+      var who = document.createElement('small');
+      who.className = 'pick-who';
+      who.textContent = ' ' + api.who(p);
+      chip.appendChild(who);
+      var x = document.createElement('a');
+      x.className = 'pick-x';
+      x.href = './';
+      x.setAttribute('aria-label', 'Back to the tree');
+      x.textContent = '×';
+      chip.appendChild(x);
+      bar.appendChild(chip);
+    });
+    var text = document.createElement('span');
+    text.className = 'pick-note';
+    text.textContent = note;
+    bar.appendChild(text);
+    var clear = document.createElement('a');
+    clear.className = 'pick-clear';
+    clear.href = './';
+    clear.textContent = 'Clear';
+    bar.appendChild(clear);
+  }
+
   function startLink(me, a, b, v) {
     var query = '?a=' + encodeURIComponent(a) + (v ? '&v=' + encodeURIComponent(v) : '&b=' + encodeURIComponent(b));
     return api.call('GET', '/links/tree' + query).then(function (r) {
@@ -282,28 +312,12 @@
       accountMenu(me);
       api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
       loadOthers(me, null);
-      var bar = document.getElementById('summary');
       var first = r.steps[0], last = r.steps[r.steps.length - 1];
-      bar.innerHTML = '';
-      [first, last].forEach(function (p, i) {
-        var who = document.createElement('span');
-        who.className = 'link-person';
-        who.innerHTML = '<b></b> <small></small>';
-        who.firstChild.textContent = p.name || p.name_hi;
-        who.lastChild.textContent = api.who(p);
-        bar.appendChild(who);
-        if (!i) bar.appendChild(document.createTextNode(' ↔ '));
-      });
-      var line = document.createElement('div');
-      line.className = 'link-sentence';
-      line.textContent = (v ? 'Closest person from ' + (last.village || 'that village') + ': ' : '') +
-        FT.links.sentence(r, me.id) + ' Search another name to link it to ' +
-        (first.name || first.name_hi) + '. ';
-      bar.appendChild(line);
-      var link = document.createElement('a');
-      link.href = './';
-      link.textContent = '× Back to the tree';
-      line.appendChild(link);
+      var note = (v ? 'Closest person from ' + (last.village || 'that village') + ': ' : '') + FT.links.sentence(r, me.id);
+      FT.renderPicks = function () { linkChips(first, last, note); };
+      FT.renderPicks();
+      document.getElementById('summary').textContent = r.steps.length + ' people on this link · ' +
+        'search another name to link it to ' + (first.name || first.name_hi);
     });
   }
 
