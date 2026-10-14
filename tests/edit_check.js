@@ -2,6 +2,8 @@ var assert = require('assert');
 var edit = require('../web/edit.js');
 
 assert.deepStrictEqual(edit.actionsFor({ can_edit: false, can_delete: false }, false), []);
+assert.deepStrictEqual(edit.actionsFor({ can_edit: true, can_remove_marriage: true, can_delete: false }, true),
+  ['edit', 'child', 'unmarry']);
 assert.deepStrictEqual(edit.actionsFor({ can_edit: true, can_delete: 'request' }, false),
   ['edit', 'child', 'spouse', 'request']);
 assert.deepStrictEqual(edit.actionsFor({ can_edit: true, can_delete: 'direct' }, true),
