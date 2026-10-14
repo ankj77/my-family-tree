@@ -36,6 +36,19 @@
       (personId ? '&person=' + encodeURIComponent(personId) : '');
   };
 
+  api.otherTrees = function (people, villages, currentFamily) {
+    var trees = {};
+    villages.forEach(function (v) {
+      v.families.forEach(function (f) { trees[f.id] = api.treeLabel(v, f); });
+    });
+    return people.filter(function (p) {
+      return p.home_family !== currentFamily && trees[p.home_family];
+    }).map(function (p) {
+      return { id: p.id, name: p.name, name_hi: p.name_hi, tree: trees[p.home_family],
+               url: api.urlFor(p.home_family, p.id) };
+    });
+  };
+
   api.roleText = function (me) {
     if (me.guest) return 'Guest (view only)';
     if (me.is_global) return 'Global admin';
@@ -248,6 +261,9 @@
         accountMenu(me);
         api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
         if (me.login_ends) countDown(me);
+        api.call('GET', '/people').then(function (people) {
+          FT.otherTrees = api.otherTrees(people, api.villages, api.familyId);
+        }, function () {});
         var person = param('person');
         if (person) FT.openPerson(person);
         else {

@@ -32,6 +32,12 @@ class TestViewing(ApiCase):
         self.assertEqual(self.get("/families/pugthala/tree").status_code, 403)
         self.assertTrue(next(p for p in people if p["id"] == "amit")["has_account"])
 
+    def test_people_carry_their_home_tree(self):
+        self.login("mohan")
+        homes = {p["id"]: p["home_family"] for p in self.get("/people").get_json()}
+        self.assertEqual(homes["sita"], "bakheta")
+        self.assertEqual(homes["bash"], "pugthala")
+
     def test_married_in_wife_links_to_her_fathers_family(self):
         self.login("mohan")
         tree = self.get("/families/bakheta/tree").get_json()["tree"]

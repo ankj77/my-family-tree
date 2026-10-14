@@ -368,7 +368,8 @@ def list_people():
     _, graph, access = context()
     return jsonify([
         {"id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"), "gender": row.get("gender"),
-         "life": row.get("life"), "family_id": row.get("family_id"), "has_account": pid in graph.account_ids}
+         "life": row.get("life"), "family_id": row.get("family_id"), "home_family": graph.home_family(pid),
+         "has_account": pid in graph.account_ids}
         for pid, row in graph.people.items() if access.can_read_person(pid)
     ])
 

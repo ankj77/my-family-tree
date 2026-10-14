@@ -71,3 +71,12 @@ api.call('PATCH', '/people/amit', { born: '1990' }).then(function () {
     console.log('api_check ok');
   });
 }).catch(function (e) { console.error(e); process.exit(1); });
+
+var other = api.otherTrees([
+  { id: 'amit', name: 'Amit', home_family: 'bakheta' },
+  { id: 'bash', name: 'Bash', name_hi: 'बश', home_family: 'pugthala' },
+  { id: 'lost', name: 'Lost', home_family: null }
+], [{ name: 'Pugthala', families: [{ id: 'pugthala', root_name: 'Bash' }] },
+    { name: 'Bakheta', families: [{ id: 'bakheta', root_name: 'Ram' }] }], 'bakheta');
+assert.deepStrictEqual(other, [{ id: 'bash', name: 'Bash', name_hi: 'बश', tree: 'Pugthala · Bash',
+                                 url: '?family=pugthala&person=bash' }]);
