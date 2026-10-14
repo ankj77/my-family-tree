@@ -20,9 +20,6 @@
   --leaf-3:#BCD79C;
   --leaf-spouse:#E7C4D3;
   --hl:#C86B2A;
-  --place-0:#D9731A;
-  --place-1:#1F7A8C;
-  --place-2:#8A4FB0;
   --warn:#B5432F;
   --band:#EFE7D2;
   --font:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari","Nirmala UI",sans-serif;
@@ -177,20 +174,11 @@
   .spouse-link{stroke:var(--bark);stroke-width:2px;}
   .spouse-card{cursor:pointer;}
   .gap-bg{fill:transparent;stroke:var(--ink-muted);stroke-width:1.6px;stroke-dasharray:7 5;cursor:pointer;}
-  .place-dot.place-0{fill:var(--place-0);}
-  .place-dot.place-1{fill:var(--place-1);}
-  .place-dot.place-2{fill:var(--place-2);}
-  .place-dot.place-both{fill:none;stroke:var(--ink-muted);stroke-width:2px;stroke-dasharray:3 2;}
-  .place-head{font-family:var(--serif);font-size:20px;font-weight:600;fill:var(--name-ink);}
+  .place-hit .card-bg{stroke:#D9731A;stroke-width:2.5px;}
   .sg-place .sg-name::before{content:'\2302  ';color:#D9731A;}
   .sg-place.area .sg-name::before,.sg-place.city .sg-name::before{content:'\25C9  ';color:var(--rail-m);}
   .spouse-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
   .spouse-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
-  .place-hit.place-0 .card-bg{stroke:var(--place-0);stroke-width:2.5px;}
-  .place-hit.place-1 .card-bg{stroke:var(--place-1);stroke-width:2.5px;}
-  .place-hit.place-2 .card-bg{stroke:var(--place-2);stroke-width:2.5px;}
-  .place-1.pick-place{border-color:var(--place-1);}
-  .place-2.pick-place{border-color:var(--place-2);}
   .motif-line{fill:none;stroke:var(--bark);stroke-width:1.4px;stroke-linecap:round;}
   .pc-sub{font-size:11.5px;fill:var(--ink-muted);pointer-events:none;}
   .pc-rule{stroke:var(--rule);stroke-width:1px;}
@@ -208,7 +196,7 @@
     color:var(--name-ink);}
   .pick button{min-width:34px;min-height:34px;border:0;border-radius:50%;
     background:none;font-size:18px;line-height:1;color:var(--ink-muted);cursor:pointer;}
-  .pick-place{border-color:var(--place-0);border-width:2px;}
+  .pick-place{border-color:#D9731A;}
   .pick button:hover{background:var(--card);color:var(--warn);}
   .pick-clear{min-height:38px;padding:0 14px;border:1px solid var(--edge);
     border-radius:999px;background:var(--card);font-family:var(--font);
