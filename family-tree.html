@@ -2264,7 +2264,7 @@ FT.views.chart = {
     document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
     document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
     if (!me.guest) menuItem('Change password', passwordSheet);
-    if (!me.guest) menuItem('Village links', function () { location.assign('links.html'); });
+    if (!me.guest) menuItem('Links', function () { location.assign('links.html'); });
     if (me.is_admin) menuItem('Admin', function () { location.assign('admin.html'); });
     menuItem('Log out', function () {
       api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
@@ -2275,12 +2275,17 @@ FT.views.chart = {
     return '?la=' + encodeURIComponent(a) + '&lb=' + encodeURIComponent(b);
   };
 
-  function startLink(me, a, b) {
-    return api.call('GET', '/links/tree?a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b)).then(function (r) {
+  api.villageTreeUrl = function (a, v) {
+    return '?la=' + encodeURIComponent(a) + '&lv=' + encodeURIComponent(v);
+  };
+
+  function startLink(me, a, b, v) {
+    var query = '?a=' + encodeURIComponent(a) + (v ? '&v=' + encodeURIComponent(v) : '&b=' + encodeURIComponent(b));
+    return api.call('GET', '/links/tree' + query).then(function (r) {
       if (!r.found) { location.assign('./?nolink=1'); return; }
       document.getElementById('login').classList.add('hidden');
       FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
-      FT.state.ends = [a, b];
+      FT.state.ends = [a, r.steps[r.steps.length - 1].id];
       FT.linkEdges = r.edges;
       FT.init();
       FT.setView('chart');
@@ -2302,7 +2307,8 @@ FT.views.chart = {
       });
       var line = document.createElement('div');
       line.className = 'link-sentence';
-      line.textContent = FT.links.sentence(r, me.id) + ' Search another name to link it to ' +
+      line.textContent = (v ? 'Closest person from ' + (last.village || 'that village') + ': ' : '') +
+        FT.links.sentence(r, me.id) + ' Search another name to link it to ' +
         (first.name || first.name_hi) + '. ';
       bar.appendChild(line);
       var link = document.createElement('a');
@@ -2317,7 +2323,9 @@ FT.views.chart = {
     wireLogin();
     api.call('GET', '/me').then(function (me) {
       api.me = me;
-      if (param('la') && param('lb') && !me.guest) return startLink(me, param('la'), param('lb'));
+      if (param('la') && (param('lb') || param('lv')) && !me.guest) {
+        return startLink(me, param('la'), param('lb'), param('lv'));
+      }
       return api.call('GET', '/villages').then(function (villages) {
         api.villages = villages;
         var id = api.pickFamily(param('family'), stored('ft-family'), me.home_family, villages);
@@ -2670,8 +2678,8 @@ FT.views.chart = {
 })(typeof FT !== 'undefined' ? (FT.edit = {}) : module.exports);
 
 (function (links) {
-  var state = { va: null, vb: null };
-  var villages = [], me = null;
+  var state = { a: null, b: null };
+  var people = [], villages = [], me = null;
 
   function esc(s) {
     return String(s === null || s === undefined ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -2691,11 +2699,45 @@ FT.views.chart = {
     return nameOf(b) + ' is ' + whose + ' ' + result.summary.en + hi + '.';
   };
 
+  links.parsePick = function (value) {
+    if (!value) return null;
+    var m = /^(p|v):(.+)$/.exec(value);
+    return m ? { kind: m[1], id: m[2] } : { kind: 'p', id: value };
+  };
+
   links.query = function (s) {
     var parts = [];
-    if (s.va) parts.push('a=' + encodeURIComponent(s.va));
-    if (s.vb) parts.push('b=' + encodeURIComponent(s.vb));
+    if (s.a) parts.push('a=' + encodeURIComponent(s.a.kind + ':' + s.a.id));
+    if (s.b) parts.push('b=' + encodeURIComponent(s.b.kind + ':' + s.b.id));
     return parts.length ? '?' + parts.join('&') : '';
+  };
+
+  links.matches = function (people, villages, q, limit) {
+    var needle = q.trim().toLowerCase();
+    if (!needle) return [];
+    function rank(texts) {
+      var best = null;
+      texts.forEach(function (t) {
+        var i = (t || '').toLowerCase().indexOf(needle);
+        if (i >= 0 && (best === null || (i === 0 ? 0 : 1) < best)) best = i === 0 ? 0 : 1;
+      });
+      return best;
+    }
+    var hits = [];
+    villages.forEach(function (v) {
+      var r = rank([v.name]);
+      if (r !== null) hits.push({ kind: 'v', item: v, rank: r });
+    });
+    people.forEach(function (p) {
+      var r = rank([p.name, p.name_hi]);
+      if (r !== null) hits.push({ kind: 'p', item: p, rank: r + 0.5 });
+    });
+    hits.sort(function (x, y) { return x.rank - y.rank; });
+    return hits.slice(0, limit || 10);
+  };
+
+  links.who = function (p) {
+    return [p.relation, p.village || 'Village not recorded'].filter(Boolean).join(' · ');
   };
 
   function api() { return FT.api; }
@@ -2705,56 +2747,114 @@ FT.views.chart = {
     return m ? decodeURIComponent(m[1]) : null;
   }
 
-  function villageSelect(label, value, blank) {
-    return '<label class="lk-pick"><span>' + esc(label) + '</span><select>' +
-      '<option value="">' + esc(blank) + '</option>' +
-      villages.map(function (v) {
-        return '<option value="' + esc(v.id) + '"' + (v.id === value ? ' selected' : '') + '>' + esc(v.name) + '</option>';
-      }).join('') + '</select></label>';
+  function find(list, id) {
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  function item(pick) {
+    return pick && find(pick.kind === 'v' ? villages : people, pick.id);
+  }
+
+  function pickText(pick) {
+    var it = item(pick);
+    if (!it) return '';
+    return pick.kind === 'v' ? it.name + ' (village)' : nameOf(it) + ' ' + links.who(it);
+  }
+
+  function box(slot, label, key) {
+    slot.innerHTML = '<label class="lk-pick"><span>' + esc(label) + '</span>' +
+      '<input type="search" autocomplete="off" placeholder="Type a name or a village" value="' +
+      esc(pickText(state[key])) + '"></label><div class="lk-results"></div>';
+    var input = slot.querySelector('input');
+    var results = slot.querySelector('.lk-results');
+    input.addEventListener('focus', function () { input.select(); });
+    input.addEventListener('input', function () {
+      results.innerHTML = links.matches(people, villages, input.value).map(function (m) {
+        var it = m.item;
+        return '<button type="button" data-kind="' + m.kind + '" data-id="' + esc(it.id) + '">' +
+          (m.kind === 'v'
+            ? '<b>' + esc(it.name) + '</b> <span>Village</span>'
+            : '<b>' + esc(nameOf(it)) + '</b> ' + (it.name && it.name_hi ? esc(it.name_hi) : '') +
+              ' <span>' + esc(links.who(it)) + '</span>') + '</button>';
+      }).join('');
+    });
+    results.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-id]');
+      if (!b) return;
+      state[key] = { kind: b.getAttribute('data-kind'), id: b.getAttribute('data-id') };
+      render(true);
+    });
   }
 
   function show(html) { document.getElementById('lk-result').innerHTML = html; }
   function fail(err) { show('<p class="lk-msg">' + esc(err.message) + '</p>'); }
 
-  function personCard(p) {
+  function personCard(p, href, extra) {
     var life = p.life === 'deceased' ? 'Deceased' : p.life === 'living' ? 'Living' : '';
-    return '<a class="lk-card ' + esc(p.gender || '') + '" href="./' + api().linkTreeUrl(me.id, p.id) + '">' +
+    return '<a class="lk-card ' + esc(p.gender || '') + '" href="./' + href + '">' +
+      (extra ? '<span class="lk-relation">' + esc(extra) + '</span>' : '') +
       '<b>' + esc(nameOf(p)) + '</b>' + (p.name && p.name_hi ? '<span class="lk-hi">' + esc(p.name_hi) + '</span>' : '') +
       '<span class="lk-meta">' + esc([life, 'from ' + (p.village || 'village not recorded')].filter(Boolean).join(' · ')) + '</span>' +
       (p.relation ? '<span class="lk-rel">' + esc(p.relation) + '</span>' : '') + '</a>';
   }
 
   function coupleHtml(c) {
-    return '<div class="lk-couple">' + personCard(c.husband) + '<span class="lk-married">married</span>' +
-      personCard(c.wife) + '</div>';
+    return '<div class="lk-couple">' + personCard(c.husband, api().linkTreeUrl(me.id, c.husband.id)) +
+      '<span class="lk-married">married</span>' + personCard(c.wife, api().linkTreeUrl(me.id, c.wife.id)) + '</div>';
   }
 
-  function render() {
-    var form = document.getElementById('lk-form');
-    form.innerHTML = villageSelect('Village', state.va, 'Choose a village') +
-      villageSelect('Linked to', state.vb, 'Any village');
-    var selects = form.querySelectorAll('select');
-    selects[0].addEventListener('change', function () { state.va = this.value || null; state.vb = null; render(); });
-    selects[1].addEventListener('change', function () { state.vb = this.value || null; render(); });
-    history.replaceState(null, '', location.pathname + links.query(state));
-    if (!state.va) { show('<p class="lk-msg">Pick a village to see which villages it is linked to.</p>'); return; }
-    if (!state.vb) {
-      api().call('GET', '/villages/' + encodeURIComponent(state.va) + '/links').then(function (list) {
-        show(list.length ? '<ul class="lk-list">' + list.map(function (v) {
-          return '<li><button type="button" data-village="' + esc(v.village_id) + '">' + esc(v.village) +
-            '</button> · ' + v.marriages + (v.marriages === 1 ? ' marriage' : ' marriages') + '</li>';
-        }).join('') + '</ul>' : '<p class="lk-msg">No marriages with other villages are recorded.</p>');
+  function villageLinks(vid) {
+    api().call('GET', '/villages/' + encodeURIComponent(vid) + '/links').then(function (list) {
+      show(list.length ? '<ul class="lk-list">' + list.map(function (v) {
+        return '<li><button type="button" data-village="' + esc(v.village_id) + '">' + esc(v.village) +
+          '</button> · ' + v.marriages + (v.marriages === 1 ? ' marriage' : ' marriages') + '</li>';
+      }).join('') + '</ul>' : '<p class="lk-msg">No marriages with other villages are recorded.</p>');
+    }, fail);
+  }
+
+  function villagePair(a, b) {
+    api().call('GET', '/links/villages?a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b)).then(function (r) {
+      if (r.couples.length) { show('<div class="lk-couples">' + r.couples.map(coupleHtml).join('') + '</div>'); return; }
+      if (!r.chain) { show('<p class="lk-msg">These villages are not linked in the records.</p>'); return; }
+      show('<p class="lk-summary">No direct marriage. Linked through: ' +
+        esc([r.chain[0].from.village].concat(r.chain.map(function (h) { return h.to.village; })).join(' → ')) +
+        '</p><div class="lk-couples">' + r.chain.map(function (h) { return coupleHtml(h.couple); }).join('') + '</div>');
+    }, fail);
+  }
+
+  function personVillage(pid, vid) {
+    var person = find(people, pid), village = find(villages, vid);
+    api().call('GET', '/links/person-village?a=' + encodeURIComponent(pid) + '&v=' + encodeURIComponent(vid))
+      .then(function (list) {
+        if (!list.length) { show('<p class="lk-msg">No one from ' + esc(village.name) + ' is linked to ' + esc(nameOf(person)) + ' in the records.</p>'); return; }
+        var whose = pid === me.id ? 'your' : nameOf(person) + '\'s';
+        show('<p class="lk-summary">' + list.length + (list.length === 1 ? ' person' : ' people') + ' from ' +
+          esc(village.name) + ' linked to ' + esc(nameOf(person)) + ', closest first. Tap one to see the chart.</p>' +
+          '<div class="lk-grid">' + list.map(function (p) {
+            var rel = whose + ' ' + p.summary.en + (p.summary.hi ? ' (' + p.summary.hi + ')' : '');
+            return personCard(p, api().linkTreeUrl(pid, p.id), rel);
+          }).join('') + '</div>');
       }, fail);
+  }
+
+  function render(picked) {
+    var form = document.getElementById('lk-form');
+    form.innerHTML = '<div id="lk-a"></div><div id="lk-b"></div>';
+    box(document.getElementById('lk-a'), 'First: person or village', 'a');
+    box(document.getElementById('lk-b'), 'Second: person or village', 'b');
+    history.replaceState(null, '', location.pathname + links.query(state));
+    var a = state.a, b = state.b;
+    if (a && b && a.kind === 'p' && b.kind === 'p') {
+      if (picked) { location.assign('./' + api().linkTreeUrl(a.id, b.id)); return; }
+      show('<a class="lk-go" href="./' + api().linkTreeUrl(a.id, b.id) + '">Show the link chart →</a>');
       return;
     }
-    api().call('GET', '/links/villages?a=' + encodeURIComponent(state.va) + '&b=' + encodeURIComponent(state.vb))
-      .then(function (r) {
-        if (r.couples.length) { show('<div class="lk-couples">' + r.couples.map(coupleHtml).join('') + '</div>'); return; }
-        if (!r.chain) { show('<p class="lk-msg">These villages are not linked in the records.</p>'); return; }
-        show('<p class="lk-summary">No direct marriage. Linked through: ' +
-          esc([r.chain[0].from.village].concat(r.chain.map(function (h) { return h.to.village; })).join(' → ')) +
-          '</p><div class="lk-couples">' + r.chain.map(function (h) { return coupleHtml(h.couple); }).join('') + '</div>');
-      }, fail);
+    if (a && b && a.kind === 'v' && b.kind === 'v') { villagePair(a.id, b.id); return; }
+    if (a && b) { var p = a.kind === 'p' ? a : b, v = a.kind === 'v' ? a : b; personVillage(p.id, v.id); return; }
+    var only = a || b;
+    if (only && only.kind === 'v') { villageLinks(only.id); return; }
+    show('<p class="lk-msg">Pick two: two people, two villages, or a person and a village.</p>');
   }
 
   links.start = function () {
@@ -2762,17 +2862,20 @@ FT.views.chart = {
     api().call('GET', '/me').then(function (who) {
       me = who;
       if (me.guest) { show('<p class="lk-msg">Guest logins cannot see links.</p>'); return null; }
-      state.va = param('a');
-      state.vb = param('b');
-      return api().call('GET', '/villages').then(function (list) {
-        villages = list.slice().sort(function (x, y) { return x.name.localeCompare(y.name); });
+      state.a = links.parsePick(param('a')) || { kind: 'p', id: me.id };
+      state.b = links.parsePick(param('b'));
+      return Promise.all([api().call('GET', '/directory'), api().call('GET', '/villages')]).then(function (r) {
+        people = r[0];
+        villages = r[1].slice().sort(function (x, y) { return x.name.localeCompare(y.name); });
         document.getElementById('lk-result').addEventListener('click', function (e) {
           var b = e.target.closest('[data-village]');
           if (!b) return;
-          state.vb = b.getAttribute('data-village');
-          render();
+          var other = { kind: 'v', id: b.getAttribute('data-village') };
+          if (state.a) state.b = other;
+          else state.a = other;
+          render(false);
         });
-        render();
+        render(false);
       });
     }).catch(function (err) {
       if (err.status === 401) location.assign('./');

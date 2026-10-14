@@ -253,7 +253,7 @@
     document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
     document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
     if (!me.guest) menuItem('Change password', passwordSheet);
-    if (!me.guest) menuItem('Village links', function () { location.assign('links.html'); });
+    if (!me.guest) menuItem('Links', function () { location.assign('links.html'); });
     if (me.is_admin) menuItem('Admin', function () { location.assign('admin.html'); });
     menuItem('Log out', function () {
       api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
@@ -264,12 +264,17 @@
     return '?la=' + encodeURIComponent(a) + '&lb=' + encodeURIComponent(b);
   };
 
-  function startLink(me, a, b) {
-    return api.call('GET', '/links/tree?a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b)).then(function (r) {
+  api.villageTreeUrl = function (a, v) {
+    return '?la=' + encodeURIComponent(a) + '&lv=' + encodeURIComponent(v);
+  };
+
+  function startLink(me, a, b, v) {
+    var query = '?a=' + encodeURIComponent(a) + (v ? '&v=' + encodeURIComponent(v) : '&b=' + encodeURIComponent(b));
+    return api.call('GET', '/links/tree' + query).then(function (r) {
       if (!r.found) { location.assign('./?nolink=1'); return; }
       document.getElementById('login').classList.add('hidden');
       FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
-      FT.state.ends = [a, b];
+      FT.state.ends = [a, r.steps[r.steps.length - 1].id];
       FT.linkEdges = r.edges;
       FT.init();
       FT.setView('chart');
@@ -291,7 +296,8 @@
       });
       var line = document.createElement('div');
       line.className = 'link-sentence';
-      line.textContent = FT.links.sentence(r, me.id) + ' Search another name to link it to ' +
+      line.textContent = (v ? 'Closest person from ' + (last.village || 'that village') + ': ' : '') +
+        FT.links.sentence(r, me.id) + ' Search another name to link it to ' +
         (first.name || first.name_hi) + '. ';
       bar.appendChild(line);
       var link = document.createElement('a');
@@ -306,7 +312,9 @@
     wireLogin();
     api.call('GET', '/me').then(function (me) {
       api.me = me;
-      if (param('la') && param('lb') && !me.guest) return startLink(me, param('la'), param('lb'));
+      if (param('la') && (param('lb') || param('lv')) && !me.guest) {
+        return startLink(me, param('la'), param('lb'), param('lv'));
+      }
       return api.call('GET', '/villages').then(function (villages) {
         api.villages = villages;
         var id = api.pickFamily(param('family'), stored('ft-family'), me.home_family, villages);

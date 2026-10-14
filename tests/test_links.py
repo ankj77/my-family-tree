@@ -55,6 +55,27 @@ class TestPersonPath(unittest.TestCase):
         self.assertEqual(rels(links.person_path(graph, "kid", "dad")), [None, "parent"])
 
 
+class TestPathToVillage(unittest.TestCase):
+    def setUp(self):
+        self.graph = sample_graph()
+
+    def test_nearest_person_from_the_village(self):
+        steps = links.path_to_village(self.graph, "amit", "kakroi")
+        self.assertEqual(ids(steps), ["amit", "jagdish", "ram", "mohan", "sita"])
+
+    def test_own_village_finds_someone_else(self):
+        steps = links.path_to_village(self.graph, "amit", "bakheta")
+        self.assertEqual(len(steps), 2)
+        self.assertNotEqual(steps[-1]["id"], "amit")
+
+    def test_everyone_from_the_village_nearest_first(self):
+        paths = links.paths_to_village(self.graph, "jagdish", "pugthala")
+        self.assertEqual([p[-1]["id"] for p in paths], ["rashmi", "bash"])
+
+    def test_village_nobody_comes_from(self):
+        self.assertIsNone(links.path_to_village(self.graph, "amit", "nowhere"))
+
+
 class TestVillages(unittest.TestCase):
     def setUp(self):
         self.graph = sample_graph()

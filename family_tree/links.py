@@ -38,25 +38,49 @@ def neighbours(graph: Graph, kids: Dict[str, List[str]], pid: str) -> List[Tuple
 
 
 def person_path(graph: Graph, a: str, b: str) -> Optional[List[dict]]:
+    if a == b and a in graph.people:
+        return [{"id": a, "rel": None}]
     if a not in graph.people or b not in graph.people:
         return None
+    reached = _reach(graph, a, lambda pid: pid == b)
+    return _steps(reached, b) if b in reached else None
+
+
+def path_to_village(graph: Graph, a: str, vid: str) -> Optional[List[dict]]:
+    paths = paths_to_village(graph, a, vid, limit=1)
+    return paths[0] if paths else None
+
+
+def paths_to_village(graph: Graph, a: str, vid: str, limit: int = 30) -> List[List[dict]]:
+    if a not in graph.people:
+        return []
+    reached = _reach(graph, a)
+    goals = [pid for pid in reached if pid != a and birth_village(graph, pid) == vid]
+    paths = [_steps(reached, pid) for pid in goals]
+    paths.sort(key=lambda steps: (len(steps), sum(s["rel"] in MARRIAGE for s in steps), steps[-1]["id"]))
+    return paths[:limit]
+
+
+def _reach(graph: Graph, a: str, stop=None) -> dict:
     kids = children_index(graph)
     reached = {a: (0, None, None)}
     frontier = [a]
-    while frontier and b not in reached:
-        found = {}
+    while frontier and not (stop and any(stop(pid) for pid in frontier)):
+        fresh = {}
         for pid in frontier:
             for other, rel in neighbours(graph, kids, pid):
                 if other in reached:
                     continue
                 marriages = reached[pid][0] + (rel in MARRIAGE)
-                if other not in found or marriages < found[other][0]:
-                    found[other] = (marriages, pid, rel)
-        reached.update(found)
-        frontier = list(found)
-    if b not in reached:
-        return None
-    steps, pid = [], b
+                if other not in fresh or marriages < fresh[other][0]:
+                    fresh[other] = (marriages, pid, rel)
+        reached.update(fresh)
+        frontier = list(fresh)
+    return reached
+
+
+def _steps(reached: dict, pid: str) -> List[dict]:
+    steps = []
     while pid is not None:
         _, prev, rel = reached[pid]
         steps.append({"id": pid, "rel": rel})

@@ -161,3 +161,7 @@ needed. Search is over a few thousand people at most.
   side by side, and every line named (son, daughter, married) with an arrow from parent to child.
 - The family tree itself also names every line (son, daughter, married) and points parent → child.
 - `links.html` is now **Village links** only.
+- `links.html` is back to **How are we linked?** with two boxes; each takes a person or a village:
+  person + person opens the link chart, village + village lists the couples (or the chain through
+  other villages), person + village lists everyone from that village linked to the person, closest
+  first, each with the relation; tapping one opens the chart. Old `?tab=people&a=<id>` links still work.

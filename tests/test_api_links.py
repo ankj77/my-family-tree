@@ -64,3 +64,17 @@ class TestLinksApi(ApiCase):
         self.assertEqual(r["counts"]["total"], 5)
         self.assertNotIn("private", str(r))
         self.assertEqual(self.get("/links/tree?a=bash").status_code, 404)
+
+    def test_link_tree_to_a_village(self):
+        self.login("amit")
+        r = self.get("/links/tree?a=amit&v=kakroi").get_json()
+        self.assertEqual([s["id"] for s in r["steps"]], ["amit", "jagdish", "ram", "mohan", "sita"])
+        self.assertFalse(self.get("/links/tree?a=amit&v=bakheta").get_json()["found"] is None)
+        self.assertEqual(self.get("/links/tree?a=amit&v=nowhere").status_code, 404)
+
+    def test_everyone_from_a_village_with_their_relation(self):
+        self.login("jagdish")
+        r = self.get("/links/person-village?a=jagdish&v=pugthala").get_json()
+        self.assertEqual([(p["id"], p["summary"]["en"]) for p in r], [("rashmi", "wife"), ("bash", "wife's father")])
+        self.assertEqual(r[1]["summary"]["hi"], "ससुर जी")
+        self.assertEqual(self.get("/links/person-village?a=jagdish&v=nowhere").status_code, 404)

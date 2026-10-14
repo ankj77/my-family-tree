@@ -432,8 +432,10 @@ def link_people():
 def link_tree():
     actor, graph = member_graph()
     a = known_person(graph, request.args.get("a"))
-    b = known_person(graph, request.args.get("b"))
-    steps = links.person_path(graph, a, b)
+    if request.args.get("v"):
+        steps = links.path_to_village(graph, a, known_village(graph, request.args.get("v")))
+    else:
+        steps = links.person_path(graph, a, known_person(graph, request.args.get("b")))
     if steps is None:
         return jsonify({"found": False, "steps": [], "summary": kinship.describe(None)})
     people = [graph.people[s["id"]] for s in steps]
@@ -449,6 +451,15 @@ def link_tree():
                    "male": sum(p.get("gender") == "male" for p in people),
                    "female": sum(p.get("gender") == "female" for p in people)},
     })
+
+
+@app.get("/links/person-village")
+def link_person_village():
+    _, graph = member_graph()
+    a = known_person(graph, request.args.get("a"))
+    vid = known_village(graph, request.args.get("v"))
+    return jsonify([dict(link_person(graph, steps[-1]["id"]), summary=kinship.describe(steps), steps=len(steps) - 1)
+                    for steps in links.paths_to_village(graph, a, vid)])
 
 
 @app.get("/villages/<vid>/links")
