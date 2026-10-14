@@ -62,6 +62,22 @@ def _parents(people, pid):
     return [p for p in (row.get("father_id"), row.get("mother_id")) if p in people]
 
 
+def _ancestors(people, pid: str) -> set:
+    seen, stack = set(), list(_parents(people, pid))
+    while stack:
+        parent = stack.pop()
+        if parent in seen or parent not in people:
+            continue
+        seen.add(parent)
+        stack.extend(_parents(people, parent))
+    return seen
+
+
+def _blood_relatives(people, a: str, b: str) -> bool:
+    shared_parent = set(_parents(people, a)) & set(_parents(people, b))
+    return bool(shared_parent) or a in _ancestors(people, b) or b in _ancestors(people, a)
+
+
 def _cycle_at(people) -> Optional[str]:
     done = set()
     for start in people:
@@ -98,6 +114,10 @@ def check(graph: Graph) -> None:
             if pid in married:
                 raise RuleError("%s already has a spouse" % display(people[pid]))
             married.add(pid)
+        if _blood_relatives(people, husband, wife):
+            raise RuleError("%s and %s are blood relatives (same parent, or parent and child), so they cannot be "
+                            "married; remove the marriage or fix the parents first"
+                            % (display(people[husband]), display(people[wife])))
         family = people[husband].get("family_id")
         if family is not None and family == people[wife].get("family_id"):
             raise RuleError(

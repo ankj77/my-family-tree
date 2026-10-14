@@ -34,6 +34,20 @@ class TestCheck(unittest.TestCase):
         with self.assertRaisesRegex(RuleError, "same family"):
             check(graph_with(change))
 
+    def test_brother_and_sister_cannot_be_married(self):
+        def sibling(rows):
+            next(p for p in rows["people"] if p["id"] == "vikram")["father_id"] = "jagdish"
+        with self.assertRaisesRegex(RuleError, "Vikram and Neha are blood relatives"):
+            check(graph_with(sibling))
+
+    def test_parent_and_child_cannot_be_married(self):
+        def parent(rows):
+            rows["people"] += [person("gopal", gender="male"),
+                               person("gita", father_id="gopal", gender="female")]
+            rows["marriages"].append(("gopal", "gita"))
+        with self.assertRaisesRegex(RuleError, "Gopal and Gita are blood relatives"):
+            check(graph_with(parent))
+
     def test_second_spouse(self):
         def change(rows):
             rows["people"].append(person("lata", gender="female"))

@@ -338,3 +338,12 @@ class TestScope(ApiCase):
         row = self.query("SELECT family_id, father_id, mother_id FROM people WHERE id='tara'")[0]
         self.assertEqual(row, {"family_id": "bakheta", "father_id": "jagdish", "mother_id": "rashmi"})
         self.assertEqual(self.patch("/people/tara", {"born": "2000"}).status_code, 200)
+
+
+class TestSpouseIsNotABloodRelative(ApiCase):
+    def test_wife_cannot_be_given_her_husbands_father(self):
+        self.login("mohan")
+        self.assertEqual(self.post("/people", {"as": "spouse", "spouse_id": "amit", "name": "Sheela"}).status_code, 201)
+        r = self.patch("/people/sheela", {"father_id": "jagdish"})
+        self.assertEqual(r.status_code, 409, r.get_json())
+        self.assertIn("blood relatives", r.get_json()["error"])
