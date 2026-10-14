@@ -1642,10 +1642,9 @@ FT.boot = function (data) {
   function choose(row) {
     var other = row.getAttribute('data-other');
     if (other) {
-      var from = linkFrom();
       var url = row.getAttribute('data-url');
-      if (!from && url) location.assign(location.pathname + url);
-      else if (FT.onLink) FT.onLink(from || FT.meId, other);
+      if (url) location.assign(location.pathname + url);
+      else if (FT.onLink) FT.onLink(FT.state.ends[0] || FT.meId, other);
       return;
     }
     var v = row.getAttribute('data-place');
@@ -1657,16 +1656,11 @@ FT.boot = function (data) {
     FT.showPlace(v);
   }
 
-  function linkFrom() {
-    return FT.state.ends.length ? FT.state.ends[0] : FT.state.picks[0] || null;
-  }
-
   function go(id) {
     hideSuggest();
     searchBox.value = '';
     searchBox.blur();
-    var from = linkFrom();
-    if (FT.onLink && from && from !== id) { FT.onLink(from, id); return; }
+    if (FT.onLink && FT.state.ends.length && FT.state.ends[0] !== id) { FT.onLink(FT.state.ends[0], id); return; }
     if (FT.state.picks.indexOf(id) < 0) {
       if (FT.state.picks.length >= FT.MAX_PICKS) {
         pickNote = 'Up to ' + FT.MAX_PICKS + ' people — remove one first.';
