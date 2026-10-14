@@ -151,7 +151,7 @@ class TestPosterView(unittest.TestCase):
 class TestPosterParentCards(unittest.TestCase):
     def test_every_view_declares_the_parents_card_style(self):
         html = _payload_html()
-        self.assertEqual(1, html.count("cardStyle: 'parents'"))
+        self.assertEqual(2, html.count("cardStyle: 'parents'"))
         self.assertIn("FT.drawParentCard", html)
 
     def test_the_card_carries_dates_and_place_when_recorded(self):

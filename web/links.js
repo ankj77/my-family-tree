@@ -117,13 +117,17 @@
     renderPeople();
   }
 
-  function personLink(p) {
-    return '<a href="./' + api().linkTreeUrl(me.id, p.id) + '">' + esc(nameOf(p)) + '</a>';
+  function personCard(p) {
+    var life = p.life === 'deceased' ? 'Deceased' : p.life === 'living' ? 'Living' : '';
+    return '<a class="lk-card ' + esc(p.gender || '') + '" href="./' + api().linkTreeUrl(me.id, p.id) + '">' +
+      '<b>' + esc(nameOf(p)) + '</b>' + (p.name && p.name_hi ? '<span class="lk-hi">' + esc(p.name_hi) + '</span>' : '') +
+      '<span class="lk-meta">' + esc([life, 'from ' + (p.village || 'village not recorded')].filter(Boolean).join(' · ')) + '</span>' +
+      (p.relation ? '<span class="lk-rel">' + esc(p.relation) + '</span>' : '') + '</a>';
   }
 
   function coupleHtml(c) {
-    return '<li>' + personLink(c.husband) + ' (' + esc(c.husband.village) + ') married ' +
-      personLink(c.wife) + ' (' + esc(c.wife.village) + ')</li>';
+    return '<div class="lk-couple">' + personCard(c.husband) + '<span class="lk-married">married</span>' +
+      personCard(c.wife) + '</div>';
   }
 
   function renderVillages() {
@@ -146,11 +150,11 @@
     }
     api().call('GET', '/links/villages?a=' + encodeURIComponent(state.va) + '&b=' + encodeURIComponent(state.vb))
       .then(function (r) {
-        if (r.couples.length) { show('<ul class="lk-list">' + r.couples.map(coupleHtml).join('') + '</ul>'); return; }
+        if (r.couples.length) { show('<div class="lk-couples">' + r.couples.map(coupleHtml).join('') + '</div>'); return; }
         if (!r.chain) { show('<p class="lk-msg">These villages are not linked in the records.</p>'); return; }
         show('<p class="lk-summary">No direct marriage. Linked through: ' +
           esc([r.chain[0].from.village].concat(r.chain.map(function (h) { return h.to.village; })).join(' → ')) +
-          '</p><ul class="lk-list">' + r.chain.map(function (h) { return coupleHtml(h.couple); }).join('') + '</ul>');
+          '</p><div class="lk-couples">' + r.chain.map(function (h) { return coupleHtml(h.couple); }).join('') + '</div>');
       }, fail);
   }
 

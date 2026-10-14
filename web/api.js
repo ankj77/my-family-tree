@@ -253,7 +253,9 @@
       document.getElementById('login').classList.add('hidden');
       FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
       FT.state.ends = [a, b];
+      FT.COUPLE_GAP = 110;
       FT.init();
+      FT.setView('chart');
       FT.expandAll();
       accountMenu(me);
       api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };

@@ -743,6 +743,11 @@ FT.boot = function (data) {
     var spX = FT.CARD_W + FT.COUPLE_GAP;
     if (sp) {
       el('line', { 'class': 'spouse-link', x1: FT.CARD_W, y1: H / 2, x2: spX, y2: H / 2 }, g);
+      var lview = FT.views[FT.state.viewId];
+      if (lview && lview.coupleLabel) {
+        el('text', { 'class': 'chart-label chart-married', x: FT.CARD_W + FT.COUPLE_GAP / 2, y: H / 2 - 10 }, g)
+          .textContent = 'married';
+      }
       var sg = el('g', { 'class': 'spouse-card ' + (sp.gender || ''),
         transform: 'translate(' + spX + ',0)' }, g);
       cardFace(sg, sp, H, [['Father', sp.father ? { name: sp.father } : null, 'male'],
@@ -963,8 +968,10 @@ FT.boot = function (data) {
     } else (function walk(n, depth) {
       var w = FT.nodeW(n);
       var h = FT.nodeH(n);
-      minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
-      minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
+      if (!n.hidden) {
+        minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
+        minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
+      }
       FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
     })(FT.top(), 0);
     if (view.extentPad) {

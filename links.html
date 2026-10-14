@@ -182,6 +182,9 @@
   .rose{fill:#B3121B;stroke:#7A0A10;stroke-width:.7px;}
   .rose-core{fill:#D62A33;}
   .spouse-link{stroke:var(--bark);stroke-width:2px;}
+  .chart-edge{fill:none;stroke:var(--connector);stroke-width:2.5px;}
+  .chart-label{font-family:var(--font);font-size:15px;font-weight:600;fill:var(--ink-muted);pointer-events:none;}
+  .chart-married{text-anchor:middle;font-size:15px;fill:var(--rail-f);}
   .spouse-card{cursor:pointer;}
   .gap-bg{fill:transparent;stroke:var(--ink-muted);stroke-width:1.6px;stroke-dasharray:7 5;cursor:pointer;}
   .card .place-hit .card-bg{stroke:#D9731A;stroke-width:3px;}
@@ -312,6 +315,18 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
   .lk-pick small{font-size:13px;color:var(--ink-muted);}
   .lk-go{display:inline-block;min-height:44px;line-height:44px;padding:0 18px;background:var(--hl);color:#fff !important;
     text-decoration:none;border-radius:6px;font-size:16px;}
+  .lk-couples{display:flex;flex-direction:column;gap:14px;}
+  .lk-couple{display:flex;flex-wrap:wrap;align-items:center;gap:10px;}
+  .lk-card{display:flex;flex-direction:column;gap:2px;width:260px;box-sizing:border-box;padding:10px 14px;
+    background:var(--card);border:1.5px solid var(--rail-unknown);border-radius:10px;box-shadow:var(--shadow-card);
+    text-decoration:none;color:var(--ink) !important;}
+  .lk-card.male{background:var(--card-m);border-color:var(--rail-m);}
+  .lk-card.female{background:var(--card-f);border-color:var(--rail-f);}
+  .lk-card b{font-family:var(--serif);font-size:17px;color:var(--name-ink);}
+  .lk-hi{font-size:14px;}
+  .lk-meta{font-size:13px;color:var(--ink-muted);}
+  .lk-rel{font-size:13px;margin-top:4px;padding-top:4px;border-top:1px solid var(--rule);}
+  .lk-married{font-size:14px;font-weight:600;color:var(--rail-f);padding:0 4px;}
   .lk-list{padding-left:18px;line-height:1.9;}
   .lk-list button{min-height:36px;border:0;background:none;color:var(--hl);text-decoration:underline;
     cursor:pointer;font-size:15px;padding:0;}
@@ -584,7 +599,9 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
       document.getElementById('login').classList.add('hidden');
       FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
       FT.state.ends = [a, b];
+      FT.COUPLE_GAP = 110;
       FT.init();
+      FT.setView('chart');
       FT.expandAll();
       accountMenu(me);
       api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
@@ -753,13 +770,17 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     renderPeople();
   }
 
-  function personLink(p) {
-    return '<a href="./' + api().linkTreeUrl(me.id, p.id) + '">' + esc(nameOf(p)) + '</a>';
+  function personCard(p) {
+    var life = p.life === 'deceased' ? 'Deceased' : p.life === 'living' ? 'Living' : '';
+    return '<a class="lk-card ' + esc(p.gender || '') + '" href="./' + api().linkTreeUrl(me.id, p.id) + '">' +
+      '<b>' + esc(nameOf(p)) + '</b>' + (p.name && p.name_hi ? '<span class="lk-hi">' + esc(p.name_hi) + '</span>' : '') +
+      '<span class="lk-meta">' + esc([life, 'from ' + (p.village || 'village not recorded')].filter(Boolean).join(' · ')) + '</span>' +
+      (p.relation ? '<span class="lk-rel">' + esc(p.relation) + '</span>' : '') + '</a>';
   }
 
   function coupleHtml(c) {
-    return '<li>' + personLink(c.husband) + ' (' + esc(c.husband.village) + ') married ' +
-      personLink(c.wife) + ' (' + esc(c.wife.village) + ')</li>';
+    return '<div class="lk-couple">' + personCard(c.husband) + '<span class="lk-married">married</span>' +
+      personCard(c.wife) + '</div>';
   }
 
   function renderVillages() {
@@ -782,11 +803,11 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     }
     api().call('GET', '/links/villages?a=' + encodeURIComponent(state.va) + '&b=' + encodeURIComponent(state.vb))
       .then(function (r) {
-        if (r.couples.length) { show('<ul class="lk-list">' + r.couples.map(coupleHtml).join('') + '</ul>'); return; }
+        if (r.couples.length) { show('<div class="lk-couples">' + r.couples.map(coupleHtml).join('') + '</div>'); return; }
         if (!r.chain) { show('<p class="lk-msg">These villages are not linked in the records.</p>'); return; }
         show('<p class="lk-summary">No direct marriage. Linked through: ' +
           esc([r.chain[0].from.village].concat(r.chain.map(function (h) { return h.to.village; })).join(' → ')) +
-          '</p><ul class="lk-list">' + r.chain.map(function (h) { return coupleHtml(h.couple); }).join('') + '</ul>');
+          '</p><div class="lk-couples">' + r.chain.map(function (h) { return coupleHtml(h.couple); }).join('') + '</div>');
       }, fail);
   }
 

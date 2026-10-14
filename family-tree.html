@@ -182,6 +182,9 @@
   .rose{fill:#B3121B;stroke:#7A0A10;stroke-width:.7px;}
   .rose-core{fill:#D62A33;}
   .spouse-link{stroke:var(--bark);stroke-width:2px;}
+  .chart-edge{fill:none;stroke:var(--connector);stroke-width:2.5px;}
+  .chart-label{font-family:var(--font);font-size:15px;font-weight:600;fill:var(--ink-muted);pointer-events:none;}
+  .chart-married{text-anchor:middle;font-size:15px;fill:var(--rail-f);}
   .spouse-card{cursor:pointer;}
   .gap-bg{fill:transparent;stroke:var(--ink-muted);stroke-width:1.6px;stroke-dasharray:7 5;cursor:pointer;}
   .card .place-hit .card-bg{stroke:#D9731A;stroke-width:3px;}
@@ -1102,6 +1105,11 @@ FT.boot = function (data) {
     var spX = FT.CARD_W + FT.COUPLE_GAP;
     if (sp) {
       el('line', { 'class': 'spouse-link', x1: FT.CARD_W, y1: H / 2, x2: spX, y2: H / 2 }, g);
+      var lview = FT.views[FT.state.viewId];
+      if (lview && lview.coupleLabel) {
+        el('text', { 'class': 'chart-label chart-married', x: FT.CARD_W + FT.COUPLE_GAP / 2, y: H / 2 - 10 }, g)
+          .textContent = 'married';
+      }
       var sg = el('g', { 'class': 'spouse-card ' + (sp.gender || ''),
         transform: 'translate(' + spX + ',0)' }, g);
       cardFace(sg, sp, H, [['Father', sp.father ? { name: sp.father } : null, 'male'],
@@ -1322,8 +1330,10 @@ FT.boot = function (data) {
     } else (function walk(n, depth) {
       var w = FT.nodeW(n);
       var h = FT.nodeH(n);
-      minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
-      minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
+      if (!n.hidden) {
+        minX = Math.min(minX, n.x - w / 2); maxX = Math.max(maxX, n.x + w);
+        minY = Math.min(minY, n.y - h / 2); maxY = Math.max(maxY, n.y + h);
+      }
       FT.kidsAt(n, depth).forEach(function (c) { walk(c, depth + 1); });
     })(FT.top(), 0);
     if (view.extentPad) {
@@ -1908,6 +1918,68 @@ FT.views.poster = {
   }
 };
 
+FT.views.chart = {
+  id: 'chart',
+  label: 'Family chart',
+  nodeShape: 'box',
+  cardStyle: 'parents',
+  coupleLabel: true,
+  ROW_GAP: 110,
+  togglePos: function (n) {
+    return { x: FT.jointX(n), y: FT.nodeH(n) + 14 };
+  },
+  childWord: function (c) {
+    return { male: 'son', female: 'daughter' }[c.gender] || 'child';
+  },
+  layout: function (root) {
+    var view = this;
+    var cursor = 0;
+    var rowH = 0;
+    FT.nodes.forEach(function (n) { if (!n.hidden) rowH = Math.max(rowH, FT.nodeH(n)); });
+    function shiftRight(n, depth, dx) {
+      n.x += dx;
+      FT.kidsAt(n, depth).forEach(function (c) { shiftRight(c, depth + 1, dx); });
+    }
+    (function place(n, depth) {
+      n.depth = depth;
+      n.y = (depth - (root.hidden ? 1 : 0)) * (rowH + view.ROW_GAP);
+      var kids = FT.kidsAt(n, depth);
+      var start = cursor;
+      if (!kids.length) {
+        n.x = cursor;
+        cursor += FT.nodeW(n) + FT.H_GAP;
+        return;
+      }
+      kids.forEach(function (c) { place(c, depth + 1); });
+      var first = kids[0], last = kids[kids.length - 1];
+      n.x = (first.x + FT.jointX(first) + last.x + FT.jointX(last)) / 2 - FT.jointX(n);
+      if (n.x < start) {
+        kids.forEach(function (c) { shiftRight(c, depth + 1, start - n.x); });
+        n.x = start;
+      }
+      cursor = Math.max(cursor, n.x + FT.nodeW(n) + FT.H_GAP);
+    })(root, 0);
+    this.extentPad = null;
+  },
+  drawEdges: function (g, root) {
+    var view = this;
+    (function walk(n, depth) {
+      FT.kidsAt(n, depth).forEach(function (c) {
+        if (!n.hidden) {
+          var x1 = n.x + FT.jointX(n), y1 = n.y + FT.nodeH(n);
+          var x2 = c.x + FT.CARD_W / 2, y2 = c.y;
+          var mid = y1 + (y2 - y1) / 2;
+          FT.edge(g, 'M' + x1 + ',' + y1 + ' V' + mid + ' H' + x2 + ' V' + y2, c.id)
+            .setAttribute('class', 'edge chart-edge');
+          var label = FT.el('text', { 'class': 'chart-label', x: x2 + 8, y: y2 - 14 }, g);
+          label.textContent = view.childWord(c);
+        }
+        walk(c, depth + 1);
+      });
+    })(root, 0);
+  }
+};
+
 (function (filters) {
   function isLiving(p) {
     return p.life === 'living' && !p.died;
@@ -2182,7 +2254,9 @@ FT.views.poster = {
       document.getElementById('login').classList.add('hidden');
       FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
       FT.state.ends = [a, b];
+      FT.COUPLE_GAP = 110;
       FT.init();
+      FT.setView('chart');
       FT.expandAll();
       accountMenu(me);
       api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
@@ -2672,13 +2746,17 @@ FT.views.poster = {
     renderPeople();
   }
 
-  function personLink(p) {
-    return '<a href="./' + api().linkTreeUrl(me.id, p.id) + '">' + esc(nameOf(p)) + '</a>';
+  function personCard(p) {
+    var life = p.life === 'deceased' ? 'Deceased' : p.life === 'living' ? 'Living' : '';
+    return '<a class="lk-card ' + esc(p.gender || '') + '" href="./' + api().linkTreeUrl(me.id, p.id) + '">' +
+      '<b>' + esc(nameOf(p)) + '</b>' + (p.name && p.name_hi ? '<span class="lk-hi">' + esc(p.name_hi) + '</span>' : '') +
+      '<span class="lk-meta">' + esc([life, 'from ' + (p.village || 'village not recorded')].filter(Boolean).join(' · ')) + '</span>' +
+      (p.relation ? '<span class="lk-rel">' + esc(p.relation) + '</span>' : '') + '</a>';
   }
 
   function coupleHtml(c) {
-    return '<li>' + personLink(c.husband) + ' (' + esc(c.husband.village) + ') married ' +
-      personLink(c.wife) + ' (' + esc(c.wife.village) + ')</li>';
+    return '<div class="lk-couple">' + personCard(c.husband) + '<span class="lk-married">married</span>' +
+      personCard(c.wife) + '</div>';
   }
 
   function renderVillages() {
@@ -2701,11 +2779,11 @@ FT.views.poster = {
     }
     api().call('GET', '/links/villages?a=' + encodeURIComponent(state.va) + '&b=' + encodeURIComponent(state.vb))
       .then(function (r) {
-        if (r.couples.length) { show('<ul class="lk-list">' + r.couples.map(coupleHtml).join('') + '</ul>'); return; }
+        if (r.couples.length) { show('<div class="lk-couples">' + r.couples.map(coupleHtml).join('') + '</div>'); return; }
         if (!r.chain) { show('<p class="lk-msg">These villages are not linked in the records.</p>'); return; }
         show('<p class="lk-summary">No direct marriage. Linked through: ' +
           esc([r.chain[0].from.village].concat(r.chain.map(function (h) { return h.to.village; })).join(' → ')) +
-          '</p><ul class="lk-list">' + r.chain.map(function (h) { return coupleHtml(h.couple); }).join('') + '</ul>');
+          '</p><div class="lk-couples">' + r.chain.map(function (h) { return coupleHtml(h.couple); }).join('') + '</div>');
       }, fail);
   }
 
