@@ -184,6 +184,7 @@
   .spouse-link{stroke:var(--bark);stroke-width:2px;}
   .chart-edge{fill:none;stroke:var(--connector);stroke-width:2.5px;}
   .chart-label{font-family:var(--font);font-size:15px;font-weight:600;fill:var(--ink-muted);pointer-events:none;}
+  .chart-marriage{stroke:var(--rail-f);stroke-width:3px;}
   .chart-married{text-anchor:middle;font-size:15px;fill:var(--rail-f);}
   .spouse-card{cursor:pointer;}
   .gap-bg{fill:transparent;stroke:var(--ink-muted);stroke-width:1.6px;stroke-dasharray:7 5;cursor:pointer;}
@@ -586,7 +587,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
       document.getElementById('login').classList.add('hidden');
       FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
       FT.state.ends = [a, b];
-      FT.COUPLE_GAP = 110;
+      FT.linkEdges = r.edges;
       FT.init();
       FT.setView('chart');
       FT.expandAll();

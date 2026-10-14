@@ -557,7 +557,7 @@ FT.boot = function (data) {
 
   FT.parentsOf = function (n) {
     var p = FT.parentOf[n.id];
-    if (!p) return { father: null, mother: null };
+    if (!p) return { father: n.father ? { name: n.father } : null, mother: n.mother ? { name: n.mother } : null };
     var spouse = (p.spouses && p.spouses.length) ? p.spouses[0] : null;
     if (p.gender === 'female') return { mother: p, father: spouse };
     return { father: p, mother: spouse };
@@ -743,11 +743,6 @@ FT.boot = function (data) {
     var spX = FT.CARD_W + FT.COUPLE_GAP;
     if (sp) {
       el('line', { 'class': 'spouse-link', x1: FT.CARD_W, y1: H / 2, x2: spX, y2: H / 2 }, g);
-      var lview = FT.views[FT.state.viewId];
-      if (lview && lview.coupleLabel) {
-        el('text', { 'class': 'chart-label chart-married', x: FT.CARD_W + FT.COUPLE_GAP / 2, y: H / 2 - 10 }, g)
-          .textContent = 'married';
-      }
       var sg = el('g', { 'class': 'spouse-card ' + (sp.gender || ''),
         transform: 'translate(' + spX + ',0)' }, g);
       cardFace(sg, sp, H, [['Father', sp.father ? { name: sp.father } : null, 'male'],

@@ -118,29 +118,40 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class TestLinkTrees(unittest.TestCase):
+class TestChainLayout(unittest.TestCase):
     def setUp(self):
         self.graph = sample_graph()
 
-    def shape(self, card):
-        return [card["id"], [s["id"] for s in card["spouses"]], [self.shape(c) for c in card["children"]]]
+    def test_peak_sits_between_the_two_children_and_marriage_steps_aside(self):
+        steps = links.person_path(self.graph, "bash", "mohan")
+        spots = [(s["id"], c["col"], c["gen"]) for s, c in zip(steps, links.chain_layout(steps))]
+        self.assertEqual(spots, [("bash", 0, 0), ("rashmi", 0, -1), ("jagdish", 1, -1),
+                                 ("ram", 1.5, 0), ("mohan", 2, -1)])
 
-    def test_one_tree_per_family_joined_by_the_couple(self):
-        trees = links.link_trees(self.graph, links.person_path(self.graph, "bash", "mohan"))
-        self.assertEqual([self.shape(t) for t in trees], [
-            ["bash", [], [["rashmi", ["jagdish"], []]]],
-            ["ram", [], [["jagdish", ["rashmi"], []], ["mohan", [], []]]],
+    def test_straight_line_up_stays_in_one_column(self):
+        steps = links.person_path(self.graph, "amit", "ram")
+        self.assertEqual([c["col"] for c in links.chain_layout(steps)], [0, 0, 0])
+        self.assertEqual([c["gen"] for c in links.chain_layout(steps)], [0, 1, 2])
+
+    def test_each_line_names_the_relation(self):
+        steps = links.person_path(self.graph, "bash", "mohan")
+        self.assertEqual(links.chain_edges(self.graph, steps), [
+            {"from": "bash", "to": "rashmi", "label": "daughter"},
+            {"from": "rashmi", "to": "jagdish", "label": "married"},
+            {"from": "ram", "to": "jagdish", "label": "son"},
+            {"from": "ram", "to": "mohan", "label": "son"},
         ])
 
-    def test_straight_line_up(self):
-        trees = links.link_trees(self.graph, links.person_path(self.graph, "amit", "ram"))
-        self.assertEqual([self.shape(t) for t in trees], [["ram", [], [["jagdish", [], [["amit", [], []]]]]]])
+    def test_one_card_per_person_with_parents(self):
+        cards = links.chain_cards(self.graph, links.person_path(self.graph, "bash", "mohan"))
+        self.assertEqual([c["id"] for c in cards], ["bash", "rashmi", "jagdish", "ram", "mohan"])
+        self.assertEqual(cards[1]["father"], "Bash")
 
     def test_cards_hide_private_fields(self):
         rows = sample_rows()
         next(p for p in rows["people"] if p["id"] == "mohan").update(note="private", born="1950", address_city="Delhi")
         graph = Graph(rows["people"], rows["marriages"], rows["families"], rows["villages"])
-        text = str(links.link_trees(graph, links.person_path(graph, "amit", "mohan")))
+        text = str(links.chain_cards(graph, links.person_path(graph, "amit", "mohan")))
         for secret in ("private", "1950", "Delhi"):
             self.assertNotIn(secret, text)
 

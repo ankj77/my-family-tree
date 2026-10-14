@@ -253,7 +253,7 @@
       document.getElementById('login').classList.add('hidden');
       FT.boot({ tree: r.tree, unlinked: [], summary: r.counts });
       FT.state.ends = [a, b];
-      FT.COUPLE_GAP = 110;
+      FT.linkEdges = r.edges;
       FT.init();
       FT.setView('chart');
       FT.expandAll();

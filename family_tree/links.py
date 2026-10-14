@@ -96,40 +96,45 @@ def _card(graph: Graph, pid: str, as_spouse: bool) -> dict:
     return card
 
 
-def _legs(steps: List[dict], segment: List[int]) -> Tuple[int, List[int], List[int]]:
-    level = highest = top = 0
-    for i, index in enumerate(segment[1:], 1):
-        rel = steps[index]["rel"]
-        level += 1 if rel in UP else -1 if rel in DOWN else 0
-        if level > highest:
-            highest, top = level, i
-    return segment[top], segment[:top][::-1], segment[top + 1:]
+def _move(rel: Optional[str]) -> int:
+    return 1 if rel in UP else -1 if rel in DOWN else 0
 
 
-def link_trees(graph: Graph, steps: List[dict]) -> List[dict]:
-    parts = segments(steps)
-    spouse_at = {}
-    for k in range(1, len(parts)):
-        joined = parts[k][0]
-        spouse_at[joined - 1] = joined
-        spouse_at[joined] = joined - 1
+def chain_layout(steps: List[dict]) -> List[dict]:
+    spots = [{"col": 0.0, "gen": 0}]
+    col = 0
+    for i in range(1, len(steps)):
+        move = _move(steps[i]["rel"])
+        before = _move(steps[i - 1]["rel"])
+        if move == 0:
+            col += 1
+        elif before and before != move:
+            col += 1
+            spots[i - 1]["col"] = col - 0.5
+        spots.append({"col": float(col), "gen": spots[i - 1]["gen"] + move})
+    return spots
 
-    def node(index: int, below: List[int]) -> dict:
-        card = _card(graph, steps[index]["id"], False)
-        spouse = spouse_at.get(index)
-        card.update(spouses=[_card(graph, steps[spouse]["id"], True)] if spouse is not None else [],
-                    placeholder=None, child_groups=[], children=[])
-        if below:
-            card["children"] = [node(below[0], below[1:])]
-        return card
 
-    trees = []
-    for segment in parts:
-        top, left, right = _legs(steps, segment)
-        tree = node(top, [])
-        tree["children"] = [node(leg[0], leg[1:]) for leg in (left, right) if leg]
-        trees.append(tree)
-    return trees
+def chain_edges(graph: Graph, steps: List[dict]) -> List[dict]:
+    edges = []
+    for i in range(1, len(steps)):
+        a, b, rel = steps[i - 1]["id"], steps[i]["id"], steps[i]["rel"]
+        if rel in MARRIAGE:
+            edges.append({"from": a, "to": b, "label": "married"})
+            continue
+        parent, child = (b, a) if rel in UP else (a, b)
+        word = {"male": "son", "female": "daughter"}.get(graph.people[child].get("gender"), "child")
+        edges.append({"from": parent, "to": child, "label": word})
+    return edges
+
+
+def chain_cards(graph: Graph, steps: List[dict]) -> List[dict]:
+    cards = []
+    for step, spot in zip(steps, chain_layout(steps)):
+        card = _card(graph, step["id"], True)
+        card.update(spot, spouses=[], placeholder=None, child_groups=[], children=[])
+        cards.append(card)
+    return cards
 
 
 def birth_village(graph: Graph, pid: str) -> Optional[str]:
