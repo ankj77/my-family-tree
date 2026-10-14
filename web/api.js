@@ -287,10 +287,12 @@
       chip.appendChild(x);
       bar.appendChild(chip);
     });
-    var text = document.createElement('span');
-    text.className = 'pick-note';
-    text.textContent = note;
-    bar.appendChild(text);
+    if (note) {
+      var text = document.createElement('span');
+      text.className = 'pick-note';
+      text.textContent = note;
+      bar.appendChild(text);
+    }
     var clear = document.createElement('a');
     clear.className = 'pick-clear';
     clear.href = './';
@@ -313,7 +315,7 @@
       api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
       loadOthers(me, null);
       var first = r.steps[0], last = r.steps[r.steps.length - 1];
-      var note = (v ? 'Closest person from ' + (last.village || 'that village') + ': ' : '') + FT.links.sentence(r, me.id);
+      var note = v ? 'Closest person from ' + (last.village || 'that village') : '';
       FT.renderPicks = function () { linkChips(first, last, note); };
       FT.renderPicks();
       document.getElementById('summary').textContent = r.steps.length + ' people on this link · ' +
