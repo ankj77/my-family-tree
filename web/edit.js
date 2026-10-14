@@ -24,9 +24,13 @@
   var EDIT_ALL = ['name', 'gender', 'origin_village_id', 'life', 'address_country',
     'address_line', 'address_locality', 'address_city', 'address_state', 'address_abroad', 'born', 'died', 'note'];
   var INDIA_ADDRESS = ['address_line', 'address_locality', 'address_city', 'address_state'];
-  var NEW_CHILD = EDIT_ALL;
+  var NEW_CHILD = EDIT_ALL.filter(function (n) { return n !== 'origin_village_id'; });
   var NEW_SPOUSE = EDIT_ALL.concat(['family_id']);
-  var NEW_FATHER = EDIT_ALL.filter(function (n) { return n !== 'gender'; });
+  var NEW_FATHER = NEW_CHILD.filter(function (n) { return n !== 'gender'; });
+
+  edit.formFields = function (kind) {
+    return { child: NEW_CHILD, father: NEW_FATHER, spouse: NEW_SPOUSE }[kind];
+  };
 
   edit.editNames = function (canMove) {
     return canMove ? EDIT_ALL.concat(EDIT_MOVE) : EDIT_ALL.slice();
@@ -254,8 +258,7 @@
         }, back, person.edit || {});
       }, function (err) { body.insertAdjacentHTML('beforeend', '<p class="form-msg">' + esc(err.message) + '</p>'); });
     } else if (kind === 'child') {
-      openForm(body, formHtml('Add a child of ' + nameOf(person), NEW_CHILD, { life: 'living' },
-        { origin_village_id: edit.villageOptions(api.villages || []) }, 'Add'), function (values) {
+      openForm(body, formHtml('Add a child of ' + nameOf(person), NEW_CHILD, { life: 'living' }, {}, 'Add'), function (values) {
         return api.call('POST', '/people', Object.assign({ as: 'child', parent_id: person.id }, values))
           .then(function (r) { api.reloadAt(r.id); });
       }, back);
@@ -267,8 +270,7 @@
           .then(function (r) { api.reloadAt(r.id); });
       }, back);
     } else if (kind === 'father') {
-      openForm(body, formHtml('Add the father of ' + nameOf(person), NEW_FATHER, { life: 'living' },
-        { origin_village_id: edit.villageOptions(api.villages || []) }, 'Add'), function (values) {
+      openForm(body, formHtml('Add the father of ' + nameOf(person), NEW_FATHER, { life: 'living' }, {}, 'Add'), function (values) {
         return api.call('POST', path + '/father', values).then(function (r) {
           location.assign(location.pathname + api.urlFor(r.family_id, person.id));
         });

@@ -73,3 +73,7 @@ assert.deepStrictEqual(edit.villageOptions([]).slice(-1)[0], ['__new', '+ Add a 
 assert.strictEqual(edit.esc('<b a="1">&'), '&lt;b a=&quot;1&quot;&gt;&amp;');
 assert.strictEqual(edit.esc(null), '');
 console.log('edit_check ok');
+
+assert.ok(edit.formFields('child').indexOf('origin_village_id') < 0);
+assert.ok(edit.formFields('father').indexOf('origin_village_id') < 0);
+assert.ok(edit.formFields('spouse').indexOf('origin_village_id') >= 0);
