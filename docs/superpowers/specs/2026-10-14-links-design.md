@@ -45,9 +45,9 @@ and so on.
     When the first person is not the viewer it reads `Ved Prakash is Amit's …`.
   - The chain drawn as **mini trees**: the chain is split wherever it crosses a marriage.
     Each piece (a blood segment) is drawn as a small tree from its lowest people up to its
-    shared ancestor and back down. Pieces are joined by a `══` marriage line. Each card shows
-    the name and the village.
-  - On phones the pieces stack vertically; on wide screens they sit side by side.
+    shared ancestor and back down. Each card shows the name and the village.
+  - Pieces stack vertically, joined by a row naming both spouses
+    (`Chandgiram ══ married ══ Patori`), because the spouse can be anywhere in a piece.
 - Shortest chain = fewest steps. Between equally short chains, the one with fewer marriages
   wins; if still tied, the first one found.
 - Same person picked twice: "That's the same person." No chain at all: "No link found in
@@ -66,12 +66,12 @@ and so on.
 
 ### Which village a person belongs to
 
-- A person's village is the village of their **home tree** (`Graph.home_family`). A wife
-  who married in and has no tree of her own belongs to her husband's tree.
-- A marriage links the **husband's village** with the **wife's birth village**:
-  - her own tree's village if she has a `family_id` (born in a tree on the site);
-  - otherwise her `origin_village_id`;
-  - if neither is known, the marriage is not counted between villages.
+- A person's village is their **birth village**: their own tree's village if they have a
+  `family_id`, otherwise their `origin_village_id`. Cards fall back to the home tree's village
+  when neither is known.
+- A marriage links the **husband's birth village** with the **wife's birth village**, so a
+  husband who married into a tree still counts for the village he came from. If either side is
+  unknown, the marriage is not counted between villages.
 - A marriage where both sides are the same village is not listed as a link between villages.
 
 ## Design

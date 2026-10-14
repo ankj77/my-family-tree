@@ -1,7 +1,7 @@
 import unittest
 from functools import lru_cache
 
-from family_tree.render import render_admin, render_index
+from family_tree.render import render_admin, render_index, render_links
 
 
 @lru_cache(maxsize=None)
@@ -447,3 +447,11 @@ class TestRenderAdmin(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRenderLinks(unittest.TestCase):
+    def test_links_page(self):
+        html = render_links()
+        self.assertIn("FT.links.start();", html)
+        self.assertIn('id="lk-result"', html)
+        self.assertNotIn("FT.boot = ", html)

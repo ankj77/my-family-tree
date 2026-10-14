@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jain Parivar Online · Links</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F7F2E4">
+<link rel="icon" href="web/icons/icon-192.png">
+<link rel="apple-touch-icon" href="web/icons/apple-touch-icon.png">
+<style>:root{
+  --canvas:#F7F2E4;
+  --card:#FFFDF7;
+  --edge:#B9C6A4;
+  --rule:#DEE4CC;
+  --rail-m:#4A6FA5;
+  --rail-f:#C4708A;
+  --rail-unknown:#A89880;
+  --card-m:#EEF3FA;
+  --card-f:#FBEFF3;
+  --ink:#3A3A2E;
+  --ink-muted:#6F6A57;
+  --name-ink:#234A21;
+  --living:#4A8C4A;
+  --connector:#A8935F;
+  --bark:#8A6240;
+  --bark-trunk:#6B4A2E;
+  --leaf-1:#6F9C52;
+  --leaf-2:#8FBA6C;
+  --leaf-3:#BCD79C;
+  --leaf-spouse:#E7C4D3;
+  --hl:#C86B2A;
+  --warn:#B5432F;
+  --band:#EFE7D2;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari","Nirmala UI",sans-serif;
+  --serif:"Iowan Old Style",Georgia,"Times New Roman","Noto Serif Devanagari",serif;
+  --shadow-card:0 1px 2px rgba(70,60,30,.07),0 4px 10px rgba(70,60,30,.06);
+}
+  html,body{margin:0;height:100%;font-family:var(--font);}
+  body{display:flex;flex-direction:column;background:var(--canvas);}
+  #toolbar{flex:0 0 auto;position:relative;padding:12px 16px 0;background:var(--card);
+    border-bottom:1px solid var(--edge);box-shadow:var(--shadow-card);z-index:10;
+    box-sizing:border-box;font-size:13px;font-weight:500;color:var(--ink);}
+  #toolbar .top-row{display:flex;align-items:center;gap:10px;}
+  #toolbar .brand{flex:1 1 auto;min-width:0;}
+  #toolbar .title{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;
+    line-height:1.15;color:#7A1F1F;display:flex;align-items:center;gap:8px;}
+  .brand-logo{width:44px;height:44px;flex:0 0 auto;mix-blend-mode:multiply;}
+  #toolbar .who{margin:2px 0 0;min-height:1.3em;font-size:13px;color:var(--ink-muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #top-actions{display:flex;gap:8px;}
+  .menu-wrap{position:relative;}
+  #avatar{width:44px;height:44px;border-radius:50%;border:2px solid var(--card);
+    box-shadow:0 0 0 1px var(--edge);background:var(--name-ink);color:#fff;cursor:pointer;
+    font-family:var(--serif);font-size:19px;font-weight:600;padding:0;}
+  #menu{position:absolute;right:0;top:52px;min-width:220px;background:var(--card);
+    border:1px solid var(--edge);border-radius:10px;box-shadow:var(--shadow-card);
+    padding:6px;z-index:40;}
+  #menu.hidden{display:none;}
+  #menu button{display:block;width:100%;min-height:44px;text-align:left;padding:8px 12px;
+    background:none;border:0;border-radius:7px;font-family:var(--font);font-size:15px;
+    color:var(--ink);cursor:pointer;}
+  #menu button:hover{background:var(--canvas);}
+  #toolbar .search-row{position:relative;max-width:680px;margin:12px auto 0;}
+  #toolbar .search-icon{position:absolute;left:14px;top:12px;width:20px;height:20px;
+    fill:none;stroke:var(--ink-muted);stroke-width:2;stroke-linecap:round;pointer-events:none;}
+  #search{width:100%;box-sizing:border-box;min-height:46px;padding:8px 16px 8px 44px;
+    border:1px solid var(--edge);border-radius:999px;background:var(--canvas);
+    font-size:16px;font-family:var(--font);color:var(--ink);}
+  #search:focus{outline:2px solid var(--hl);outline-offset:1px;background:var(--card);}
+  #toolbar .search-hint{margin:4px 0 0;text-align:center;font-size:12px;color:var(--ink-muted);}
+  #picks:not(:empty){display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;}
+  #toolbar .summary{margin:10px -16px 0;padding:8px 16px;background:var(--band);
+    border-top:1px solid var(--edge);font-size:13px;line-height:1.5;color:var(--ink);}
+  #toolbar .summary b{font-weight:700;}
+  #stage{flex:1 1 auto;position:relative;overflow:hidden;background:var(--canvas);
+    cursor:grab;touch-action:none;}
+  #stage.grabbing{cursor:grabbing;}
+  svg{width:100%;height:100%;display:block;}
+  .edge{fill:none;stroke:var(--connector);stroke-width:1.25px;}
+  .edge.hl{stroke:var(--hl);stroke-width:2.5px;}
+  .toggle{fill:var(--card);stroke:var(--bark);stroke-width:2px;cursor:pointer;
+    pointer-events:none;}
+  .toggle-sign{font-size:15px;font-weight:700;fill:var(--bark);font-family:var(--font);
+    cursor:pointer;pointer-events:none;}
+  .branch-btn{cursor:pointer;}
+  .branch-btn rect{fill:var(--card);stroke:var(--bark);stroke-width:1.5px;}
+  .branch-btn text{font-size:22px;font-weight:600;fill:var(--name-ink);font-family:var(--font);}
+  .branch-btn:hover rect{fill:var(--band);}
+  .toggle-hit{fill:transparent;cursor:pointer;pointer-events:all;}
+  #unlinked{position:absolute;right:0;top:0;width:230px;max-width:70%;max-height:45%;overflow:auto;background:var(--card);
+    border-left:1px solid var(--edge);border-bottom:1px solid var(--edge);padding:8px;font-size:12px;z-index:5;box-sizing:border-box;}
+  #unlinked h4{margin:0 0 6px;}
+  #unlinked.empty{display:none;}
+  .card-bg{fill:var(--card);stroke:var(--edge);stroke-width:1.25px;}
+  .card-shadow{fill:var(--ink);opacity:.09;pointer-events:none;}
+  .card-hit{fill:transparent;pointer-events:all;}
+  .card-name{font-size:14px;font-weight:600;font-family:var(--serif);
+    fill:var(--name-ink);pointer-events:none;}
+  .card-meta{font-size:11px;fill:var(--ink-muted);pointer-events:none;}
+  .living-dot{fill:var(--living);pointer-events:none;}
+  .card-row{cursor:pointer;}
+  .card-row.unfilled{cursor:default;}
+  .card-row.unfilled .card-name{fill:var(--ink-muted);font-style:italic;font-weight:400;}
+  .card-row.deceased .card-rail{opacity:.7;}
+  .card-row.deceased .card-name{fill:var(--ink-muted);}
+  .card-row.uncertain .card-name{fill:var(--warn);}
+  .card.hl .card-bg{stroke:var(--hl);stroke-width:2px;}
+  .avatar{pointer-events:none;}
+  #sheet{position:absolute;right:0;top:0;bottom:0;width:320px;background:var(--card);
+    border-left:4px solid var(--rail-unknown);box-shadow:var(--shadow-card);
+    padding:16px;overflow:auto;z-index:20;box-sizing:border-box;font-size:13px;color:var(--ink);}
+  #sheet.hidden{display:none;}
+  #sheet-close{position:absolute;right:8px;top:8px;width:44px;height:44px;
+    border:0;background:none;font-size:24px;line-height:1;cursor:pointer;color:var(--ink-muted);}
+  .sheet-photo{display:block;width:96px;height:96px;border-radius:50%;
+    object-fit:cover;margin:0 auto 10px;border:1px solid var(--edge);}
+  #sheet h3{margin:0 0 2px;text-align:center;font-size:18px;font-weight:600;
+    font-family:var(--serif);color:var(--name-ink);}
+  .sheet-hi{margin:0 0 12px;text-align:center;color:var(--ink-muted);}
+  #sheet dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;}
+  #sheet dt{color:var(--ink-muted);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+  #sheet dd{margin:0;font-size:13px;color:var(--ink);}
+  .sheet-rel{margin-top:12px;padding-top:10px;border-top:1px solid var(--edge);line-height:1.9;}
+  .sheet-rel span{color:var(--ink-muted);margin-right:4px;}
+  .sheet-rel a{color:var(--rail-m);text-decoration:none;}
+  #ornament-motto,#ornament-story{position:absolute;margin:0;pointer-events:none;
+    font-family:var(--serif);font-style:italic;color:var(--name-ink);opacity:.75;z-index:4;}
+  #ornament-motto{left:16px;bottom:16px;font-size:15px;line-height:1.45;
+    background:var(--card);border:1px solid var(--edge);border-radius:8px;padding:10px 14px;}
+  #ornament-story{right:20px;bottom:20px;font-size:24px;line-height:1.3;text-align:right;}
+  @media (max-width:768px){
+    #ornament-motto{display:none;}
+    #ornament-story{font-size:16px;right:12px;bottom:12px;}
+  }
+  #controls{position:absolute;top:12px;right:12px;z-index:6;display:flex;flex-direction:column;
+    align-items:flex-end;gap:6px;cursor:default;}
+  #controls-toggle{width:44px;height:44px;border-radius:50%;border:1px solid var(--edge);
+    background:var(--card);box-shadow:var(--shadow-card);font-size:20px;cursor:pointer;color:var(--ink);}
+  #controls-body{display:none;width:220px;background:var(--card);border:1px solid var(--edge);
+    border-radius:10px;box-shadow:var(--shadow-card);padding:8px 12px;box-sizing:border-box;}
+  #controls.open #controls-body{display:block;}
+  #controls .ctl{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    min-height:44px;font-size:14px;color:var(--ink);border-bottom:1px solid var(--rule);}
+  #controls select{min-height:36px;max-width:130px;font-size:14px;font-family:var(--font);
+    border:1px solid var(--edge);border-radius:6px;background:var(--card);color:var(--ink);}
+  #controls .ctl-switch{cursor:pointer;}
+  #living-only{width:20px;height:20px;accent-color:var(--hl);cursor:pointer;}
+  #controls .zoom-buttons{display:flex;gap:4px;}
+  #controls .zoom-buttons button{min-width:40px;min-height:36px;border:1px solid var(--edge);
+    border-radius:6px;background:var(--card);font-size:15px;cursor:pointer;color:var(--ink);}
+  #expand-all{display:block;width:100%;margin-top:8px;min-height:40px;border:1px solid var(--edge);
+    border-radius:6px;background:var(--card);font-size:14px;cursor:pointer;color:var(--ink);}
+  @media (max-width:768px){
+    #sheet{right:0;left:0;top:auto;bottom:0;width:auto;max-height:60%;
+      border-left:0;border-top:1px solid var(--edge);border-radius:12px 12px 0 0;
+      box-shadow:var(--shadow-card);}
+    #toolbar{padding:10px 12px 0;}
+    #toolbar .title{font-size:22px;}
+    #toolbar .summary{margin:8px -12px 0;padding:6px 12px;font-size:12px;}
+  }
+  .poster-ground{fill:var(--connector);opacity:.22;}
+  .poster-root{fill:none;stroke:var(--bark-trunk);stroke-linecap:round;opacity:.85;}
+  .poster-trunk{fill:var(--bark-trunk);}
+  .poster-branch{fill:none;stroke:var(--bark);stroke-linecap:round;}
+  .poster-branch.hl{stroke:var(--hl);}
+  .poster-leaf{stroke:none;}
+  .parent-card .pc-name{font-family:var(--serif);font-size:14.5px;font-weight:600;
+    fill:var(--name-ink);pointer-events:none;}
+  .parent-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
+  .parent-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
+  .pc-motif{pointer-events:none;}
+  .pc-motif .petal{fill:var(--rail-f);opacity:.9;}
+  .pc-motif .petal.outer{opacity:.55;}
+  .pc-motif.female .motif-line{stroke:var(--leaf-1);}
+  .pc-motif .leaf{fill:var(--leaf-1);}
+  .pc-motif .vein{stroke:var(--card-m);stroke-width:.8px;}
+  .garland{pointer-events:none;}
+  .garland .leaf{fill:var(--leaf-1);}
+  .garland-rope{fill:none;stroke:#D9731A;stroke-width:9px;stroke-linecap:round;}
+  .curl{stroke:#B35A0E;stroke-width:.7px;}
+  .rose{fill:#B3121B;stroke:#7A0A10;stroke-width:.7px;}
+  .rose-core{fill:#D62A33;}
+  .spouse-link{stroke:var(--bark);stroke-width:2px;}
+  .spouse-card{cursor:pointer;}
+  .gap-bg{fill:transparent;stroke:var(--ink-muted);stroke-width:1.6px;stroke-dasharray:7 5;cursor:pointer;}
+  .place-hit .card-bg{stroke:#D9731A;stroke-width:2.5px;}
+  .sg-place .sg-name::before{content:'\2302  ';color:#D9731A;}
+  .sg-place.area .sg-name::before,.sg-place.city .sg-name::before{content:'\25C9  ';color:var(--rail-m);}
+  .spouse-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
+  .spouse-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
+  .motif-line{fill:none;stroke:var(--bark);stroke-width:1.4px;stroke-linecap:round;}
+  .pc-sub{font-size:11.5px;fill:var(--ink-muted);pointer-events:none;}
+  .pc-rule{stroke:var(--rule);stroke-width:1px;}
+  .pc-label{font-size:9.5px;fill:var(--ink-muted);letter-spacing:.05em;pointer-events:none;}
+  .pc-value{font-size:12.5px;fill:var(--ink);pointer-events:none;}
+  .pc-icon-bg{opacity:.28;pointer-events:none;}
+  .pc-icon-fg{opacity:.95;pointer-events:none;}
+  .pc-icon-cut{fill:var(--card);pointer-events:none;}
+  #picks{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+    padding-top:2px;}
+  #picks:empty{display:none;}
+  .pick{display:inline-flex;align-items:center;gap:4px;min-height:38px;
+    padding:2px 4px 2px 14px;border:1px solid var(--edge);border-radius:999px;
+    background:var(--canvas);font-family:var(--serif);font-size:15px;
+    color:var(--name-ink);}
+  .pick button{min-width:34px;min-height:34px;border:0;border-radius:50%;
+    background:none;font-size:18px;line-height:1;color:var(--ink-muted);cursor:pointer;}
+  .pick-place{border-color:#D9731A;}
+  .pick button:hover{background:var(--card);color:var(--warn);}
+  .pick-clear{min-height:38px;padding:0 14px;border:1px solid var(--edge);
+    border-radius:999px;background:var(--card);font-family:var(--font);
+    font-size:13px;color:var(--ink-muted);cursor:pointer;}
+  .pick-note{font-size:14px;color:var(--ink-muted);}
+  .pick-note b{font-family:var(--serif);font-size:15px;color:var(--hl);}
+  #suggest{position:fixed;z-index:30;max-height:52vh;overflow-y:auto;
+    background:var(--card);border:1px solid var(--edge);border-radius:10px;
+    box-shadow:var(--shadow-card);padding:4px;box-sizing:border-box;}
+  #suggest.hidden{display:none;}
+  .sg-row{display:block;width:100%;min-height:44px;text-align:left;cursor:pointer;
+    background:none;border:0;border-radius:7px;padding:6px 10px;font-family:var(--font);}
+  .sg-row:hover,.sg-row.on{background:var(--canvas);}
+  .sg-row:focus-visible{outline:2px solid var(--hl);}
+  .sg-name{display:block;font-family:var(--serif);font-size:14px;font-weight:600;
+    color:var(--name-ink);}
+  .sg-hint{display:block;font-size:11px;color:var(--ink-muted);}
+  .sg-more{margin:4px 10px 6px;font-size:11px;color:var(--ink-muted);}
+  .sg-head{margin:8px 10px 2px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--ink-muted);}
+  #login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    background:var(--canvas);padding:16px;box-sizing:border-box;}
+  #login.hidden{display:none;}
+  #login-form{width:100%;max-width:340px;background:var(--card);border-top:4px solid var(--hl);
+    box-shadow:var(--shadow-card);padding:28px 24px;box-sizing:border-box;text-align:center;}
+  .login-logo{display:block;width:200px;max-width:70%;margin:-8px auto 4px;mix-blend-mode:multiply;}
+  #login h1{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;color:var(--name-ink);}
+  #login .login-hi{margin:2px 0 20px;color:var(--ink-muted);font-size:15px;}
+  #login-form input{display:block;width:100%;box-sizing:border-box;font-size:17px;min-height:48px;
+    padding:8px 10px;margin-top:10px;border:1px solid var(--edge);font-family:var(--font);}
+  #login-form .pass-wrap{position:relative;margin-top:10px;}
+  #login-form .pass-wrap input{margin-top:0;padding-right:72px;}
+  #login-show{position:absolute;right:2px;top:2px;bottom:2px;min-width:64px;border:0;background:transparent;
+    color:var(--hl);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);}
+  #tree-pick{position:relative;display:inline-flex;align-items:center;margin-top:4px;min-height:40px;
+    padding:0 34px 0 12px;border:1px solid var(--edge);border-radius:8px;background:var(--card);
+    color:var(--ink);font-size:15px;max-width:100%;box-sizing:border-box;cursor:pointer;}
+  #tree-pick::after{content:"▾";position:absolute;right:12px;color:var(--ink-muted);pointer-events:none;}
+  #tree-pick b{color:var(--name-ink);font-weight:700;}
+  .tree-pick-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #family-picker{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
+    font-size:16px;font-family:var(--font);}
+  #family-picker:focus-visible{opacity:0;}
+  #tree-pick:focus-within{outline:2px solid var(--hl);outline-offset:2px;}
+  #sheet .edit-form{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+  #sheet .edit-form label[hidden]{display:none;}
+  #sheet .edit-form label{display:flex;flex-direction:column;gap:2px;font-size:11px;font-weight:600;
+    color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em;}
+  #sheet .edit-form input,#sheet .edit-form select,#sheet .edit-form textarea{font-size:15px;
+    min-height:40px;padding:6px 8px;border:1px solid var(--edge);font-family:var(--font);
+    text-transform:none;letter-spacing:0;color:var(--ink);background:#fff;}
+  #sheet .form-buttons,#sheet .sheet-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  #sheet .form-buttons button,#sheet .sheet-actions button{min-height:44px;padding:6px 14px;
+    font-size:14px;cursor:pointer;font-family:var(--font);}
+  #sheet .form-msg{min-height:1.2em;color:var(--warn);font-size:13px;margin:6px 0 0;}
+  #sheet .sheet-why{flex-basis:100%;margin:0;font-size:12px;color:var(--ink-muted);}
+  #sheet .sheet-links{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:14px;}
+  #sheet .sheet-links a{color:var(--hl);}
+  #login-enter{margin-top:12px;width:100%;min-height:48px;font-size:16px;cursor:pointer;
+    background:var(--hl);color:#fff;border:0;font-family:var(--font);}
+  .install-app{min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--edge);
+    background:var(--card);color:var(--name-ink);font-size:14px;font-weight:600;cursor:pointer;
+    font-family:var(--font);box-shadow:var(--shadow-card);}
+  #login .install-app{margin-top:12px;width:100%;}
+  .install-app.hidden{display:none;}
+  #login-msg{min-height:1.4em;margin:14px 0 0;font-size:14px;color:var(--warn);}
+  #refresh{width:44px;height:44px;border-radius:50%;border:1px solid var(--edge);
+    background:var(--card);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;
+    box-shadow:var(--shadow-card);padding:0;}
+  #refresh:hover{background:var(--canvas);}
+
+html.api-busy::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;
+  background:linear-gradient(90deg,transparent,var(--living),transparent);background-size:40% 100%;
+  background-repeat:no-repeat;animation:api-busy 1s linear infinite;}
+html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:9999;
+  padding:4px 12px;border-radius:999px;background:var(--card);color:var(--ink-muted);
+  border:1px solid var(--rule);font:13px/1.4 system-ui,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.12);
+  animation:api-busy-show .3s .25s both;pointer-events:none;}
+@keyframes api-busy{from{background-position:-40% 0}to{background-position:140% 0}}
+@keyframes api-busy-show{from{opacity:0}to{opacity:1}}
+
+  html,body{height:auto;}
+  body{display:block;overflow:auto;}
+  #links{max-width:1100px;margin:0 auto;padding:16px;box-sizing:border-box;color:var(--ink);}
+  #links a{color:var(--hl);}
+  #links h1{font-family:var(--serif);font-size:26px;margin:8px 0 12px;color:#7A1F1F;
+    display:flex;align-items:center;gap:8px;}
+  #lk-tabs{display:flex;gap:6px;margin-bottom:12px;}
+  #lk-tabs button{min-height:44px;padding:6px 14px;font-size:14px;cursor:pointer;border:1px solid var(--edge);
+    background:var(--card);font-family:var(--font);}
+  #lk-tabs button[aria-current="page"]{background:var(--hl);color:#fff;border-color:var(--hl);}
+  #lk-form{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
+  #lk-form>div{flex:1 1 260px;position:relative;}
+  .lk-pick{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--ink-muted);flex:1 1 220px;}
+  .lk-pick input,.lk-pick select{min-height:44px;font-size:16px;padding:6px 10px;border:1px solid var(--edge);
+    background:var(--card);font-family:var(--font);box-sizing:border-box;width:100%;}
+  .lk-results{display:flex;flex-direction:column;}
+  .lk-results button{min-height:44px;text-align:left;padding:6px 10px;border:1px solid var(--rule);border-top:0;
+    background:var(--card);cursor:pointer;font-family:var(--font);font-size:14px;}
+  .lk-results button span{color:var(--ink-muted);font-size:12px;}
+  .lk-results button:hover{background:var(--canvas);}
+  .lk-summary{font-family:var(--serif);font-size:19px;margin:0 0 16px;color:var(--name-ink);}
+  .lk-msg{color:var(--ink-muted);}
+  .lk-chain{display:flex;flex-direction:column;align-items:flex-start;gap:4px;overflow-x:auto;padding-bottom:8px;}
+  .lk-seg{display:flex;flex-direction:column;align-items:center;}
+  .lk-legs{display:flex;gap:24px;margin-top:18px;position:relative;}
+  .lk-legs.two::before{content:'';position:absolute;top:-10px;left:25%;right:25%;border-top:2px solid var(--connector);}
+  .lk-leg{display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .lk-card{position:relative;width:170px;box-sizing:border-box;padding:8px 10px;background:var(--card);
+    border:1px solid var(--edge);border-left:5px solid var(--rail-unknown);border-radius:8px;
+    box-shadow:var(--shadow-card);display:flex;flex-direction:column;gap:1px;}
+  .lk-card.male{border-left-color:var(--rail-m);}
+  .lk-card.female{border-left-color:var(--rail-f);}
+  .lk-card.lk-end{outline:2px solid var(--hl);outline-offset:1px;}
+  .lk-card b{font-family:var(--serif);font-size:15px;color:var(--name-ink);}
+  .lk-hi{font-size:13px;}
+  .lk-village{font-size:12px;color:var(--ink-muted);}
+  .lk-leg .lk-card::before{content:'';position:absolute;top:-19px;left:50%;height:18px;
+    border-left:2px solid var(--connector);}
+  .lk-marry{margin:10px 0;padding:6px 12px;border:1px dashed var(--rail-f);border-radius:999px;
+    font-family:var(--serif);font-size:15px;color:var(--name-ink);}
+  .lk-marry span{color:var(--rail-f);font-family:var(--font);font-size:13px;}
+  .lk-list{padding-left:18px;line-height:1.9;}
+  .lk-list button{min-height:36px;border:0;background:none;color:var(--hl);text-decoration:underline;
+    cursor:pointer;font-size:15px;padding:0;}
+</style>
+</head>
+<body>
+<div id="links">
+  <p><a href="./">← Back to the tree</a></p>
+  <h1><img class="brand-logo" src="web/icons/emblem.png" alt="">How are we linked?</h1>
+  <nav id="lk-tabs" aria-label="Link type">
+    <button type="button" data-tab="people">People</button>
+    <button type="button" data-tab="villages">Villages</button>
+  </nav>
+  <div id="lk-form"></div>
+  <main id="lk-result" aria-live="polite"></main>
+</div>
+<script>var FT = {};
+(function (api) {
+  api.base = function (hostname) {
+    return hostname === 'localhost' || hostname === '127.0.0.1'
+      ? 'http://localhost:5001'
+      : 'https://api.jainparivar.online';
+  };
+
+  api.hindiUrl = function (text) {
+    return 'https://inputtools.google.com/request?itc=hi-t-i0-und&num=1&cp=0&cs=1&ie=utf-8&oe=utf-8&app=jainparivar&text=' +
+      encodeURIComponent(text);
+  };
+
+  api.firstHindi = function (reply) {
+    var match = reply && reply[0] === 'SUCCESS' && reply[1] && reply[1][0];
+    return (match && match[1] && match[1][0]) || '';
+  };
+
+  api.hindi = function (text) {
+    if (!text) return Promise.resolve('');
+    return fetch(api.hindiUrl(text)).then(function (r) { return r.json(); })
+      .then(api.firstHindi, function () { return ''; });
+  };
+
+  api.pickFamily = function (requested, stored, home, villages) {
+    var ids = [];
+    villages.forEach(function (v) { v.families.forEach(function (f) { ids.push(f.id); }); });
+    var choices = [requested, home, stored];
+    for (var i = 0; i < choices.length; i++) {
+      if (choices[i] && ids.indexOf(choices[i]) >= 0) return choices[i];
+    }
+    return ids[0] || null;
+  };
+
+  api.urlFor = function (familyId, personId) {
+    return '?family=' + encodeURIComponent(familyId) +
+      (personId ? '&person=' + encodeURIComponent(personId) : '');
+  };
+
+  api.otherTrees = function (people, villages, currentFamily) {
+    var trees = {};
+    villages.forEach(function (v) {
+      v.families.forEach(function (f) { trees[f.id] = api.treeLabel(v, f); });
+    });
+    return people.filter(function (p) {
+      return p.home_family !== currentFamily && trees[p.home_family];
+    }).map(function (p) {
+      return { id: p.id, name: p.name, name_hi: p.name_hi, tree: trees[p.home_family],
+               url: api.urlFor(p.home_family, p.id) };
+    });
+  };
+
+  api.roleText = function (me) {
+    if (me.guest) return 'Guest (view only)';
+    if (me.is_global) return 'Global admin';
+    var scopes = me.roles.map(function (r) { return r.scope; });
+    if (scopes.indexOf('family') >= 0) return 'Family tree admin';
+    if (scopes.indexOf('branch') >= 0) return 'Node admin';
+    if (scopes.indexOf('reader') >= 0) return 'Global reader';
+    return 'Family reader';
+  };
+
+  function parse(text) {
+    try { return text ? JSON.parse(text) : {}; } catch (e) { return {}; }
+  }
+
+  var pending = 0;
+  function busy(change) {
+    pending += change;
+    var root = typeof document !== 'undefined' && document.documentElement;
+    if (root) root.classList.toggle('api-busy', pending > 0);
+  }
+
+  api.call = function (method, path, body) {
+    busy(1);
+    return send(method, path, body).then(function (data) { busy(-1); return data; },
+      function (err) { busy(-1); throw err; });
+  };
+
+  function send(method, path, body) {
+    var options = { method: method, credentials: 'include', headers: {} };
+    if (body !== undefined) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+    return fetch(api.root + path, options).then(function (r) {
+      return r.text().then(function (text) {
+        var data = parse(text);
+        if (r.ok) return data;
+        var err = new Error(data.error || ('Request failed (' + r.status + ')'));
+        err.status = r.status;
+        if (r.status === 401 && path !== '/login' && api.onLoggedOut) api.onLoggedOut();
+        throw err;
+      });
+    }, function () {
+      var err = new Error('Cannot reach the server. Check your internet connection.');
+      err.status = 0;
+      throw err;
+    });
+  }
+
+  function param(name) {
+    var m = new RegExp('[?&]' + name + '=([^&#]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  function store(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+  function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+  api.reloadAt = function (personId) {
+    location.assign(location.pathname + api.urlFor(api.familyId, personId));
+  };
+
+  function showLogin(message) {
+    document.getElementById('login').classList.remove('hidden');
+    document.getElementById('login-msg').textContent = message || '';
+    document.getElementById('login-user').focus();
+  }
+
+  api.togglePassword = function (input, button) {
+    var reveal = input.type === 'password';
+    input.type = reveal ? 'text' : 'password';
+    button.textContent = reveal ? 'Hide' : 'Show';
+    button.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+    button.setAttribute('aria-pressed', reveal ? 'true' : 'false');
+  };
+
+  function wireLogin() {
+    var form = document.getElementById('login-form');
+    var pass = document.getElementById('login-pass');
+    var show = document.getElementById('login-show');
+    show.addEventListener('click', function () {
+      api.togglePassword(pass, show);
+      pass.focus();
+    });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = document.getElementById('login-msg');
+      msg.textContent = '';
+      api.call('POST', '/login', {
+        username: document.getElementById('login-user').value,
+        password: document.getElementById('login-pass').value
+      }).then(function () { location.reload(); }, function (err) { msg.textContent = err.message; });
+    });
+  }
+
+  api.treeLabel = function (village, family) {
+    return village.name + ' · ' + (family.root_name || family.name);
+  };
+
+  api.treeLabelHtml = function (village, family) {
+    var esc = function (s) {
+      return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+    };
+    return '<b>' + esc(village.name) + '</b> · ' + esc(family.root_name || family.name);
+  };
+
+  function familySwitcher(villages, current) {
+    var pick = document.createElement('label');
+    pick.id = 'tree-pick';
+    var shown = document.createElement('span');
+    shown.className = 'tree-pick-text';
+    var select = document.createElement('select');
+    select.id = 'family-picker';
+    select.setAttribute('aria-label', 'Family tree');
+    villages.forEach(function (v) {
+      v.families.forEach(function (f) {
+        var option = document.createElement('option');
+        option.value = f.id;
+        option.textContent = api.treeLabel(v, f);
+        if (f.id === current) {
+          option.selected = true;
+          shown.innerHTML = api.treeLabelHtml(v, f);
+        }
+        select.appendChild(option);
+      });
+    });
+    select.addEventListener('change', function () {
+      location.assign(location.pathname + api.urlFor(select.value));
+    });
+    pick.appendChild(shown);
+    pick.appendChild(select);
+    document.querySelector('#toolbar .brand').appendChild(pick);
+  }
+
+  function menuItem(label, onClick) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'menuitem');
+    b.textContent = label;
+    b.addEventListener('click', onClick);
+    document.getElementById('menu').appendChild(b);
+  }
+
+  function passwordSheet() {
+    var body = document.getElementById('sheet-body');
+    body.innerHTML = '<h3>Change password</h3><form id="pw-form" class="edit-form">' +
+      '<label>Old password<input type="password" name="old" autocomplete="current-password" required></label>' +
+      '<label>New password (6 digits)<input type="password" name="new" autocomplete="new-password" inputmode="numeric" ' +
+      'pattern="[0-9]{6}" minlength="6" maxlength="6" required></label>' +
+      '<div class="form-buttons"><button type="submit">Save</button></div>' +
+      '<p class="form-msg" role="alert"></p></form>';
+    document.getElementById('sheet').classList.remove('hidden');
+    var form = document.getElementById('pw-form');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = form.querySelector('.form-msg');
+      api.call('POST', '/me/password', { old: form.elements.old.value, 'new': form.elements['new'].value })
+        .then(function () { msg.textContent = 'Password changed.'; form.reset(); },
+              function (err) { msg.textContent = err.message; });
+    });
+  }
+
+  api.timeLeft = function (ends, nowMs) {
+    var seconds = Math.floor((new Date(ends + 'Z').getTime() - nowMs) / 1000);
+    if (seconds <= 0) return '';
+    var s = seconds % 60;
+    return Math.floor(seconds / 60) + ':' + (s < 10 ? '0' : '') + s + ' left';
+  };
+
+  function countDown(me) {
+    var who = document.getElementById('who');
+    var base = who.textContent;
+    var timer = setInterval(function () {
+      var left = api.timeLeft(me.login_ends, Date.now());
+      if (left) { who.textContent = base + ' · ' + left; return; }
+      clearInterval(timer);
+      who.textContent = base;
+      api.call('POST', '/logout', {}).catch(function () {});
+      showLogin('Your temporary login has ended.');
+    }, 1000);
+  }
+
+  function accountMenu(me) {
+    var name = me.name || me.name_hi || me.username;
+    document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
+    document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
+    if (!me.guest) menuItem('Change password', passwordSheet);
+    if (!me.guest) menuItem('Links', function () { location.assign('links.html'); });
+    if (me.is_admin) menuItem('Admin', function () { location.assign('admin.html'); });
+    menuItem('Log out', function () {
+      api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
+    });
+  }
+
+  api.start = function () {
+    api.root = api.base(location.hostname);
+    wireLogin();
+    api.call('GET', '/me').then(function (me) {
+      api.me = me;
+      return api.call('GET', '/villages').then(function (villages) {
+        api.villages = villages;
+        var id = api.pickFamily(param('family'), stored('ft-family'), me.home_family, villages);
+        if (!id) throw new Error('No family has been set up yet.');
+        api.familyId = id;
+        store('ft-family', id);
+        return api.call('GET', '/families/' + encodeURIComponent(id) + '/tree');
+      }).then(function (data) {
+        document.getElementById('login').classList.add('hidden');
+        FT.boot(data);
+        FT.init();
+        familySwitcher(api.villages, api.familyId);
+        accountMenu(me);
+        api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
+        if (me.login_ends) countDown(me);
+        api.call('GET', '/people').then(function (people) {
+          FT.otherTrees = api.otherTrees(people, api.villages, api.familyId);
+        }, function () {});
+        var person = param('person');
+        if (person) FT.openPerson(person);
+        else {
+          var grandfather = FT.grandfatherOf(me.id);
+          if (grandfather) FT.showBranch(grandfather.id);
+        }
+      });
+    }).catch(function (err) {
+      showLogin(err.status === 401 ? '' : err.message);
+    });
+  };
+})(typeof FT !== 'undefined' ? (FT.api = {}) : module.exports);
+
+(function (links) {
+  var UP = { father: 1, mother: 1, parent: 1 };
+  var DOWN = { son: 1, daughter: 1, child: 1 };
+  var state = { tab: 'people', a: null, b: null, va: null, vb: null };
+  var directory = [], villages = [], me = null;
+
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  function nameOf(p) { return p.name || p.name_hi || p.id; }
+
+  links.matches = function (people, q, limit) {
+    var needle = q.trim().toLowerCase();
+    if (!needle) return [];
+    var starts = [], inside = [];
+    people.forEach(function (p) {
+      var hay = [(p.name || '').toLowerCase(), (p.name_hi || '').toLowerCase()];
+      if (hay.some(function (h) { return h.indexOf(needle) === 0; })) starts.push(p);
+      else if (hay.some(function (h) { return h.indexOf(needle) > 0; })) inside.push(p);
+    });
+    return starts.concat(inside).slice(0, limit || 8);
+  };
+
+  links.legs = function (steps, segment) {
+    var level = 0, top = 0, highest = 0;
+    segment.forEach(function (index, i) {
+      if (i > 0) level += UP[steps[index].rel] ? 1 : DOWN[steps[index].rel] ? -1 : 0;
+      if (level > highest) { highest = level; top = i; }
+    });
+    return {
+      top: segment[top],
+      left: segment.slice(0, top).reverse(),
+      right: segment.slice(top + 1)
+    };
+  };
+
+  links.sentence = function (result, meId) {
+    if (!result.found) return 'No link found in the records.';
+    var steps = result.steps;
+    if (steps.length === 1) return 'That\'s the same person.';
+    var a = steps[0], b = steps[steps.length - 1];
+    var whose = a.id === meId ? 'your' : nameOf(a) + '\'s';
+    var hi = result.summary.hi ? ' (' + result.summary.hi + ')' : '';
+    return nameOf(b) + ' is ' + whose + ' ' + result.summary.en + hi + '.';
+  };
+
+  links.query = function (s) {
+    var parts = ['tab=' + s.tab];
+    var pair = s.tab === 'people' ? [s.a, s.b] : [s.va, s.vb];
+    if (pair[0]) parts.push('a=' + encodeURIComponent(pair[0]));
+    if (pair[1]) parts.push('b=' + encodeURIComponent(pair[1]));
+    return '?' + parts.join('&');
+  };
+
+  function api() { return FT.api; }
+
+  function param(name) {
+    var m = new RegExp('[?&]' + name + '=([^&#]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  function byId(id) {
+    for (var i = 0; i < directory.length; i++) if (directory[i].id === id) return directory[i];
+    return null;
+  }
+
+  function card(p, end) {
+    return '<div class="lk-card ' + esc(p.gender || '') + (end ? ' lk-end' : '') + '">' +
+      '<b>' + esc(nameOf(p)) + '</b>' +
+      (p.name && p.name_hi ? '<span class="lk-hi">' + esc(p.name_hi) + '</span>' : '') +
+      '<span class="lk-village">' + esc(p.village || 'Village not recorded') + '</span></div>';
+  }
+
+  function segmentHtml(steps, segment, last) {
+    var legs = links.legs(steps, segment);
+    function isEnd(i) { return i === 0 || i === last; }
+    function leg(list) {
+      return '<div class="lk-leg">' + list.map(function (i) { return card(steps[i], isEnd(i)); }).join('') + '</div>';
+    }
+    var lower = [legs.left, legs.right].filter(function (l) { return l.length; });
+    return '<div class="lk-seg">' + card(steps[legs.top], isEnd(legs.top)) +
+      (lower.length ? '<div class="lk-legs' + (lower.length > 1 ? ' two' : '') + '">' +
+        lower.map(leg).join('') + '</div>' : '') + '</div>';
+  }
+
+  function marryHtml(a, b) {
+    return '<p class="lk-marry"><b>' + esc(nameOf(a)) + '</b> <span>══ married ══</span> <b>' +
+      esc(nameOf(b)) + '</b></p>';
+  }
+
+  function chainHtml(result) {
+    var last = result.steps.length - 1;
+    return '<div class="lk-chain">' + result.segments.map(function (segment, k) {
+      return (k ? marryHtml(result.steps[segment[0] - 1], result.steps[segment[0]]) : '') +
+        segmentHtml(result.steps, segment, last);
+    }).join('') + '</div>';
+  }
+
+  function picker(slot, label, value, onPick) {
+    var p = value && byId(value);
+    slot.innerHTML = '<label class="lk-pick"><span>' + esc(label) + '</span>' +
+      '<input type="search" autocomplete="off" placeholder="Type a name" value="' + esc(p ? nameOf(p) : '') + '">' +
+      (p ? '<small>' + esc(p.village || '') + '</small>' : '') + '</label><div class="lk-results"></div>';
+    var input = slot.querySelector('input');
+    var results = slot.querySelector('.lk-results');
+    input.addEventListener('input', function () {
+      results.innerHTML = links.matches(directory, input.value).map(function (m) {
+        return '<button type="button" data-id="' + esc(m.id) + '"><b>' + esc(nameOf(m)) + '</b> ' +
+          (m.name && m.name_hi ? esc(m.name_hi) + ' ' : '') + '<span>' + esc(m.village || '—') + '</span></button>';
+      }).join('');
+    });
+    results.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-id]');
+      if (b) onPick(b.getAttribute('data-id'));
+    });
+  }
+
+  function villageSelect(label, value, blank) {
+    return '<label class="lk-pick"><span>' + esc(label) + '</span><select>' +
+      '<option value="">' + esc(blank) + '</option>' +
+      villages.map(function (v) {
+        return '<option value="' + esc(v.id) + '"' + (v.id === value ? ' selected' : '') + '>' + esc(v.name) + '</option>';
+      }).join('') + '</select></label>';
+  }
+
+  function show(html) { document.getElementById('lk-result').innerHTML = html; }
+  function fail(err) { show('<p class="lk-msg">' + esc(err.message) + '</p>'); }
+
+  function sync() {
+    history.replaceState(null, '', location.pathname + links.query(state));
+    Array.prototype.forEach.call(document.querySelectorAll('#lk-tabs [data-tab]'), function (b) {
+      b.setAttribute('aria-current', b.getAttribute('data-tab') === state.tab ? 'page' : 'false');
+    });
+  }
+
+  function renderPeople() {
+    var form = document.getElementById('lk-form');
+    form.innerHTML = '<div id="lk-a"></div><div id="lk-b"></div>';
+    picker(document.getElementById('lk-a'), 'First person', state.a, function (id) { state.a = id; renderPeople(); });
+    picker(document.getElementById('lk-b'), 'Second person', state.b, function (id) { state.b = id; renderPeople(); });
+    sync();
+    if (!state.a || !state.b) { show('<p class="lk-msg">Pick two people to see how they are linked.</p>'); return; }
+    api().call('GET', '/links/people?a=' + encodeURIComponent(state.a) + '&b=' + encodeURIComponent(state.b))
+      .then(function (r) {
+        show('<p class="lk-summary">' + esc(links.sentence(r, me.id)) + '</p>' +
+          (r.found && r.steps.length > 1 ? chainHtml(r) : ''));
+      }, fail);
+  }
+
+  function personLink(p) {
+    return '<a href="' + links.query({ tab: 'people', a: me.id, b: p.id }) + '">' + esc(nameOf(p)) + '</a>';
+  }
+
+  function coupleHtml(c) {
+    return '<li>' + personLink(c.husband) + ' (' + esc(c.husband.village) + ') married ' +
+      personLink(c.wife) + ' (' + esc(c.wife.village) + ')</li>';
+  }
+
+  function renderVillages() {
+    var form = document.getElementById('lk-form');
+    form.innerHTML = villageSelect('Village', state.va, 'Choose a village') +
+      villageSelect('Linked to', state.vb, 'Any village');
+    var selects = form.querySelectorAll('select');
+    selects[0].addEventListener('change', function () { state.va = this.value || null; state.vb = null; renderVillages(); });
+    selects[1].addEventListener('change', function () { state.vb = this.value || null; renderVillages(); });
+    sync();
+    if (!state.va) { show('<p class="lk-msg">Pick a village to see which villages it is linked to.</p>'); return; }
+    if (!state.vb) {
+      api().call('GET', '/villages/' + encodeURIComponent(state.va) + '/links').then(function (list) {
+        show(list.length ? '<ul class="lk-list">' + list.map(function (v) {
+          return '<li><button type="button" data-village="' + esc(v.village_id) + '">' + esc(v.village) +
+            '</button> · ' + v.marriages + (v.marriages === 1 ? ' marriage' : ' marriages') + '</li>';
+        }).join('') + '</ul>' : '<p class="lk-msg">No marriages with other villages are recorded.</p>');
+      }, fail);
+      return;
+    }
+    api().call('GET', '/links/villages?a=' + encodeURIComponent(state.va) + '&b=' + encodeURIComponent(state.vb))
+      .then(function (r) {
+        if (r.couples.length) { show('<ul class="lk-list">' + r.couples.map(coupleHtml).join('') + '</ul>'); return; }
+        if (!r.chain) { show('<p class="lk-msg">These villages are not linked in the records.</p>'); return; }
+        show('<p class="lk-summary">No direct marriage. Linked through: ' +
+          esc([r.chain[0].from.village].concat(r.chain.map(function (h) { return h.to.village; })).join(' → ')) +
+          '</p><ul class="lk-list">' + r.chain.map(function (h) { return coupleHtml(h.couple); }).join('') + '</ul>');
+      }, fail);
+  }
+
+  function render() {
+    if (state.tab === 'villages') renderVillages();
+    else renderPeople();
+  }
+
+  links.start = function () {
+    api().root = api().base(location.hostname);
+    state.tab = param('tab') === 'villages' ? 'villages' : 'people';
+    api().call('GET', '/me').then(function (who) {
+      me = who;
+      if (me.guest) { show('<p class="lk-msg">Guest logins cannot see links.</p>'); return null; }
+      if (state.tab === 'villages') { state.va = param('a'); state.vb = param('b'); }
+      else { state.a = param('a') || me.id; state.b = param('b'); }
+      return Promise.all([api().call('GET', '/directory'), api().call('GET', '/villages')]).then(function (r) {
+        directory = r[0];
+        villages = r[1].slice().sort(function (x, y) { return x.name.localeCompare(y.name); });
+        document.getElementById('lk-tabs').addEventListener('click', function (e) {
+          var b = e.target.closest('[data-tab]');
+          if (!b) return;
+          state.tab = b.getAttribute('data-tab');
+          render();
+        });
+        document.getElementById('lk-result').addEventListener('click', function (e) {
+          var b = e.target.closest('[data-village]');
+          if (!b) return;
+          state.vb = b.getAttribute('data-village');
+          renderVillages();
+        });
+        render();
+      });
+    }).catch(function (err) {
+      if (err.status === 401) location.assign('./');
+      else fail(err);
+    });
+  };
+})(typeof FT !== 'undefined' ? (FT.links = {}) : module.exports);
+
+FT.links.start();</script>
+</body>
+</html>

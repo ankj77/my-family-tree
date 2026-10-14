@@ -2,9 +2,10 @@
 import os
 import sys
 
-from family_tree.render import WEB_DIR, render_admin, render_index
+from family_tree.render import WEB_DIR, render_admin, render_index, render_links
 
-PAGES = (("index.html", render_index), ("family-tree.html", render_index), ("admin.html", render_admin))
+PAGES = (("index.html", render_index), ("family-tree.html", render_index), ("admin.html", render_admin),
+         ("links.html", render_links))
 
 
 def main() -> int:

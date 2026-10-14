@@ -54,6 +54,7 @@ def summary_json(summary: Summary) -> dict:
 
 APP_SCRIPTS = ["app.js"] + ["views/%s" % name for name in VIEW_FILES] + ["filters.js", "api.js", "edit.js"]
 ADMIN_SCRIPTS = ["api.js", "admin.js"]
+LINKS_SCRIPTS = ["api.js", "links.js"]
 
 
 def render_page(template: str, scripts, before: str = "", after: str = "") -> str:
@@ -71,3 +72,7 @@ def render_index() -> str:
 
 def render_admin() -> str:
     return render_page("admin.html", ADMIN_SCRIPTS, before="var FT = {};", after="FT.admin.start();")
+
+
+def render_links() -> str:
+    return render_page("links.html", LINKS_SCRIPTS, before="var FT = {};", after="FT.links.start();")

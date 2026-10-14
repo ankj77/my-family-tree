@@ -235,6 +235,7 @@
     document.getElementById('who').textContent = name + ' · ' + api.roleText(me);
     document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
     if (!me.guest) menuItem('Change password', passwordSheet);
+    if (!me.guest) menuItem('Links', function () { location.assign('links.html'); });
     if (me.is_admin) menuItem('Admin', function () { location.assign('admin.html'); });
     menuItem('Log out', function () {
       api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });

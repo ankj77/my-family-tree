@@ -1,0 +1,118 @@
+import unittest
+
+from family_tree import kinship, links
+from family_tree.graph import Graph
+from tests.sample import person, sample_graph, sample_rows
+
+
+def rels(steps):
+    return [s["rel"] for s in steps]
+
+
+def ids(steps):
+    return [s["id"] for s in steps]
+
+
+class TestPersonPath(unittest.TestCase):
+    def setUp(self):
+        self.graph = sample_graph()
+
+    def test_uncle_through_grandfather(self):
+        steps = links.person_path(self.graph, "amit", "mohan")
+        self.assertEqual(ids(steps), ["amit", "jagdish", "ram", "mohan"])
+        self.assertEqual(rels(steps), [None, "father", "father", "son"])
+
+    def test_crosses_a_marriage_into_another_village(self):
+        steps = links.person_path(self.graph, "bash", "mohan")
+        self.assertEqual(rels(steps), [None, "daughter", "husband", "father", "son"])
+        self.assertEqual(links.segments(steps), [[0, 1], [2, 3, 4]])
+
+    def test_same_person(self):
+        self.assertEqual(links.person_path(self.graph, "amit", "amit"), [{"id": "amit", "rel": None}])
+
+    def test_no_link(self):
+        rows = sample_rows()
+        rows["people"].append(person("alone", gender="male"))
+        graph = Graph(rows["people"], rows["marriages"], rows["families"], rows["villages"])
+        self.assertIsNone(links.person_path(graph, "amit", "alone"))
+
+    def test_unknown_person(self):
+        self.assertIsNone(links.person_path(self.graph, "amit", "nobody"))
+
+    def test_equal_length_prefers_fewer_marriages(self):
+        people = [
+            person("a", father_id="f", mother_id="m", gender="male"),
+            person("f", gender="male"),
+            person("m", mother_id="t", gender="female"),
+            person("t", gender="female"),
+        ]
+        graph = Graph(people, [("f", "t")], [], [])
+        self.assertEqual(rels(links.person_path(graph, "a", "t")), [None, "mother", "mother"])
+
+    def test_neutral_words_without_gender(self):
+        people = [person("kid", father_id="dad"), person("dad")]
+        graph = Graph(people, [], [], [])
+        self.assertEqual(rels(links.person_path(graph, "kid", "dad")), [None, "parent"])
+
+
+class TestVillages(unittest.TestCase):
+    def setUp(self):
+        self.graph = sample_graph()
+
+    def test_birth_village(self):
+        self.assertEqual(links.birth_village(self.graph, "rashmi"), "pugthala")
+        self.assertEqual(links.birth_village(self.graph, "sita"), "kakroi")
+        self.assertEqual(links.birth_village(self.graph, "jagdish"), "bakheta")
+        self.assertIsNone(links.birth_village(self.graph, "vikram"))
+
+    def test_village_links_skip_unknown_and_same_village(self):
+        self.assertEqual(links.village_links(self.graph, "bakheta"),
+                         [{"village_id": "kakroi", "marriages": 1}, {"village_id": "pugthala", "marriages": 1}])
+        self.assertEqual(links.village_links(self.graph, "kakroi"), [{"village_id": "bakheta", "marriages": 1}])
+
+    def test_direct_couples(self):
+        pair = links.village_pair(self.graph, "pugthala", "bakheta")
+        self.assertEqual(pair, {"couples": [("jagdish", "rashmi")], "chain": None})
+
+    def test_chain_through_another_village(self):
+        pair = links.village_pair(self.graph, "pugthala", "kakroi")
+        self.assertEqual(pair["couples"], [])
+        self.assertEqual(pair["chain"], [
+            {"from": "pugthala", "to": "bakheta", "couple": ("jagdish", "rashmi")},
+            {"from": "bakheta", "to": "kakroi", "couple": ("mohan", "sita")},
+        ])
+
+    def test_not_linked(self):
+        rows = sample_rows()
+        rows["villages"].append({"id": "far", "name": "Far", "district": None, "state": None})
+        graph = Graph(rows["people"], rows["marriages"], rows["families"], rows["villages"])
+        self.assertEqual(links.village_pair(graph, "bakheta", "far"), {"couples": [], "chain": None})
+
+
+class TestKinship(unittest.TestCase):
+    def setUp(self):
+        self.graph = sample_graph()
+
+    def describe(self, a, b):
+        return kinship.describe(links.person_path(self.graph, a, b))
+
+    def test_close_relations_get_hindi(self):
+        self.assertEqual(self.describe("amit", "mohan"), {"en": "father's brother", "hi": "चाचा / ताऊ जी"})
+        self.assertEqual(self.describe("amit", "bash"), {"en": "mother's father", "hi": "नाना जी"})
+        self.assertEqual(self.describe("amit", "sita"), {"en": "father's brother's wife", "hi": "चाची / ताई जी"})
+        self.assertEqual(self.describe("amit", "neha"), {"en": "sister", "hi": "बहन"})
+        self.assertEqual(self.describe("neha", "vikram"), {"en": "husband", "hi": "पति"})
+
+    def test_long_path_has_no_hindi(self):
+        self.assertEqual(self.describe("bash", "mohan"), {"en": "daughter's husband's brother", "hi": None})
+
+    def test_same_person(self):
+        self.assertEqual(self.describe("amit", "amit"), {"en": None, "hi": None})
+
+    def test_neutral_sibling(self):
+        steps = [{"id": "a", "rel": None}, {"id": "p", "rel": "father"}, {"id": "s", "rel": "child"}]
+        self.assertEqual(kinship.describe(steps)["en"], "sibling")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -272,6 +272,9 @@ FT.boot = function (data) {
     }
     if (p.note) rows += '<dt>Note</dt><dd>' + esc(p.note) + '</dd>';
     if (rows) h += '<dl>' + rows + '</dl>';
+    if (FT.api && FT.api.me && !FT.api.me.guest && FT.api.me.id !== p.id) {
+      h += '<p><a class="sheet-linked" href="links.html?tab=people&b=' + encodeURIComponent(p.id) + '">How am I linked?</a></p>';
+    }
 
     var rel = '';
     var parent = p === owner ? FT.parentOf[owner.id] : null;

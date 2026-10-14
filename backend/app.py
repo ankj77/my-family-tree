@@ -8,7 +8,7 @@ from flask import Flask, g, jsonify, request
 from werkzeug.exceptions import HTTPException
 
 from backend import db
-from family_tree import auth, naming, rules, views
+from family_tree import auth, kinship, links, naming, rules, views
 from family_tree.permissions import RANK, Access
 from family_tree.rules import RuleError, display
 
@@ -372,6 +372,78 @@ def list_people():
          "has_account": pid in graph.account_ids}
         for pid, row in graph.people.items() if access.can_read_person(pid)
     ])
+
+
+def member_graph():
+    actor, graph, _ = context()
+    if is_guest(actor):
+        raise ApiError(403, "Guest logins cannot see links")
+    return actor, graph
+
+
+def link_person(graph, pid):
+    row = graph.people[pid]
+    village = links.birth_village(graph, pid) or graph.village_of(pid)
+    return {"id": pid, "name": row.get("name"), "name_hi": row.get("name_hi"), "gender": row.get("gender"),
+            "life": row.get("life"), "village_id": village,
+            "village": graph.villages[village]["name"] if village in graph.villages else None}
+
+
+def known_person(graph, pid):
+    if pid not in graph.people:
+        raise ApiError(404, "No such person")
+    return pid
+
+
+def known_village(graph, vid):
+    if vid not in graph.villages:
+        raise ApiError(404, "No such village")
+    return vid
+
+
+def village_ref(graph, vid):
+    return {"village_id": vid, "village": graph.villages[vid]["name"]}
+
+
+def couple_json(graph, couple):
+    return {"husband": link_person(graph, couple[0]), "wife": link_person(graph, couple[1])}
+
+
+@app.get("/directory")
+def directory():
+    _, graph = member_graph()
+    return jsonify([link_person(graph, pid) for pid in sorted(graph.people)])
+
+
+@app.get("/links/people")
+def link_people():
+    _, graph = member_graph()
+    a = known_person(graph, request.args.get("a"))
+    b = known_person(graph, request.args.get("b"))
+    steps = links.person_path(graph, a, b)
+    if steps is None:
+        return jsonify({"found": False, "steps": [], "segments": [], "summary": kinship.describe(None)})
+    return jsonify({"found": True, "steps": [dict(link_person(graph, s["id"]), rel=s["rel"]) for s in steps],
+                    "segments": links.segments(steps), "summary": kinship.describe(steps)})
+
+
+@app.get("/villages/<vid>/links")
+def village_link_list(vid):
+    _, graph = member_graph()
+    known_village(graph, vid)
+    return jsonify([dict(village_ref(graph, row["village_id"]), marriages=row["marriages"])
+                    for row in links.village_links(graph, vid)])
+
+
+@app.get("/links/villages")
+def link_villages():
+    _, graph = member_graph()
+    pair = links.village_pair(graph, known_village(graph, request.args.get("a")),
+                              known_village(graph, request.args.get("b")))
+    chain = pair["chain"] and [
+        {"from": village_ref(graph, hop["from"]), "to": village_ref(graph, hop["to"]),
+         "couple": couple_json(graph, hop["couple"])} for hop in pair["chain"]]
+    return jsonify({"couples": [couple_json(graph, c) for c in pair["couples"]], "chain": chain})
 
 
 @app.get("/families/<family_id>/tree")
