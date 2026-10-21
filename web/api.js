@@ -223,7 +223,6 @@
         option.selected = f.id === current;
         select.appendChild(option);
       });
-      select.hidden = v.families.length < 2;
     }
 
     place.addEventListener('focus', function () {

@@ -258,7 +258,6 @@
   #village-picker{width:11em;max-width:100%;color:var(--name-ink);font-weight:700;}
   #village-picker::placeholder{color:var(--ink-muted);font-weight:400;}
   #family-picker{max-width:100%;cursor:pointer;}
-  #family-picker[hidden]{display:none;}
   #village-picker:focus,#family-picker:focus{outline:2px solid var(--hl);outline-offset:1px;}
   #sheet .edit-form{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
   #sheet .edit-form label[hidden]{display:none;}
@@ -312,7 +311,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     <button id="login-enter" type="submit">Log in</button>
     <button class="install-app hidden" type="button">Install app on this phone</button>
     <p id="login-msg" role="alert"></p>
-    <p class="login-version">Version 1.0.3</p>
+    <p class="login-version">Version 1.0.4</p>
   </form>
 </div>
 <div id="toolbar">
@@ -359,7 +358,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
       <button id="expand-all" type="button">Expand all</button>
     </div>
   </div>
-  <p id="ornament-motto">Generations grow,<br>roots stay forever<small class="motto-version">Version 1.0.3</small></p>
+  <p id="ornament-motto">Generations grow,<br>roots stay forever<small class="motto-version">Version 1.0.4</small></p>
   <p id="ornament-story">Our Roots<br>Our Family<br>Our Story</p>
 </div>
 <div id="unlinked"></div>
@@ -2264,7 +2263,6 @@ FT.views.chart = {
         option.selected = f.id === current;
         select.appendChild(option);
       });
-      select.hidden = v.families.length < 2;
     }
 
     place.addEventListener('focus', function () {
@@ -2350,7 +2348,7 @@ FT.views.chart = {
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.0.3';
+    version.textContent = 'Version 1.0.4';
     document.getElementById('menu').appendChild(version);
   }
 

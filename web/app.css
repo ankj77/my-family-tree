@@ -248,7 +248,6 @@
   #village-picker{width:11em;max-width:100%;color:var(--name-ink);font-weight:700;}
   #village-picker::placeholder{color:var(--ink-muted);font-weight:400;}
   #family-picker{max-width:100%;cursor:pointer;}
-  #family-picker[hidden]{display:none;}
   #village-picker:focus,#family-picker:focus{outline:2px solid var(--hl);outline-offset:1px;}
   #sheet .edit-form{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
   #sheet .edit-form label[hidden]{display:none;}

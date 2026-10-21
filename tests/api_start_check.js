@@ -99,7 +99,7 @@ async function loggedInBoots() {
   assert.strictEqual(brand.children[0].children[0].id, 'village-picker');
   assert.strictEqual(brand.children[0].children[0].value, 'Village');
   assert.strictEqual(brand.children[0].children[2].id, 'family-picker');
-  assert.strictEqual(brand.children[0].children[2].hidden, true);
+  assert.strictEqual(brand.children[0].children[2].children[0].textContent, 'Family');
   var two = [{ name: 'Bakheta', families: [{ id: 'a' }, { id: 'b' }] }, { name: 'Empty', families: [] }];
   assert.strictEqual(FT.api.villageNamed(two, ' bakheta '), two[0]);
   assert.strictEqual(FT.api.villageNamed(two, 'Empty'), null);
