@@ -1032,11 +1032,12 @@ FT.boot = function (data) {
     var needle = norm(q);
     if (!needle) return [];
     var groups = FT.placeGroups();
-    return Object.keys(groups).map(function (k) { return groups[k]; })
-      .filter(function (g) { return norm(g.name).indexOf(needle) >= 0; })
+    return Object.keys(groups).map(function (k) {
+      groups[k].rank = rankIn(needle, [groups[k].name]);
+      return groups[k];
+    }).filter(function (g) { return g.rank !== null; })
       .sort(function (a, b) {
-        return (norm(b.name).indexOf(needle) === 0) - (norm(a.name).indexOf(needle) === 0) ||
-          a.name.localeCompare(b.name) || a.kind.localeCompare(b.kind);
+        return a.rank - b.rank || a.name.localeCompare(b.name) || a.kind.localeCompare(b.kind);
       });
   };
 
@@ -1137,15 +1138,16 @@ FT.boot = function (data) {
       var seen = {};
       [p.village, p.home_village].forEach(function (name) {
         var key = norm(name);
-        if (!key || seen[key] || key.indexOf(needle) < 0) return;
+        var rank = key && !seen[key] ? rankIn(needle, [key]) : null;
+        if (rank === null) return;
         seen[key] = true;
-        (groups[key] || (groups[key] = { name: name, people: [] })).people.push(p);
+        (groups[key] || (groups[key] = { name: name, rank: rank, people: [] })).people.push(p);
       });
     });
-    return Object.keys(groups).sort().map(function (k) {
+    return Object.keys(groups).map(function (k) {
       groups[k].people.sort(function (a, b) { return FT.label(a)[0].localeCompare(FT.label(b)[0]); });
       return groups[k];
-    });
+    }).sort(function (a, b) { return a.rank - b.rank || a.name.localeCompare(b.name); });
   };
 
   FT.otherMatches = function (q, limit) {
@@ -1220,13 +1222,6 @@ FT.boot = function (data) {
     if (res.total > res.list.length) {
       html += '<p class="sg-more">' + (res.total - res.list.length) + ' more…</p>';
     }
-    if (others.length) {
-      html += '<p class="sg-head">Other family trees</p>' + others.map(function (m) {
-        return '<button class="sg-row" data-other="' + esc(m.person.id) + '" data-url="' + esc(m.person.url || '') + '">' +
-          '<span class="sg-name">' + esc(m.text) + '</span>' +
-          '<span class="sg-hint">' + esc(m.person.tree) + '</span></button>';
-      }).join('');
-    }
     villages.forEach(function (v) {
       html += '<p class="sg-head">From ' + esc(v.name) + ' · ' + v.people.length +
         (v.people.length === 1 ? ' person' : ' people') + '</p>' + v.people.map(function (p) {
@@ -1237,6 +1232,13 @@ FT.boot = function (data) {
           '<span class="sg-hint">' + esc(p.tree) + '</span></button>';
       }).join('');
     });
+    if (others.length) {
+      html += '<p class="sg-head">Other family trees</p>' + others.map(function (m) {
+        return '<button class="sg-row" data-other="' + esc(m.person.id) + '" data-url="' + esc(m.person.url || '') + '">' +
+          '<span class="sg-name">' + esc(m.text) + '</span>' +
+          '<span class="sg-hint">' + esc(m.person.tree) + '</span></button>';
+      }).join('');
+    }
     suggest.innerHTML = html;
     placeSuggest();
     suggest.classList.remove('hidden');
