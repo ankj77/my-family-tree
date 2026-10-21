@@ -57,6 +57,7 @@
     border:1px solid var(--edge);border-radius:10px;box-shadow:var(--shadow-card);
     padding:6px;z-index:40;}
   #menu.hidden{display:none;}
+  .menu-version{margin:4px 12px 6px;font-size:12px;color:var(--ink-muted);}
   #menu button{display:block;width:100%;min-height:44px;text-align:left;padding:8px 12px;
     background:none;border:0;border-radius:7px;font-family:var(--font);font-size:15px;
     color:var(--ink);cursor:pointer;}
@@ -650,6 +651,10 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     menuItem('Log out', function () {
       api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
     });
+    var version = document.createElement('p');
+    version.className = 'menu-version';
+    version.textContent = 'Version 1.0.0';
+    document.getElementById('menu').appendChild(version);
   }
 
   api.linkTreeUrl = function (a, b) {

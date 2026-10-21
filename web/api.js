@@ -307,6 +307,10 @@
     menuItem('Log out', function () {
       api.call('POST', '/logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
     });
+    var version = document.createElement('p');
+    version.className = 'menu-version';
+    version.textContent = 'Version __VERSION__';
+    document.getElementById('menu').appendChild(version);
   }
 
   api.linkTreeUrl = function (a, b) {

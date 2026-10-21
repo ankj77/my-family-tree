@@ -106,7 +106,7 @@ async function loggedInBoots() {
   assert.strictEqual(FT.api.villageNamed(two, 'Bak'), null);
   assert.strictEqual(elements.who.textContent, 'Asha · Family reader');
   assert.strictEqual(elements.avatar.textContent, 'A');
-  assert.deepStrictEqual(menuLabels(), ['Change password', 'Links', 'Log out']);
+  assert.deepStrictEqual(menuLabels(), ['Change password', 'Links', 'Log out', 'Version __VERSION__']);
   assert.ok(elements.login.classList.contains('hidden'));
   assert.deepStrictEqual(opened, ['branch:gf']);
   assert.strictEqual(store['ft-family'], 'f1');
@@ -117,7 +117,7 @@ async function adminSeesAdminItem() {
   elements = {};
   FT.api.start();
   await settle();
-  assert.deepStrictEqual(menuLabels(), ['Change password', 'Links', 'Admin', 'Log out']);
+  assert.deepStrictEqual(menuLabels(), ['Change password', 'Links', 'Admin', 'Log out', 'Version __VERSION__']);
   assert.strictEqual(elements.who.textContent, 'Bhanu · Global admin');
 }
 

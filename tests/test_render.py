@@ -19,6 +19,12 @@ class TestRenderIndex(unittest.TestCase):
         self.assertTrue(self.html.rstrip().endswith("</html>"))
         self.assertIn("FT.api.start();", self.html)
 
+    def test_stamps_the_version(self):
+        from family_tree.render import version
+        self.assertRegex(version(), r"^\d+\.\d+\.\d+$")
+        self.assertIn("Version %s" % version(), self.html)
+        self.assertNotIn("__VERSION__", self.html)
+
     def test_carries_no_people(self):
         self.assertNotIn("Ram Krishan", self.html)
         self.assertNotIn("tree-data", self.html)

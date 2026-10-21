@@ -3,7 +3,8 @@ import os
 from family_tree.model import Person
 from family_tree.tree import Summary
 
-WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "web")
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WEB_DIR = os.path.join(ROOT_DIR, "web")
 VIEW_FILES = ("poster.js", "chart.js")
 
 
@@ -63,7 +64,13 @@ def render_page(template: str, scripts, before: str = "", after: str = "") -> st
         _read(template)
         .replace("/*__CSS__*/", _read("app.css"))
         .replace("/*__APP_JS__*/", "\n".join(p for p in parts if p))
+        .replace("__VERSION__", version())
     )
+
+
+def version() -> str:
+    with open(os.path.join(ROOT_DIR, "VERSION"), "r", encoding="utf-8") as f:
+        return f.read().strip()
 
 
 def render_index() -> str:

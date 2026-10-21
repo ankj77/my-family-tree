@@ -33,6 +33,7 @@ is not running.
 ## Deploy
 
 - Pages: `.venv/bin/python build.py`, commit, push to `main`.
+- Version: bump `VERSION` (major.minor.patch) with every change before building; it shows at the bottom of the account menu.
 - API: `vercel deploy --prod --force` (`--force` skips the build cache, which can serve old code) (env: `DATABASE_URL`, `ALLOWED_ORIGIN`, `COOKIE_DOMAIN`).
 - Check: `.venv/bin/python db/smoke.py https://api.jainparivar.online <username> <password>`.
 
