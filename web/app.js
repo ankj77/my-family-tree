@@ -1035,7 +1035,7 @@ FT.boot = function (data) {
     return Object.keys(groups).map(function (k) {
       groups[k].rank = rankIn(needle, [groups[k].name]);
       return groups[k];
-    }).filter(function (g) { return g.rank !== null; })
+    }).filter(function (g) { return g.rank !== null && !(g.kind === 'origin' && FT.directory.length); })
       .sort(function (a, b) {
         return a.rank - b.rank || a.name.localeCompare(b.name) || a.kind.localeCompare(b.kind);
       });
