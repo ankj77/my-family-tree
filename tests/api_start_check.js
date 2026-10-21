@@ -104,6 +104,12 @@ async function loggedInBoots() {
   assert.strictEqual(FT.api.villageNamed(two, ' bakheta '), two[0]);
   assert.strictEqual(FT.api.villageNamed(two, 'Empty'), null);
   assert.strictEqual(FT.api.villageNamed(two, 'Bak'), null);
+  var three = [{ name: 'Obra', families: [{ id: 'o' }] }, { name: 'Bakheta', families: [{ id: 'b' }] },
+               { name: 'Bal Pabana', families: [{ id: 'p' }] }, { name: 'Empty', families: [] }];
+  var names = function (q) { return FT.api.villagesMatching(three, q).map(function (v) { return v.name; }); };
+  assert.deepStrictEqual(names(''), ['Bakheta', 'Bal Pabana', 'Obra']);
+  assert.deepStrictEqual(names('b'), ['Bakheta', 'Bal Pabana', 'Obra']);
+  assert.deepStrictEqual(names('ab'), ['Bal Pabana']);
   assert.strictEqual(elements.who.textContent, 'Asha · Family reader');
   assert.strictEqual(elements.avatar.textContent, 'A');
   assert.deepStrictEqual(menuLabels(), ['Change password', 'Links', 'Log out', 'Version __VERSION__']);

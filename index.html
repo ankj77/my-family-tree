@@ -252,7 +252,13 @@
   #login-form .pass-wrap input{margin-top:0;padding-right:72px;}
   #login-show{position:absolute;right:2px;top:2px;bottom:2px;min-width:64px;border:0;background:transparent;
     color:var(--hl);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);}
-  #tree-pick{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;max-width:100%;}
+  #tree-pick{position:relative;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;max-width:100%;}
+  #village-list{position:absolute;left:0;top:calc(100% + 4px);z-index:30;min-width:11em;max-height:50vh;overflow-y:auto;
+    background:var(--card);border:1px solid var(--edge);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);padding:4px 0;}
+  #village-list.hidden{display:none;}
+  .village-option{display:block;width:100%;min-height:40px;padding:6px 12px;border:0;background:transparent;
+    text-align:left;font-size:15px;font-family:var(--font);color:var(--ink);cursor:pointer;}
+  .village-option:hover,.village-option.on{background:var(--canvas);}
   #village-picker,#family-picker{min-height:40px;padding:0 12px;border:1px solid var(--edge);border-radius:8px;
     background:var(--card);color:var(--ink);font-size:16px;font-family:var(--font);box-sizing:border-box;}
   #village-picker{width:11em;max-width:100%;color:var(--name-ink);font-weight:700;}
@@ -311,7 +317,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     <button id="login-enter" type="submit">Log in</button>
     <button class="install-app hidden" type="button">Install app on this phone</button>
     <p id="login-msg" role="alert"></p>
-    <p class="login-version">Version 1.0.4</p>
+    <p class="login-version">Version 1.0.5</p>
   </form>
 </div>
 <div id="toolbar">
@@ -358,7 +364,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
       <button id="expand-all" type="button">Expand all</button>
     </div>
   </div>
-  <p id="ornament-motto">Generations grow,<br>roots stay forever<small class="motto-version">Version 1.0.4</small></p>
+  <p id="ornament-motto">Generations grow,<br>roots stay forever<small class="motto-version">Version 1.0.5</small></p>
   <p id="ornament-story">Our Roots<br>Our Family<br>Our Story</p>
 </div>
 <div id="unlinked"></div>
@@ -2220,25 +2226,33 @@ FT.views.chart = {
     })[0] || null;
   };
 
+  api.villagesMatching = function (villages, q) {
+    var key = String(q || '').trim().toLowerCase();
+    return villages.filter(function (v) {
+      return v.families.length && v.name.toLowerCase().indexOf(key) >= 0;
+    }).sort(function (a, b) {
+      return (b.name.toLowerCase().indexOf(key) === 0) - (a.name.toLowerCase().indexOf(key) === 0) ||
+        a.name.localeCompare(b.name);
+    });
+  };
+
   function familySwitcher(villages, current) {
     var pick = document.createElement('div');
     pick.id = 'tree-pick';
     var place = document.createElement('input');
     place.id = 'village-picker';
-    place.setAttribute('list', 'village-list');
     place.setAttribute('autocomplete', 'off');
     place.setAttribute('aria-label', 'Village');
-    var list = document.createElement('datalist');
+    place.setAttribute('aria-controls', 'village-list');
+    var list = document.createElement('div');
     list.id = 'village-list';
+    list.setAttribute('role', 'listbox');
+    list.classList.add('hidden');
     var select = document.createElement('select');
     select.id = 'family-picker';
     select.setAttribute('aria-label', 'Family tree');
-    var chosen = null;
+    var chosen = null, shown = [], active = -1;
     villages.forEach(function (v) {
-      if (!v.families.length) return;
-      var option = document.createElement('option');
-      option.value = v.name;
-      list.appendChild(option);
       v.families.forEach(function (f) { if (f.id === current) chosen = v; });
     });
 
@@ -2265,19 +2279,62 @@ FT.views.chart = {
       });
     }
 
+    function showList() {
+      shown = api.villagesMatching(villages, place.value);
+      list.innerHTML = '';
+      shown.forEach(function (v, i) {
+        var option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'village-option' + (i === active ? ' on' : '');
+        option.setAttribute('role', 'option');
+        option.textContent = v.name;
+        option.addEventListener('mousedown', function (e) { e.preventDefault(); choose(v); });
+        list.appendChild(option);
+      });
+      if (shown.length) list.classList.remove('hidden');
+      else list.classList.add('hidden');
+      if (active >= 0 && list.children[active] && list.children[active].scrollIntoView) {
+        list.children[active].scrollIntoView({ block: 'nearest' });
+      }
+    }
+
+    function hideList() {
+      list.classList.add('hidden');
+      active = -1;
+    }
+
+    function choose(v) {
+      hideList();
+      if (v.families.length === 1) { place.value = v.name; go(v.families[0].id); return; }
+      showFamilies(v);
+      place.blur();
+      select.focus();
+    }
+
     place.addEventListener('focus', function () {
       place.placeholder = place.value || 'Village';
       place.value = '';
+      active = -1;
+      showList();
+    });
+    place.addEventListener('input', function () {
+      active = -1;
+      showList();
+    });
+    place.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' && shown.length) {
+        e.preventDefault(); active = (active + 1) % shown.length; showList();
+      } else if (e.key === 'ArrowUp' && shown.length) {
+        e.preventDefault(); active = (active <= 0 ? shown.length : active) - 1; showList();
+      } else if (e.key === 'Enter' && shown.length) {
+        e.preventDefault(); choose(shown[active >= 0 ? active : 0]);
+      } else if (e.key === 'Escape') {
+        place.blur();
+      }
     });
     place.addEventListener('blur', function () {
-      if (!place.value && chosen) place.value = chosen.name;
-    });
-    place.addEventListener('change', function () {
-      var v = api.villageNamed(villages, place.value);
-      if (!v) { if (place.value && chosen) place.value = chosen.name; return; }
-      if (v.families.length === 1) { go(v.families[0].id); return; }
-      showFamilies(v);
-      select.focus();
+      hideList();
+      if (chosen) place.value = chosen.name;
     });
     select.addEventListener('change', function () { go(select.value); });
 
@@ -2348,7 +2405,7 @@ FT.views.chart = {
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.0.4';
+    version.textContent = 'Version 1.0.5';
     document.getElementById('menu').appendChild(version);
   }
 

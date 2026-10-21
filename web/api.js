@@ -180,25 +180,33 @@
     })[0] || null;
   };
 
+  api.villagesMatching = function (villages, q) {
+    var key = String(q || '').trim().toLowerCase();
+    return villages.filter(function (v) {
+      return v.families.length && v.name.toLowerCase().indexOf(key) >= 0;
+    }).sort(function (a, b) {
+      return (b.name.toLowerCase().indexOf(key) === 0) - (a.name.toLowerCase().indexOf(key) === 0) ||
+        a.name.localeCompare(b.name);
+    });
+  };
+
   function familySwitcher(villages, current) {
     var pick = document.createElement('div');
     pick.id = 'tree-pick';
     var place = document.createElement('input');
     place.id = 'village-picker';
-    place.setAttribute('list', 'village-list');
     place.setAttribute('autocomplete', 'off');
     place.setAttribute('aria-label', 'Village');
-    var list = document.createElement('datalist');
+    place.setAttribute('aria-controls', 'village-list');
+    var list = document.createElement('div');
     list.id = 'village-list';
+    list.setAttribute('role', 'listbox');
+    list.classList.add('hidden');
     var select = document.createElement('select');
     select.id = 'family-picker';
     select.setAttribute('aria-label', 'Family tree');
-    var chosen = null;
+    var chosen = null, shown = [], active = -1;
     villages.forEach(function (v) {
-      if (!v.families.length) return;
-      var option = document.createElement('option');
-      option.value = v.name;
-      list.appendChild(option);
       v.families.forEach(function (f) { if (f.id === current) chosen = v; });
     });
 
@@ -225,19 +233,62 @@
       });
     }
 
+    function showList() {
+      shown = api.villagesMatching(villages, place.value);
+      list.innerHTML = '';
+      shown.forEach(function (v, i) {
+        var option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'village-option' + (i === active ? ' on' : '');
+        option.setAttribute('role', 'option');
+        option.textContent = v.name;
+        option.addEventListener('mousedown', function (e) { e.preventDefault(); choose(v); });
+        list.appendChild(option);
+      });
+      if (shown.length) list.classList.remove('hidden');
+      else list.classList.add('hidden');
+      if (active >= 0 && list.children[active] && list.children[active].scrollIntoView) {
+        list.children[active].scrollIntoView({ block: 'nearest' });
+      }
+    }
+
+    function hideList() {
+      list.classList.add('hidden');
+      active = -1;
+    }
+
+    function choose(v) {
+      hideList();
+      if (v.families.length === 1) { place.value = v.name; go(v.families[0].id); return; }
+      showFamilies(v);
+      place.blur();
+      select.focus();
+    }
+
     place.addEventListener('focus', function () {
       place.placeholder = place.value || 'Village';
       place.value = '';
+      active = -1;
+      showList();
+    });
+    place.addEventListener('input', function () {
+      active = -1;
+      showList();
+    });
+    place.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' && shown.length) {
+        e.preventDefault(); active = (active + 1) % shown.length; showList();
+      } else if (e.key === 'ArrowUp' && shown.length) {
+        e.preventDefault(); active = (active <= 0 ? shown.length : active) - 1; showList();
+      } else if (e.key === 'Enter' && shown.length) {
+        e.preventDefault(); choose(shown[active >= 0 ? active : 0]);
+      } else if (e.key === 'Escape') {
+        place.blur();
+      }
     });
     place.addEventListener('blur', function () {
-      if (!place.value && chosen) place.value = chosen.name;
-    });
-    place.addEventListener('change', function () {
-      var v = api.villageNamed(villages, place.value);
-      if (!v) { if (place.value && chosen) place.value = chosen.name; return; }
-      if (v.families.length === 1) { go(v.families[0].id); return; }
-      showFamilies(v);
-      select.focus();
+      hideList();
+      if (chosen) place.value = chosen.name;
     });
     select.addEventListener('change', function () { go(select.value); });
 
