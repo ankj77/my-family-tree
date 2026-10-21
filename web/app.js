@@ -1133,9 +1133,14 @@ FT.boot = function (data) {
     if (!needle) return [];
     var groups = {};
     FT.directory.forEach(function (p) {
-      if (!p.url || norm(p.village).indexOf(needle) < 0) return;
-      var grp = groups[norm(p.village)] || (groups[norm(p.village)] = { name: p.village, people: [] });
-      grp.people.push(p);
+      if (!p.url) return;
+      var seen = {};
+      [p.village, p.home_village].forEach(function (name) {
+        var key = norm(name);
+        if (!key || seen[key] || key.indexOf(needle) < 0) return;
+        seen[key] = true;
+        (groups[key] || (groups[key] = { name: name, people: [] })).people.push(p);
+      });
     });
     return Object.keys(groups).sort().map(function (k) {
       groups[k].people.sort(function (a, b) { return FT.label(a)[0].localeCompare(FT.label(b)[0]); });

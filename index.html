@@ -1501,9 +1501,14 @@ FT.boot = function (data) {
     if (!needle) return [];
     var groups = {};
     FT.directory.forEach(function (p) {
-      if (!p.url || norm(p.village).indexOf(needle) < 0) return;
-      var grp = groups[norm(p.village)] || (groups[norm(p.village)] = { name: p.village, people: [] });
-      grp.people.push(p);
+      if (!p.url) return;
+      var seen = {};
+      [p.village, p.home_village].forEach(function (name) {
+        var key = norm(name);
+        if (!key || seen[key] || key.indexOf(needle) < 0) return;
+        seen[key] = true;
+        (groups[key] || (groups[key] = { name: name, people: [] })).people.push(p);
+      });
     });
     return Object.keys(groups).sort().map(function (k) {
       groups[k].people.sort(function (a, b) { return FT.label(a)[0].localeCompare(FT.label(b)[0]); });
@@ -2073,16 +2078,16 @@ FT.views.chart = {
   };
 
   api.otherTrees = function (people, villages, currentFamily, shown) {
-    var trees = {};
+    var trees = {}, homes = {};
     villages.forEach(function (v) {
-      v.families.forEach(function (f) { trees[f.id] = api.treeLabel(v, f); });
+      v.families.forEach(function (f) { trees[f.id] = api.treeLabel(v, f); homes[f.id] = v.name; });
     });
     return people.filter(function (p) {
       return p.home_family !== currentFamily && !(shown && shown[p.id]);
     }).map(function (p) {
       var where = trees[p.home_family] || p.village || 'Village not recorded';
       return { id: p.id, name: p.name, name_hi: p.name_hi,
-               village: p.village, tree: [p.relation, where].filter(Boolean).join(' · '),
+               village: p.village, home_village: homes[p.home_family], tree: [p.relation, where].filter(Boolean).join(' · '),
                url: trees[p.home_family] ? api.urlFor(p.home_family, p.id) : null };
     });
   };

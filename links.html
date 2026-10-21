@@ -386,16 +386,16 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
   };
 
   api.otherTrees = function (people, villages, currentFamily, shown) {
-    var trees = {};
+    var trees = {}, homes = {};
     villages.forEach(function (v) {
-      v.families.forEach(function (f) { trees[f.id] = api.treeLabel(v, f); });
+      v.families.forEach(function (f) { trees[f.id] = api.treeLabel(v, f); homes[f.id] = v.name; });
     });
     return people.filter(function (p) {
       return p.home_family !== currentFamily && !(shown && shown[p.id]);
     }).map(function (p) {
       var where = trees[p.home_family] || p.village || 'Village not recorded';
       return { id: p.id, name: p.name, name_hi: p.name_hi,
-               village: p.village, tree: [p.relation, where].filter(Boolean).join(' · '),
+               village: p.village, home_village: homes[p.home_family], tree: [p.relation, where].filter(Boolean).join(' · '),
                url: trees[p.home_family] ? api.urlFor(p.home_family, p.id) : null };
     });
   };
