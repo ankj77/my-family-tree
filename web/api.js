@@ -173,30 +173,78 @@
     return '<b>' + esc(village.name) + '</b> · ' + esc(family.root_name || family.name);
   };
 
+  api.villageNamed = function (villages, name) {
+    var key = String(name || '').trim().toLowerCase();
+    return villages.filter(function (v) {
+      return v.families.length && v.name.toLowerCase() === key;
+    })[0] || null;
+  };
+
   function familySwitcher(villages, current) {
-    var pick = document.createElement('label');
+    var pick = document.createElement('div');
     pick.id = 'tree-pick';
-    var shown = document.createElement('span');
-    shown.className = 'tree-pick-text';
+    var place = document.createElement('input');
+    place.id = 'village-picker';
+    place.setAttribute('list', 'village-list');
+    place.setAttribute('autocomplete', 'off');
+    place.setAttribute('aria-label', 'Village');
+    var list = document.createElement('datalist');
+    list.id = 'village-list';
     var select = document.createElement('select');
     select.id = 'family-picker';
     select.setAttribute('aria-label', 'Family tree');
+    var chosen = null;
     villages.forEach(function (v) {
+      if (!v.families.length) return;
+      var option = document.createElement('option');
+      option.value = v.name;
+      list.appendChild(option);
+      v.families.forEach(function (f) { if (f.id === current) chosen = v; });
+    });
+
+    function go(id) { location.assign(location.pathname + api.urlFor(id)); }
+
+    function showFamilies(v) {
+      chosen = v;
+      place.value = v.name;
+      select.innerHTML = '';
+      var here = v.families.some(function (f) { return f.id === current; });
+      if (!here) {
+        var ask = document.createElement('option');
+        ask.textContent = 'Choose family';
+        ask.disabled = true;
+        ask.selected = true;
+        select.appendChild(ask);
+      }
       v.families.forEach(function (f) {
         var option = document.createElement('option');
         option.value = f.id;
-        option.textContent = api.treeLabel(v, f);
-        if (f.id === current) {
-          option.selected = true;
-          shown.innerHTML = api.treeLabelHtml(v, f);
-        }
+        option.textContent = f.root_name || f.name;
+        option.selected = f.id === current;
         select.appendChild(option);
       });
+      select.hidden = v.families.length < 2;
+    }
+
+    place.addEventListener('focus', function () {
+      place.placeholder = place.value || 'Village';
+      place.value = '';
     });
-    select.addEventListener('change', function () {
-      location.assign(location.pathname + api.urlFor(select.value));
+    place.addEventListener('blur', function () {
+      if (!place.value && chosen) place.value = chosen.name;
     });
-    pick.appendChild(shown);
+    place.addEventListener('change', function () {
+      var v = api.villageNamed(villages, place.value);
+      if (!v) { if (place.value && chosen) place.value = chosen.name; return; }
+      if (v.families.length === 1) { go(v.families[0].id); return; }
+      showFamilies(v);
+      select.focus();
+    });
+    select.addEventListener('change', function () { go(select.value); });
+
+    if (chosen) showFamilies(chosen);
+    pick.appendChild(place);
+    pick.appendChild(list);
     pick.appendChild(select);
     document.querySelector('#toolbar .brand').appendChild(pick);
   }

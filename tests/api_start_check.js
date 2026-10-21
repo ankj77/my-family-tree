@@ -96,7 +96,14 @@ async function loggedInBoots() {
   assert.strictEqual(inits, 1);
   assert.strictEqual(brand.children.length, 1);
   assert.strictEqual(brand.children[0].id, 'tree-pick');
-  assert.strictEqual(brand.children[0].children[1].id, 'family-picker');
+  assert.strictEqual(brand.children[0].children[0].id, 'village-picker');
+  assert.strictEqual(brand.children[0].children[0].value, 'Village');
+  assert.strictEqual(brand.children[0].children[2].id, 'family-picker');
+  assert.strictEqual(brand.children[0].children[2].hidden, true);
+  var two = [{ name: 'Bakheta', families: [{ id: 'a' }, { id: 'b' }] }, { name: 'Empty', families: [] }];
+  assert.strictEqual(FT.api.villageNamed(two, ' bakheta '), two[0]);
+  assert.strictEqual(FT.api.villageNamed(two, 'Empty'), null);
+  assert.strictEqual(FT.api.villageNamed(two, 'Bak'), null);
   assert.strictEqual(elements.who.textContent, 'Asha · Family reader');
   assert.strictEqual(elements.avatar.textContent, 'A');
   assert.deepStrictEqual(menuLabels(), ['Change password', 'Links', 'Log out']);
