@@ -50,7 +50,7 @@
     }).map(function (p) {
       var where = trees[p.home_family] || p.village || 'Village not recorded';
       return { id: p.id, name: p.name, name_hi: p.name_hi,
-               tree: [p.relation, where].filter(Boolean).join(' · '),
+               village: p.village, tree: [p.relation, where].filter(Boolean).join(' · '),
                url: trees[p.home_family] ? api.urlFor(p.home_family, p.id) : null };
     });
   };
@@ -64,6 +64,7 @@
       people.forEach(function (p) { FT.who[p.id] = api.who(p); });
       if (FT.renderPicks) FT.renderPicks();
       FT.otherTrees = api.otherTrees(people, api.villages || [], currentFamily, FT.byId);
+      FT.directory = api.otherTrees(people, api.villages || []);
     }, function () {});
   }
 

@@ -1126,6 +1126,22 @@ FT.boot = function (data) {
   }
 
   FT.otherTrees = [];
+  FT.directory = [];
+
+  FT.villageMatches = function (q) {
+    var needle = norm(q);
+    if (!needle) return [];
+    var groups = {};
+    FT.directory.forEach(function (p) {
+      if (!p.url || norm(p.village).indexOf(needle) < 0) return;
+      var grp = groups[norm(p.village)] || (groups[norm(p.village)] = { name: p.village, people: [] });
+      grp.people.push(p);
+    });
+    return Object.keys(groups).sort().map(function (k) {
+      groups[k].people.sort(function (a, b) { return FT.label(a)[0].localeCompare(FT.label(b)[0]); });
+      return groups[k];
+    });
+  };
 
   FT.otherMatches = function (q, limit) {
     var needle = q.trim().toLowerCase();
@@ -1178,7 +1194,8 @@ FT.boot = function (data) {
     var res = FT.searchMatches(searchBox.value);
     var places = FT.placeMatches(searchBox.value);
     var others = FT.otherMatches(searchBox.value);
-    if (!res.list.length && !places.length && !others.length) { hideSuggest(); return; }
+    var villages = FT.villageMatches(searchBox.value);
+    if (!res.list.length && !places.length && !others.length && !villages.length) { hideSuggest(); return; }
     var html = places.map(function (g) {
       var n = g.members.length;
       return '<button class="sg-row sg-place ' + g.kind + '" data-place="' + esc(g.key) + '">' +
@@ -1205,6 +1222,16 @@ FT.boot = function (data) {
           '<span class="sg-hint">' + esc(m.person.tree) + '</span></button>';
       }).join('');
     }
+    villages.forEach(function (v) {
+      html += '<p class="sg-head">From ' + esc(v.name) + ' · ' + v.people.length +
+        (v.people.length === 1 ? ' person' : ' people') + '</p>' + v.people.map(function (p) {
+        var owner = FT.byId[p.id] && FT.ownerOf(p.id);
+        return '<button class="sg-row" ' + (owner ? 'data-goto="' + esc(owner.id) + '"' :
+          'data-other="' + esc(p.id) + '" data-url="' + esc(p.url) + '"') + '>' +
+          '<span class="sg-name">' + esc(FT.label(p)[0]) + '</span>' +
+          '<span class="sg-hint">' + esc(p.tree) + '</span></button>';
+      }).join('');
+    });
     suggest.innerHTML = html;
     placeSuggest();
     suggest.classList.remove('hidden');
