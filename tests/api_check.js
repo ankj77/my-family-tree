@@ -80,8 +80,8 @@ var other = api.otherTrees([
 ], [{ name: 'Pugthala', families: [{ id: 'pugthala', root_name: 'Bash' }] },
     { name: 'Bakheta', families: [{ id: 'bakheta', root_name: 'Ram' }] }], 'bakheta', { shown: true });
 assert.deepStrictEqual(other, [
-  { id: 'bash', name: 'Bash', name_hi: 'बश', village: 'Pugthala', home_village: 'Pugthala', tree: 'son of Ram · Pugthala · Bash', url: '?family=pugthala&person=bash' },
-  { id: 'far', name: 'Far', name_hi: undefined, village: 'Kakroi', home_village: undefined, tree: 'Kakroi', url: null }
+  { id: 'bash', name: 'Bash', name_hi: 'बश', tree: 'son of Ram · Pugthala · Bash', url: '?family=pugthala&person=bash' },
+  { id: 'far', name: 'Far', name_hi: undefined, tree: 'Kakroi', url: null }
 ]);
 assert.strictEqual(api.who({ relation: 'son of Vijay · husband of Ridhi', village: 'Bakheta' }), 'son of Vijay · husband of Ridhi · Bakheta');
 assert.strictEqual(api.who({ relation: '', village: null }), 'Village not recorded');

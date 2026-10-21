@@ -462,6 +462,13 @@ def link_person_village():
                     for steps in links.paths_to_village(graph, a, vid)])
 
 
+@app.get("/villages/<vid>/people")
+def village_people(vid):
+    _, graph, access = context()
+    known_village(graph, vid)
+    return jsonify(links.village_cards(graph, vid, access.can_read_person))
+
+
 @app.get("/villages/<vid>/links")
 def village_link_list(vid):
     _, graph = member_graph()

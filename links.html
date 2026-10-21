@@ -392,16 +392,16 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
   };
 
   api.otherTrees = function (people, villages, currentFamily, shown) {
-    var trees = {}, homes = {};
+    var trees = {};
     villages.forEach(function (v) {
-      v.families.forEach(function (f) { trees[f.id] = api.treeLabel(v, f); homes[f.id] = v.name; });
+      v.families.forEach(function (f) { trees[f.id] = api.treeLabel(v, f); });
     });
     return people.filter(function (p) {
       return p.home_family !== currentFamily && !(shown && shown[p.id]);
     }).map(function (p) {
       var where = trees[p.home_family] || p.village || 'Village not recorded';
       return { id: p.id, name: p.name, name_hi: p.name_hi,
-               village: p.village, home_village: homes[p.home_family], tree: [p.relation, where].filter(Boolean).join(' · '),
+               tree: [p.relation, where].filter(Boolean).join(' · '),
                url: trees[p.home_family] ? api.urlFor(p.home_family, p.id) : null };
     });
   };
@@ -415,7 +415,6 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
       people.forEach(function (p) { FT.who[p.id] = api.who(p); });
       if (FT.renderPicks) FT.renderPicks();
       FT.otherTrees = api.otherTrees(people, api.villages || [], currentFamily, FT.byId);
-      FT.directory = api.otherTrees(people, api.villages || []);
     }, function () {});
   }
 
@@ -541,6 +540,17 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     });
   };
 
+  api.showVillage = function (vid) {
+    var v = (api.villages || []).filter(function (x) { return x.id === vid; })[0];
+    if (!v) return;
+    api.call('GET', '/villages/' + encodeURIComponent(vid) + '/people').then(function (people) {
+      people.forEach(function (p) { if (p.home_family) p.url = api.urlFor(p.home_family, p.id); });
+      FT.villageGroup = { key: 'village:' + vid, kind: 'origin', name: v.name, suffix: v.state || '',
+                          members: people.map(function (p) { return { person: p, owner: p }; }) };
+      FT.showPlace(FT.villageGroup.key);
+    }, function () {});
+  };
+
   function familySwitcher(villages, current) {
     var pick = document.createElement('div');
     pick.id = 'tree-pick';
@@ -610,10 +620,13 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
 
     function choose(v) {
       hideList();
-      if (v.families.length === 1) { place.value = v.name; go(v.families[0].id); return; }
-      showFamilies(v);
+      place.value = v.name;
+      if (v !== chosen) {
+        location.assign(location.pathname + api.urlFor(v.families[0].id) + '&village=' + encodeURIComponent(v.id));
+        return;
+      }
       place.blur();
-      select.focus();
+      api.showVillage(v.id);
     }
 
     place.addEventListener('focus', function () {
@@ -710,7 +723,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.0.5';
+    version.textContent = 'Version 1.1.0';
     document.getElementById('menu').appendChild(version);
   }
 
@@ -801,6 +814,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
         api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
         if (me.login_ends) countDown(me);
         loadOthers(me, api.familyId);
+        if (param('village')) api.showVillage(param('village'));
         if (param('nolink')) document.getElementById('summary').textContent = 'No link found in the records between those two people.';
         var person = param('person');
         if (person) FT.openPerson(person);

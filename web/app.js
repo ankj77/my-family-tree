@@ -323,6 +323,11 @@ FT.boot = function (data) {
   };
 
   FT.select = function (id, owner) {
+    if (owner && owner.url) {
+      var real = FT.ownerOf(id);
+      if (!real) { location.assign(location.pathname + owner.url); return; }
+      owner = real;
+    }
     var node = owner || FT.byId[id];
     if (!node) return;
     var person = node.id === id ? node :
@@ -1021,6 +1026,7 @@ FT.boot = function (data) {
       add('area', a.locality, a.city || a.state, p, owner);
       add('city', a.city, a.state, p, owner);
     }
+    if (FT.villageGroup) groups[FT.villageGroup.key] = FT.villageGroup;
     FT.nodes.forEach(function (n) {
       addPerson(n, n);
       (n.spouses || []).forEach(function (s) { addPerson(s, n); });
@@ -1035,7 +1041,7 @@ FT.boot = function (data) {
     return Object.keys(groups).map(function (k) {
       groups[k].rank = rankIn(needle, [groups[k].name]);
       return groups[k];
-    }).filter(function (g) { return g.rank !== null && !(g.kind === 'origin' && FT.directory.length); })
+    }).filter(function (g) { return g.rank !== null && !(g.kind === 'origin' && FT.api && FT.api.villages); })
       .sort(function (a, b) {
         return a.rank - b.rank || a.name.localeCompare(b.name) || a.kind.localeCompare(b.kind);
       });
@@ -1127,27 +1133,14 @@ FT.boot = function (data) {
   }
 
   FT.otherTrees = [];
-  FT.directory = [];
-
   FT.villageMatches = function (q) {
     var needle = norm(q);
     if (!needle) return [];
-    var groups = {};
-    FT.directory.forEach(function (p) {
-      if (!p.url) return;
-      var seen = {};
-      [p.village, p.home_village].forEach(function (name) {
-        var key = norm(name);
-        var rank = key && !seen[key] ? rankIn(needle, [key]) : null;
-        if (rank === null) return;
-        seen[key] = true;
-        (groups[key] || (groups[key] = { name: name, rank: rank, people: [] })).people.push(p);
-      });
-    });
-    return Object.keys(groups).map(function (k) {
-      groups[k].people.sort(function (a, b) { return FT.label(a)[0].localeCompare(FT.label(b)[0]); });
-      return groups[k];
-    }).sort(function (a, b) { return a.rank - b.rank || a.name.localeCompare(b.name); });
+    return ((FT.api && FT.api.villages) || []).map(function (v) {
+      return { village: v, rank: v.families.length || v.people_from ? rankIn(needle, [v.name]) : null };
+    }).filter(function (m) { return m.rank !== null; }).sort(function (a, b) {
+      return a.rank - b.rank || a.village.name.localeCompare(b.village.name);
+    }).map(function (m) { return m.village; });
   };
 
   FT.otherMatches = function (q, limit) {
@@ -1203,7 +1196,11 @@ FT.boot = function (data) {
     var others = FT.otherMatches(searchBox.value);
     var villages = FT.villageMatches(searchBox.value);
     if (!res.list.length && !places.length && !others.length && !villages.length) { hideSuggest(); return; }
-    var html = places.map(function (g) {
+    var html = villages.map(function (v) {
+      return '<button class="sg-row sg-place origin" data-village="' + esc(v.id) + '">' +
+        '<span class="sg-name">' + esc(v.name + (v.state ? ', ' + v.state : '')) + '</span>' +
+        '<span class="sg-hint">Village · people from all families</span></button>';
+    }).join('') + places.map(function (g) {
       var n = g.members.length;
       return '<button class="sg-row sg-place ' + g.kind + '" data-place="' + esc(g.key) + '">' +
         '<span class="sg-name">' + esc(FT.placeLabel(g)) + '</span>' +
@@ -1222,16 +1219,6 @@ FT.boot = function (data) {
     if (res.total > res.list.length) {
       html += '<p class="sg-more">' + (res.total - res.list.length) + ' more…</p>';
     }
-    villages.forEach(function (v) {
-      html += '<p class="sg-head">From ' + esc(v.name) + ' · ' + v.people.length +
-        (v.people.length === 1 ? ' person' : ' people') + '</p>' + v.people.map(function (p) {
-        var owner = FT.byId[p.id] && FT.ownerOf(p.id);
-        return '<button class="sg-row" ' + (owner ? 'data-goto="' + esc(owner.id) + '"' :
-          'data-other="' + esc(p.id) + '" data-url="' + esc(p.url) + '"') + '>' +
-          '<span class="sg-name">' + esc(FT.label(p)[0]) + '</span>' +
-          '<span class="sg-hint">' + esc(p.tree) + '</span></button>';
-      }).join('');
-    });
     if (others.length) {
       html += '<p class="sg-head">Other family trees</p>' + others.map(function (m) {
         return '<button class="sg-row" data-other="' + esc(m.person.id) + '" data-url="' + esc(m.person.url || '') + '">' +
@@ -1311,6 +1298,15 @@ FT.boot = function (data) {
       var url = row.getAttribute('data-url');
       if (url) location.assign(location.pathname + url);
       else if (FT.onLink) FT.onLink(FT.state.ends[0] || FT.meId, other);
+      return;
+    }
+    var village = row.getAttribute('data-village');
+    if (village) {
+      hideSuggest();
+      searchBox.value = '';
+      searchBox.blur();
+      pickNote = '';
+      FT.api.showVillage(village);
       return;
     }
     var v = row.getAttribute('data-place');

@@ -46,6 +46,17 @@ class TestLinksApi(ApiCase):
                          [("Pugthala", "Bakheta"), ("Bakheta", "Kakroi")])
         self.assertEqual(chain[1]["couple"]["wife"]["village"], "Kakroi")
 
+    def test_village_people_only_from_readable_trees(self):
+        self.query("UPDATE people SET note='private' WHERE id='rashmi'")
+        self.login("amit")
+        people = self.get("/villages/pugthala/people").get_json()
+        self.assertEqual([p["id"] for p in people], ["rashmi"])
+        self.assertEqual(people[0]["home_family"], "bakheta")
+        self.assertNotIn("bash", [p["id"] for p in people])
+        self.assertNotIn("private", str(people))
+        self.assertIn("rashmi", [p["id"] for p in self.get("/villages/bakheta/people").get_json()])
+        self.assertEqual(self.get("/villages/nowhere/people").status_code, 404)
+
     def test_unknown_ids(self):
         self.login("amit")
         self.assertEqual(self.get("/links/people?a=amit&b=nobody").status_code, 404)

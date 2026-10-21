@@ -162,6 +162,20 @@ def chain_cards(graph: Graph, steps: List[dict]) -> List[dict]:
     return cards
 
 
+def village_cards(graph: Graph, vid: str, readable) -> List[dict]:
+    cards = []
+    for pid in graph.people:
+        spouse = graph.spouse.get(pid)
+        opener = pid if readable(pid) else spouse if spouse and readable(spouse) else None
+        wife = spouse and graph.people[pid].get("gender") == "female"
+        homes = {birth_village(graph, pid), graph.village_of(pid), graph.village_of(spouse) if wife else None}
+        if opener and vid in homes:
+            card = _card(graph, pid, True)
+            card.update(home_family=graph.home_family(opener), spouses=[], placeholder=None, child_groups=[], children=[])
+            cards.append(card)
+    return sorted(cards, key=lambda c: ((c.get("name") or c.get("name_hi") or "").lower(), c["id"]))
+
+
 def birth_village(graph: Graph, pid: str) -> Optional[str]:
     row = graph.people[pid]
     if row.get("family_id") in graph.families:
