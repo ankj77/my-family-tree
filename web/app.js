@@ -573,16 +573,20 @@ FT.boot = function (data) {
 
   var SILHOUETTE = {
     male: [
-      ['circle', { cx: 0, cy: -3, r: 3.7 }],
-      ['ellipse', { 'class': 'pc-icon-cut', cx: 0, cy: -2.1, rx: 2.8, ry: 2.9 }],
-      ['path', { d: 'M-6.8,8.4 C-6.8,3.8 -3.8,1.8 0,1.8 C3.8,1.8 6.8,3.8 6.8,8.4 Z' }],
-      ['path', { 'class': 'pc-icon-cut', d: 'M-1.7,1.9 L0,4.6 L1.7,1.9 Z' }]
+      ['circle', { cx: 0, cy: -5.6, r: 1.8 }],
+      ['rect', { x: -2.5, y: -3.2, width: 5, height: 5.6, rx: 1.1 }],
+      ['rect', { x: -4, y: -3, width: 1.2, height: 4.8, rx: 0.6 }],
+      ['rect', { x: 2.8, y: -3, width: 1.2, height: 4.8, rx: 0.6 }],
+      ['rect', { x: -2.4, y: 1.6, width: 2.1, height: 5.6, rx: 0.8 }],
+      ['rect', { x: 0.3, y: 1.6, width: 2.1, height: 5.6, rx: 0.8 }]
     ],
     female: [
-      ['circle', { cx: 0, cy: -7.8, r: 1.9 }],
-      ['path', { d: 'M-3.9,-3 C-3.9,-7.8 3.9,-7.8 3.9,-3 L4.5,2.6 L-4.5,2.6 Z' }],
-      ['ellipse', { 'class': 'pc-icon-cut', cx: 0, cy: -2.2, rx: 2.5, ry: 2.9 }],
-      ['path', { d: 'M-6.2,8.4 C-6.2,4.8 -3.4,2.8 0,2.8 C3.4,2.8 6.2,4.8 6.2,8.4 Z' }]
+      ['circle', { cx: 0, cy: -5.6, r: 1.8 }],
+      ['path', { d: 'M-1.9,-3.2 H1.9 Q2.6,-3.2 2.8,-2.4 L4.2,2.8 H-4.2 L-2.8,-2.4 Q-2.6,-3.2 -1.9,-3.2 Z' }],
+      ['rect', { x: -4.1, y: -2.8, width: 1.2, height: 4.2, rx: 0.6, transform: 'rotate(12 -3.5 -2.8)' }],
+      ['rect', { x: 2.9, y: -2.8, width: 1.2, height: 4.2, rx: 0.6, transform: 'rotate(-12 3.5 -2.8)' }],
+      ['rect', { x: -1.9, y: 2.6, width: 1.6, height: 4.6, rx: 0.7 }],
+      ['rect', { x: 0.3, y: 2.6, width: 1.6, height: 4.6, rx: 0.7 }]
     ]
   };
 
