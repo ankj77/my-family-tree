@@ -168,7 +168,7 @@
   .parent-card .pc-name.on-band{fill:#fff;}
   .pc-icon-plate{fill:#fff;pointer-events:none;}
   .pc-mark{font-family:var(--font);font-size:14px;font-weight:700;fill:#fff;pointer-events:none;}
-  .pc-tag{font-family:var(--font);font-size:10px;font-weight:600;letter-spacing:.06em;fill:#fff;opacity:.9;}
+  .pc-tag{font-family:var(--font);font-size:9px;font-weight:600;letter-spacing:.08em;fill:#fff;opacity:.9;pointer-events:none;}
   .garland{pointer-events:none;}
   .garland .leaf{fill:var(--leaf-1);}
   .garland-rope{fill:none;stroke:#D9731A;stroke-width:9px;stroke-linecap:round;}
