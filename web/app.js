@@ -595,12 +595,13 @@ FT.boot = function (data) {
     var icon = el('g', {
       transform: 'translate(' + cx + ',' + cy + ') scale(' + (scale || 1) + ')'
     }, g);
-    var bg = el('circle', { 'class': 'pc-icon-bg', r: 9 }, icon);
+    var bg = el('circle', { 'class': 'pc-icon-bg', r: 11 }, icon);
     bg.style.fill = tint;
+    var figure = el('g', { transform: 'scale(1.35)' }, icon);
     SILHOUETTE[gender === 'female' ? 'female' : 'male'].forEach(function (part) {
       var attrs = { 'class': part[1]['class'] || 'pc-icon-fg' };
       Object.keys(part[1]).forEach(function (k) { if (k !== 'class') attrs[k] = part[1][k]; });
-      var shape = el(part[0], attrs, icon);
+      var shape = el(part[0], attrs, figure);
       if (attrs['class'] === 'pc-icon-fg') shape.style.fill = tint;
     });
   }
@@ -692,8 +693,8 @@ FT.boot = function (data) {
     if (p.gender) {
       var tag = el('tspan', { 'class': 'pc-tag ' + p.gender, dx: 6 }, title);
       tag.textContent = p.gender === 'female' ? '[ FEMALE ]' : '[ MALE ]';
-      el('circle', { 'class': 'pc-icon-plate', cx: 22, cy: 21, r: 12 }, g);
-      personIcon(g, 22, 21, p.gender, 1.3);
+      el('circle', { 'class': 'pc-icon-plate', cx: 22, cy: 18, r: 14 }, g);
+      personIcon(g, 22, 18, p.gender, 1.25);
       genderMark(g, FT.CARD_W - 22, 21, p.gender);
     }
     var meta = FT.metaLine(p);
