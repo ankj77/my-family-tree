@@ -601,27 +601,11 @@ FT.boot = function (data) {
     });
   }
 
-  var PETAL = 'M0,6 C-4.2,1 -3.8,-6 0,-10 C3.8,-6 4.2,1 0,6 Z';
   var LEAF = 'M0,8 C-6.5,3 -6,-5 0,-10 C6,-5 6.5,3 0,8 Z';
 
-  function genderMotif(g, cx, cy, gender) {
-    var m = el('g', {
-      'class': 'pc-motif ' + gender, transform: 'translate(' + cx + ',' + cy + ')'
-    }, g);
-    if (gender === 'female') {
-      [-64, -32, 0, 32, 64].forEach(function (a) {
-        el('path', { 'class': Math.abs(a) > 40 ? 'petal outer' : 'petal', d: PETAL,
-          transform: 'rotate(' + a + ' 0 6)' }, m);
-      });
-      el('path', { 'class': 'motif-line', d: 'M-10,8 Q0,12 10,8' }, m);
-      return;
-    }
-    el('path', { 'class': 'motif-line', d: 'M-2,11 Q0,2 0,-4' }, m);
-    [[-38, -4, 2], [34, 5, -1]].forEach(function (l) {
-      var t = 'translate(' + l[1] + ',' + l[2] + ') rotate(' + l[0] + ') scale(0.85)';
-      el('path', { 'class': 'leaf', d: LEAF, transform: t }, m);
-      el('path', { 'class': 'vein', d: 'M0,7 L0,-8', transform: t }, m);
-    });
+  function genderMark(g, cx, cy, gender) {
+    var mark = el('text', { 'class': 'pc-mark ' + gender, x: cx, y: cy + 9, 'text-anchor': 'middle' }, g);
+    mark.textContent = gender === 'female' ? '\u2640' : '\u2642';
   }
 
   var ROPE = ['#F29A2E', '#E3801C', '#F7B04A'];
@@ -690,10 +674,12 @@ FT.boot = function (data) {
       'class': 'pc-name', x: FT.CARD_W / 2, y: 26, 'text-anchor': 'middle'
     }, g);
     title.textContent = FT.label(p)[0];
-    fitText(title, FT.CARD_W - 84);
+    fitText(title, FT.CARD_W - (p.gender ? 150 : 84));
     if (p.gender) {
+      var tag = el('tspan', { 'class': 'pc-tag ' + p.gender, dx: 6 }, title);
+      tag.textContent = p.gender === 'female' ? '[ FEMALE ]' : '[ MALE ]';
       personIcon(g, 22, 21, p.gender, 1.3);
-      genderMotif(g, FT.CARD_W - 22, 21, p.gender);
+      genderMark(g, FT.CARD_W - 22, 21, p.gender);
     }
     var meta = FT.metaLine(p);
     var drop = 0;

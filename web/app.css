@@ -6,8 +6,8 @@
   --rail-m:#4A6FA5;
   --rail-f:#C4708A;
   --rail-unknown:#A89880;
-  --card-m:#EEF3FA;
-  --card-f:#FBEFF3;
+  --card-m:#E3ECF8;
+  --card-f:#F9E3EB;
   --ink:#3A3A2E;
   --ink-muted:#6F6A57;
   --name-ink:#234A21;
@@ -162,12 +162,10 @@
     fill:var(--name-ink);pointer-events:none;}
   .parent-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
   .parent-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
-  .pc-motif{pointer-events:none;}
-  .pc-motif .petal{fill:var(--rail-f);opacity:.9;}
-  .pc-motif .petal.outer{opacity:.55;}
-  .pc-motif.female .motif-line{stroke:var(--leaf-1);}
-  .pc-motif .leaf{fill:var(--leaf-1);}
-  .pc-motif .vein{stroke:var(--card-m);stroke-width:.8px;}
+  .pc-mark{font-size:26px;font-weight:700;pointer-events:none;}
+  .pc-mark.male,.pc-tag.male{fill:var(--rail-m);}
+  .pc-mark.female,.pc-tag.female{fill:var(--rail-f);}
+  .pc-tag{font-family:var(--font);font-size:10px;font-weight:600;letter-spacing:.06em;}
   .garland{pointer-events:none;}
   .garland .leaf{fill:var(--leaf-1);}
   .garland-rope{fill:none;stroke:#D9731A;stroke-width:9px;stroke-linecap:round;}
@@ -191,7 +189,6 @@
   .sg-place.area .sg-name::before,.sg-place.city .sg-name::before{content:'\25C9  ';color:var(--rail-m);}
   .spouse-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
   .spouse-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
-  .motif-line{fill:none;stroke:var(--bark);stroke-width:1.4px;stroke-linecap:round;}
   .pc-sub{font-size:11.5px;fill:var(--ink-muted);pointer-events:none;}
   .pc-rule{stroke:var(--rule);stroke-width:1px;}
   .pc-label{font-size:9.5px;fill:var(--ink-muted);letter-spacing:.05em;pointer-events:none;}
