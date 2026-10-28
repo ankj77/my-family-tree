@@ -167,7 +167,7 @@
   .pc-band.female{fill:var(--rail-f);}
   .parent-card .pc-name.on-band{fill:#fff;}
   .pc-icon-plate{fill:#fff;pointer-events:none;}
-  .pc-mark{font-size:26px;font-weight:700;fill:#fff;pointer-events:none;}
+  .pc-mark{font-family:var(--font);font-size:14px;font-weight:700;fill:#fff;pointer-events:none;}
   .pc-tag{font-family:var(--font);font-size:10px;font-weight:600;letter-spacing:.06em;fill:#fff;opacity:.9;}
   .garland{pointer-events:none;}
   .garland .leaf{fill:var(--leaf-1);}

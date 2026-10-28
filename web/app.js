@@ -609,8 +609,8 @@ FT.boot = function (data) {
   var LEAF = 'M0,8 C-6.5,3 -6,-5 0,-10 C6,-5 6.5,3 0,8 Z';
 
   function genderMark(g, cx, cy, gender) {
-    var mark = el('text', { 'class': 'pc-mark ' + gender, x: cx, y: cy + 9, 'text-anchor': 'middle' }, g);
-    mark.textContent = gender === 'female' ? '\u2640' : '\u2642';
+    var mark = el('text', { 'class': 'pc-mark ' + gender, x: cx, y: cy, 'text-anchor': 'end' }, g);
+    mark.textContent = gender === 'female' ? '\u092E\u0939\u093F\u0932\u093E' : '\u092A\u0941\u0930\u0941\u0937';
   }
 
   var ROPE = ['#F29A2E', '#E3801C', '#F7B04A'];
@@ -689,13 +689,13 @@ FT.boot = function (data) {
       'class': p.gender ? 'pc-name on-band' : 'pc-name', x: FT.CARD_W / 2, y: 26, 'text-anchor': 'middle'
     }, g);
     title.textContent = FT.label(p)[0];
-    fitText(title, FT.CARD_W - (p.gender ? 150 : 84));
+    fitText(title, FT.CARD_W - (p.gender ? 180 : 84));
     if (p.gender) {
       var tag = el('tspan', { 'class': 'pc-tag ' + p.gender, dx: 6 }, title);
       tag.textContent = p.gender === 'female' ? '[ FEMALE ]' : '[ MALE ]';
       el('circle', { 'class': 'pc-icon-plate', cx: 22, cy: 18, r: 14 }, g);
       personIcon(g, 22, 18, p.gender, 1.25);
-      genderMark(g, FT.CARD_W - 22, 21, p.gender);
+      genderMark(g, FT.CARD_W - 12, 24, p.gender);
     }
     var meta = FT.metaLine(p);
     var drop = 0;
