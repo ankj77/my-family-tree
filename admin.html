@@ -172,10 +172,13 @@
     fill:var(--name-ink);pointer-events:none;}
   .parent-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
   .parent-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
-  .pc-mark{font-size:26px;font-weight:700;pointer-events:none;}
-  .pc-mark.male,.pc-tag.male{fill:var(--rail-m);}
-  .pc-mark.female,.pc-tag.female{fill:var(--rail-f);}
-  .pc-tag{font-family:var(--font);font-size:10px;font-weight:600;letter-spacing:.06em;}
+  .pc-band{pointer-events:none;}
+  .pc-band.male{fill:var(--rail-m);}
+  .pc-band.female{fill:var(--rail-f);}
+  .parent-card .pc-name.on-band{fill:#fff;}
+  .pc-icon-plate{fill:#fff;pointer-events:none;}
+  .pc-mark{font-size:26px;font-weight:700;fill:#fff;pointer-events:none;}
+  .pc-tag{font-family:var(--font);font-size:10px;font-weight:600;letter-spacing:.06em;fill:#fff;opacity:.9;}
   .garland{pointer-events:none;}
   .garland .leaf{fill:var(--leaf-1);}
   .garland-rope{fill:none;stroke:#D9731A;stroke-width:9px;stroke-linecap:round;}
@@ -714,7 +717,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.2.0';
+    version.textContent = 'Version 1.3.0';
     document.getElementById('menu').appendChild(version);
   }
 

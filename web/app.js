@@ -659,25 +659,36 @@ FT.boot = function (data) {
   };
 
   FT.cardH = function (p, rows) {
-    return 44 + rows * 30 + (FT.metaLine(p).text ? 16 : 0);
+    return 50 + rows * 30 + (FT.metaLine(p).text ? 16 : 0);
   };
 
   function spouseWord(s) {
     return s.gender === 'female' ? 'Wife' : s.gender === 'male' ? 'Husband' : 'Spouse';
   }
 
+  var BAND_H = 36;
+
+  function nameBand(g, gender) {
+    var W = FT.CARD_W;
+    el('path', { 'class': 'pc-band ' + gender,
+      d: 'M0,' + BAND_H + ' V10 A10,10 0 0 1 10,0 H' + (W - 10) +
+         ' A10,10 0 0 1 ' + W + ',10 V' + BAND_H + ' Z' }, g);
+  }
+
   function cardFace(g, p, H, rows, valueRoom) {
     el('rect', { 'class': 'card-shadow', x: 0, y: 3, width: FT.CARD_W, height: H, rx: 10 }, g);
     el('rect', { 'class': 'card-bg', width: FT.CARD_W, height: H, rx: 10 }, g);
     el('rect', { 'class': 'card-hit', width: FT.CARD_W, height: H }, g);
+    if (p.gender) nameBand(g, p.gender);
     var title = el('text', {
-      'class': 'pc-name', x: FT.CARD_W / 2, y: 26, 'text-anchor': 'middle'
+      'class': p.gender ? 'pc-name on-band' : 'pc-name', x: FT.CARD_W / 2, y: 26, 'text-anchor': 'middle'
     }, g);
     title.textContent = FT.label(p)[0];
     fitText(title, FT.CARD_W - (p.gender ? 150 : 84));
     if (p.gender) {
       var tag = el('tspan', { 'class': 'pc-tag ' + p.gender, dx: 6 }, title);
       tag.textContent = p.gender === 'female' ? '[ FEMALE ]' : '[ MALE ]';
+      el('circle', { 'class': 'pc-icon-plate', cx: 22, cy: 21, r: 12 }, g);
       personIcon(g, 22, 21, p.gender, 1.3);
       genderMark(g, FT.CARD_W - 22, 21, p.gender);
     }
@@ -685,17 +696,17 @@ FT.boot = function (data) {
     var drop = 0;
     if (meta.text) {
       var sub = el('text', {
-        'class': 'pc-sub', x: FT.CARD_W / 2, y: 42, 'text-anchor': 'middle'
+        'class': 'pc-sub', x: FT.CARD_W / 2, y: 48, 'text-anchor': 'middle'
       }, g);
       sub.textContent = meta.text;
       fitText(sub, FT.CARD_W - 24);
       drop = 16;
     }
     el('line', {
-      'class': 'pc-rule', x1: 18, y1: 38 + drop, x2: FT.CARD_W - 18, y2: 38 + drop
+      'class': 'pc-rule', x1: 18, y1: 44 + drop, x2: FT.CARD_W - 18, y2: 44 + drop
     }, g);
     rows.forEach(function (row, i) {
-      var y = 58 + drop + i * 30;
+      var y = 64 + drop + i * 30;
       personIcon(g, 32, y, row[2]);
       var lab = el('text', { 'class': 'pc-label', x: 52, y: y - 3 }, g);
       lab.textContent = row[0];

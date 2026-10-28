@@ -163,7 +163,7 @@ class TestPosterParentCards(unittest.TestCase):
     def test_the_card_carries_dates_and_place_when_recorded(self):
         html = _payload_html()
         self.assertIn("var meta = FT.metaLine(p);", html)
-        self.assertIn("return 44 + rows * 30 + (FT.metaLine(p).text ? 16 : 0);", html)
+        self.assertIn("return 50 + rows * 30 + (FT.metaLine(p).text ? 16 : 0);", html)
 
     def test_parent_resolution_helper_exists(self):
         html = _payload_html()
