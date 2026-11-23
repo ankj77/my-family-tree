@@ -893,6 +893,8 @@ FT.boot = function (data) {
   function apply(){
     vp.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')');
   }
+  FT.camera = function () { return { tx: tx, ty: ty, scale: scale }; };
+  FT.setCamera = function (c) { tx = c.tx; ty = c.ty; scale = c.scale; apply(); };
   stage.addEventListener('mousedown',function(e){ dragging=true; lx=e.clientX; ly=e.clientY; stage.classList.add('grabbing'); });
   window.addEventListener('mousemove',function(e){ if(!dragging) return; tx+=e.clientX-lx; ty+=e.clientY-ly; lx=e.clientX; ly=e.clientY; apply(); });
   window.addEventListener('mouseup',function(){ dragging=false; stage.classList.remove('grabbing'); });
@@ -1509,5 +1511,7 @@ FT.boot = function (data) {
     if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;
     markLang();
     FT.setView('poster');
+    if (FT.motion) FT.motion.grow();
   };
+  if (FT.motion) FT.motion.attach();
 };

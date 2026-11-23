@@ -290,3 +290,17 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
   animation:api-busy-show .3s .25s both;pointer-events:none;}
 @keyframes api-busy{from{background-position:-40% 0}to{background-position:140% 0}}
 @keyframes api-busy-show{from{opacity:0}to{opacity:1}}
+  #stage.ft-focus .card:not(.fam):not(.hl),
+  #stage.ft-focus .edge:not(.hl):not(.fam),
+  #stage.ft-focus .poster-leaf,
+  #stage.ft-focus .chart-label{opacity:.25;transition:opacity .35s;}
+  .card,.edge,.poster-leaf,.chart-label{transition:opacity .35s;}
+  .edge.fam{stroke:var(--leaf-1);}
+  .card.ft-lit{filter:drop-shadow(0 0 10px rgba(200,107,42,.85));}
+  .ft-tag{pointer-events:none;}
+  .ft-tag text{fill:#fff;font-size:13px;font-weight:700;font-family:var(--font);}
+  .ft-pulse{fill:#FFD27A;stroke:var(--hl);stroke-width:2.5;pointer-events:none;filter:drop-shadow(0 0 6px #FFB347);}
+  .edge.ft-hover{stroke:var(--hl);}
+  .ft-tip{position:absolute;pointer-events:none;background:var(--name-ink);color:#fff;font-size:13px;
+    padding:6px 10px;border-radius:8px;white-space:nowrap;transform:translate(-50%,calc(-100% - 14px));z-index:6;}
+  @media (prefers-reduced-motion: reduce){.card,.edge,.poster-leaf,.chart-label{transition:none;}}
