@@ -330,7 +330,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     <button id="login-enter" type="submit">Log in</button>
     <button class="install-app hidden" type="button">Install app on this phone</button>
     <p id="login-msg" role="alert"></p>
-    <p class="login-version">Version 1.5.0</p>
+    <p class="login-version">Version 1.5.1</p>
   </form>
 </div>
 <div id="toolbar">
@@ -377,7 +377,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
       <button id="expand-all" type="button">Expand all</button>
     </div>
   </div>
-  <p id="ornament-motto">Generations grow,<br>roots stay forever<small class="motto-version">Version 1.5.0</small></p>
+  <p id="ornament-motto">Generations grow,<br>roots stay forever<small class="motto-version">Version 1.5.1</small></p>
   <p id="ornament-story">Our Roots<br>Our Family<br>Our Story</p>
 </div>
 <div id="unlinked"></div>
@@ -1899,7 +1899,6 @@ FT.boot = function (data) {
     if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;
     markLang();
     FT.setView('poster');
-    if (FT.motion) FT.motion.grow();
   };
   if (FT.motion) FT.motion.attach();
 };
@@ -2726,7 +2725,7 @@ FT.views.chart = {
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.5.0';
+    version.textContent = 'Version 1.5.1';
     document.getElementById('menu').appendChild(version);
   }
 
@@ -2781,6 +2780,7 @@ FT.views.chart = {
       FT.init();
       FT.setView('chart');
       FT.expandAll();
+      if (FT.motion) FT.motion.grow();
       accountMenu(me);
       api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
       loadOthers(me, null);
@@ -2825,6 +2825,7 @@ FT.views.chart = {
           var grandfather = FT.grandfatherOf(me.id);
           if (grandfather) FT.showBranch(grandfather.id);
         }
+        if (FT.motion) FT.motion.grow();
       });
     }).catch(function (err) {
       showLogin(err.status === 401 ? '' : err.message);

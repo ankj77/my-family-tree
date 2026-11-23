@@ -427,6 +427,7 @@
       FT.init();
       FT.setView('chart');
       FT.expandAll();
+      if (FT.motion) FT.motion.grow();
       accountMenu(me);
       api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
       loadOthers(me, null);
@@ -471,6 +472,7 @@
           var grandfather = FT.grandfatherOf(me.id);
           if (grandfather) FT.showBranch(grandfather.id);
         }
+        if (FT.motion) FT.motion.grow();
       });
     }).catch(function (err) {
       showLogin(err.status === 401 ? '' : err.message);

@@ -1511,7 +1511,6 @@ FT.boot = function (data) {
     if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;
     markLang();
     FT.setView('poster');
-    if (FT.motion) FT.motion.grow();
   };
   if (FT.motion) FT.motion.attach();
 };
