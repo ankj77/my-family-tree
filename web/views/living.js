@@ -165,26 +165,26 @@ FT.views.living = {
     var el = FT.el;
     var root = n.depth === 0;
     var g = el('g', {
-      'class': 'card living-node' + (FT.isDeceased(n) ? ' deceased' : '') + (root ? ' root' : ''),
+      'class': 'card living-node ' + (n.gender || 'unknown') + (FT.isDeceased(n) ? ' deceased' : '') + (root ? ' root' : ''),
       'data-id': n.id, transform: 'translate(' + n.x + ',' + n.y + ')'
     }, parent);
-    el('circle', { 'class': 'fruit', r: root ? 13 : 9 }, g);
+    el('circle', { 'class': 'fruit', r: root ? 19 : 14 }, g);
     el('text', { 'class': 'initial', dy: '0.35em', 'text-anchor': 'middle' }, g)
       .textContent = Array.from(this.shortName(n) || '?')[0].toUpperCase();
 
     var sp = FT.spouseOf(n);
     var sub = [FT.lifespan(n), sp ? '& ' + this.shortName(sp) : ''].filter(Boolean).join('  ');
     var hasKids = (n.children || []).length > 0 && !FT.state.place;
-    var outward = this.pos(n.ang || 0, 24);
+    var outward = this.pos(n.ang || 0, 32);
     var label;
     if (!n.livingKids || n.livingKids.length || root) {
-      label = el('text', { 'class': 'living-label', 'text-anchor': 'middle', y: root ? 34 : 26 }, g);
+      label = el('text', { 'class': 'living-label', 'text-anchor': 'middle', y: root ? 42 : 32 }, g);
       el('tspan', { 'class': 'nm', x: 0 }, label).textContent = this.shortName(n);
       if (sub) el('tspan', { 'class': 'sub', x: 0, dy: '1.25em' }, label).textContent = sub;
     } else {
       var deg = n.ang * 180 / Math.PI;
       var right = n.ang >= 0;
-      var gap = hasKids ? 40 : 22;
+      var gap = hasKids ? 48 : 28;
       label = el('text', { 'class': 'living-label', dy: '0.32em', x: right ? gap : -gap,
         'text-anchor': right ? 'start' : 'end', transform: 'rotate(' + (right ? deg - 90 : deg + 90) + ')' }, g);
       el('tspan', { 'class': 'nm' }, label).textContent = this.shortName(n);
