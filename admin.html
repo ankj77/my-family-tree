@@ -535,15 +535,19 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     });
   }
 
+  api.familyName = function (family) {
+    return family.known_name || family.root_name || family.name;
+  };
+
   api.treeLabel = function (village, family) {
-    return village.name + ' · ' + (family.root_name || family.name);
+    return village.name + ' · ' + api.familyName(family);
   };
 
   api.treeLabelHtml = function (village, family) {
     var esc = function (s) {
       return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
     };
-    return '<b>' + esc(village.name) + '</b> · ' + esc(family.root_name || family.name);
+    return '<b>' + esc(village.name) + '</b> · ' + esc(api.familyName(family));
   };
 
   api.villageNamed = function (villages, name) {
@@ -611,7 +615,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
       v.families.forEach(function (f) {
         var option = document.createElement('option');
         option.value = f.id;
-        option.textContent = f.root_name || f.name;
+        option.textContent = api.familyName(f);
         option.selected = f.id === current;
         select.appendChild(option);
       });
@@ -745,7 +749,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.7.0';
+    version.textContent = 'Version 1.8.0';
     document.getElementById('menu').appendChild(version);
   }
 
@@ -950,7 +954,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
   function familyOptions() {
     var out = [];
     state.villages.forEach(function (v) {
-      v.families.forEach(function (f) { out.push([f.id, v.name + ' · ' + (f.root_name || f.name)]); });
+      v.families.forEach(function (f) { out.push([f.id, v.name + ' · ' + api().familyName(f)]); });
     });
     return out;
   }
@@ -1012,7 +1016,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
       var global = state.me.is_global;
       var rows = state.villages.filter(function (v) { return global || v.families.length; }).map(function (v) {
         var trees = v.families.map(function (f) {
-          return '<a href="./?family=' + encodeURIComponent(f.id) + '">' + esc(f.root_name || f.name) + '</a>';
+          return '<a href="./?family=' + encodeURIComponent(f.id) + '">' + esc(api().familyName(f)) + '</a>';
         }).join(', ') || '—';
         var buttons = global ? '<button type="button" data-village-edit="' + esc(v.id) + '">Edit</button> ' +
           '<button type="button" data-village-delete="' + esc(v.id) + '">Delete</button>' : '';

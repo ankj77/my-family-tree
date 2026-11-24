@@ -355,3 +355,27 @@ class TestDeletingASpouseRemovesTheMarriage(ApiCase):
         self.assertEqual(self.delete("/people/vikram").status_code, 200)
         self.assertEqual(list(self.query("SELECT * FROM marriages WHERE wife_id='neha'")), [])
         self.assertEqual(self.post("/people", {"as": "spouse", "spouse_id": "neha", "name": "Rohit"}).status_code, 201)
+
+
+class TestKnownAs(ApiCase):
+    def bakheta(self):
+        return self.get("/villages").get_json()[0]["families"][0]
+
+    def test_global_admin_names_the_tree_after_someone_born_in_it(self):
+        self.login("mohan")
+        self.assertIsNone(self.bakheta()["known_name"])
+        self.assertEqual(self.patch("/families/bakheta", {"known_as_id": "jagdish"}).status_code, 200)
+        self.assertEqual(self.bakheta()["known_name"], "Jagdish")
+        tree = self.get("/families/bakheta/tree").get_json()["tree"]
+        self.assertTrue(find(tree, "jagdish")["names_tree"])
+        self.assertTrue(find(tree, "ram")["can_name_tree"])
+        self.assertEqual(self.patch("/families/bakheta", {"known_as_id": None}).status_code, 200)
+        self.assertIsNone(self.bakheta()["known_name"])
+
+    def test_only_people_born_in_the_family(self):
+        self.login("mohan")
+        self.assertEqual(self.patch("/families/bakheta", {"known_as_id": "bash"}).status_code, 409)
+
+    def test_branch_admin_cannot_rename(self):
+        self.login("jagdish")
+        self.assertEqual(self.patch("/families/bakheta", {"known_as_id": "jagdish"}).status_code, 403)

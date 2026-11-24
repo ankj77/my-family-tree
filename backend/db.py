@@ -75,7 +75,7 @@ def load_graph(cur):
     people = cur.fetchall()
     cur.execute("SELECT husband_id, wife_id FROM marriages")
     marriages = [(r["husband_id"], r["wife_id"]) for r in cur.fetchall()]
-    cur.execute("SELECT id, village_id, name FROM families ORDER BY name, id")
+    cur.execute("SELECT id, village_id, name, known_as_id FROM families ORDER BY name, id")
     families = cur.fetchall()
     cur.execute("SELECT id, name, district, state FROM villages ORDER BY name, id")
     villages = cur.fetchall()

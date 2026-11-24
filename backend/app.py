@@ -319,6 +319,8 @@ def person_extras(graph, access, pending, pid):
         "family_id": row.get("family_id"),
         "can_edit": can_edit,
         "can_move": access.is_admin_over(pid),
+        "can_name_tree": can_name_tree(graph, access, pid),
+        "names_tree": graph.families.get(row.get("family_id"), {}).get("known_as_id") == pid,
         "can_add_father": can_edit and not row.get("father_id") and graph.tree_parent(pid) is None,
         "can_delete": mode if mode and not blocker else False,
         "delete_reason": blocker,
@@ -355,12 +357,41 @@ def list_villages():
     for village in graph.villages.values():
         families = [
             {"id": f["id"], "name": f["name"], "root_person_id": graph.roots[f["id"]],
-             "root_name": name_of(graph, graph.roots[f["id"]])}
+             "root_name": name_of(graph, graph.roots[f["id"]]), "known_name": known_name(graph, f)}
             for f in graph.families.values() if f["village_id"] == village["id"] and f["id"] in readable
         ]
         people_from = sum(1 for row in graph.people.values() if row.get("origin_village_id") == village["id"])
         out.append(dict(village, families=families, people_from=people_from))
     return jsonify(out)
+
+
+def known_name(graph, family):
+    pid = family.get("known_as_id")
+    return name_of(graph, pid) if pid in graph.people else None
+
+
+def can_name_tree(graph, access, pid):
+    family_id = graph.people[pid].get("family_id")
+    return family_id in graph.families and (access.is_global or family_id in access.admin_families())
+
+
+@app.patch("/families/<family_id>")
+def update_family(family_id):
+    actor, graph, access = context()
+    if family_id not in graph.families:
+        raise ApiError(404, "No such family")
+    if not (access.is_global or family_id in access.admin_families()):
+        raise ApiError(403, "You cannot rename the %s family tree" % graph.families[family_id]["name"])
+    pid = body().get("known_as_id") or None
+    if pid is not None and graph.people.get(pid, {}).get("family_id") != family_id:
+        raise RuleError("Only someone born in this family can name its tree")
+    before = graph.families[family_id].get("known_as_id")
+    cur = conn().cursor()
+    cur.execute("UPDATE families SET known_as_id=%s WHERE id=%s", (pid, family_id))
+    log(cur, actor, pid or before, "family_known_as", {"family_id": family_id, "known_as_id": before},
+        {"family_id": family_id, "known_as_id": pid})
+    conn().commit()
+    return jsonify(id=family_id, known_as_id=pid)
 
 
 @app.get("/people")

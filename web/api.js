@@ -161,15 +161,19 @@
     });
   }
 
+  api.familyName = function (family) {
+    return family.known_name || family.root_name || family.name;
+  };
+
   api.treeLabel = function (village, family) {
-    return village.name + ' · ' + (family.root_name || family.name);
+    return village.name + ' · ' + api.familyName(family);
   };
 
   api.treeLabelHtml = function (village, family) {
     var esc = function (s) {
       return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
     };
-    return '<b>' + esc(village.name) + '</b> · ' + esc(family.root_name || family.name);
+    return '<b>' + esc(village.name) + '</b> · ' + esc(api.familyName(family));
   };
 
   api.villageNamed = function (villages, name) {
@@ -237,7 +241,7 @@
       v.families.forEach(function (f) {
         var option = document.createElement('option');
         option.value = f.id;
-        option.textContent = f.root_name || f.name;
+        option.textContent = api.familyName(f);
         option.selected = f.id === current;
         select.appendChild(option);
       });

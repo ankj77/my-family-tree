@@ -13,6 +13,10 @@ assert.deepStrictEqual(edit.actionsFor({ can_edit: true, can_delete: 'request', 
 
 assert.deepStrictEqual(edit.actionsFor({ can_edit: true, can_add_father: true, can_delete: false }, true),
   ['edit', 'child', 'father']);
+assert.deepStrictEqual(edit.actionsFor({ can_edit: true, can_name_tree: true, can_delete: false }, true),
+  ['edit', 'child', 'name']);
+assert.deepStrictEqual(edit.actionsFor({ can_edit: true, can_name_tree: true, names_tree: true, can_delete: false }, true),
+  ['edit', 'child', 'unname']);
 
 assert.deepStrictEqual(edit.payload([['name', '  Kiran '], ['born', ''], ['sort_order', '3'], ['note', ' ']]),
   { name: 'Kiran', born: null, sort_order: 3, note: null });

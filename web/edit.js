@@ -50,6 +50,7 @@
       if (!hasSpouse) out.push('spouse');
     }
     if (p.can_add_father) out.push('father');
+    if (p.can_name_tree) out.push(p.names_tree ? 'unname' : 'name');
     if (p.delete_pending) out.push('pending');
     else if (p.can_delete === 'direct') out.push('delete');
     else if (p.can_delete === 'request') out.push('request');
@@ -275,6 +276,11 @@
           location.assign(location.pathname + api.urlFor(r.family_id, person.id));
         });
       }, back);
+    } else if (kind === 'name' || kind === 'unname') {
+      api.call('PATCH', '/families/' + encodeURIComponent(person.family_id),
+        { known_as_id: kind === 'name' ? person.id : null })
+        .then(function () { api.reloadAt(person.id); },
+          function (err) { body.insertAdjacentHTML('beforeend', '<p class="form-msg">' + esc(err.message) + '</p>'); });
     } else if (kind === 'delete' || kind === 'request') {
       var stay = person === node ? (FT.parentOf[node.id] || {}).id : node.id;
       var text = kind === 'delete' ? 'Delete ' + nameOf(person) + '? This cannot be undone.'
@@ -294,7 +300,8 @@
       return '<button type="button" disabled title="' + esc(person.delete_reason) + '">Delete</button>' +
         '<p class="sheet-why">' + esc(person.delete_reason) + '</p>';
     }
-    var labels = { edit: 'Edit', child: 'Add child', spouse: spouseLabel(person), father: 'Add father', 'delete': 'Delete', request: 'Request delete' };
+    var labels = { edit: 'Edit', child: 'Add child', spouse: spouseLabel(person), father: 'Add father',
+      name: 'Show tree as ' + nameOf(person), unname: 'Stop showing tree as ' + nameOf(person), 'delete': 'Delete', request: 'Request delete' };
     return '<button type="button" data-act="' + kind + '">' + esc(labels[kind]) + '</button>';
   }
 
@@ -307,7 +314,9 @@
         return '<a href="' + esc(FT.api.urlFor(l.family_id, person.id)) + '">' + esc(l.text) + ' →</a>';
       }).join('') + '</div>';
     }
-    var actions = edit.actionsFor(person, hasSpouse);
+    var actions = edit.actionsFor(person, hasSpouse).filter(function (a) {
+      return (a !== 'name' && a !== 'unname') || person.family_id === FT.api.familyId;
+    });
     if (actions.length) {
       html += '<div class="sheet-actions">' + actions.map(function (a) { return buttonHtml(a, person); }).join('') + '</div>';
     }

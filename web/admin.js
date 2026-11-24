@@ -96,7 +96,7 @@
   function familyOptions() {
     var out = [];
     state.villages.forEach(function (v) {
-      v.families.forEach(function (f) { out.push([f.id, v.name + ' · ' + (f.root_name || f.name)]); });
+      v.families.forEach(function (f) { out.push([f.id, v.name + ' · ' + api().familyName(f)]); });
     });
     return out;
   }
@@ -158,7 +158,7 @@
       var global = state.me.is_global;
       var rows = state.villages.filter(function (v) { return global || v.families.length; }).map(function (v) {
         var trees = v.families.map(function (f) {
-          return '<a href="./?family=' + encodeURIComponent(f.id) + '">' + esc(f.root_name || f.name) + '</a>';
+          return '<a href="./?family=' + encodeURIComponent(f.id) + '">' + esc(api().familyName(f)) + '</a>';
         }).join(', ') || '—';
         var buttons = global ? '<button type="button" data-village-edit="' + esc(v.id) + '">Edit</button> ' +
           '<button type="button" data-village-delete="' + esc(v.id) + '">Delete</button>' : '';

@@ -9,6 +9,7 @@ CREATE TABLE families (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   village_id VARCHAR(64) NOT NULL,
   name VARCHAR(200) NOT NULL,
+  known_as_id VARCHAR(64) NULL,
   CONSTRAINT fk_family_village FOREIGN KEY (village_id) REFERENCES villages(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
