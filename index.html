@@ -346,7 +346,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     <button id="login-enter" type="submit">Log in</button>
     <button class="install-app hidden" type="button">Install app on this phone</button>
     <p id="login-msg" role="alert"></p>
-    <p class="login-version">Version 1.6.2</p>
+    <p class="login-version">Version 1.7.0</p>
   </form>
 </div>
 <div id="toolbar">
@@ -379,8 +379,8 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     <button id="controls-toggle" type="button" aria-label="View options" aria-expanded="false">⚙</button>
     <div id="controls-body">
       <label class="ctl">Style <select id="view-picker" aria-label="Tree style">
-        <option value="poster">Cards</option>
         <option value="living">Living tree</option>
+        <option value="poster">Cards</option>
       </select></label>
       <label class="ctl">Show <select id="show-picker" aria-label="Who to show">
         <option value="all">Everyone</option>
@@ -397,7 +397,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
       <button id="expand-all" type="button">Expand all</button>
     </div>
   </div>
-  <p id="ornament-motto">Generations grow,<br>roots stay forever<small class="motto-version">Version 1.6.2</small></p>
+  <p id="ornament-motto">Generations grow,<br>roots stay forever<small class="motto-version">Version 1.7.0</small></p>
   <p id="ornament-story">Our Roots<br>Our Family<br>Our Story</p>
 </div>
 <div id="unlinked"></div>
@@ -1374,10 +1374,7 @@ FT.boot = function (data) {
     if (!FT.views[id]) return;
     FT.state.viewId = id;
     var picker = document.getElementById('view-picker');
-    if (picker.querySelector('option[value="' + id + '"]')) {
-      picker.value = id;
-      try { localStorage.setItem('ft-view', id); } catch (e) {}
-    }
+    if (picker.querySelector('option[value="' + id + '"]')) picker.value = id;
     FT.clearPicks();
     FT.state.depthCap = null;
     FT.render();
@@ -1855,6 +1852,7 @@ FT.boot = function (data) {
   };
   document.getElementById('view-picker').addEventListener('change', function (e) {
     FT.setView(e.target.value);
+    try { localStorage.setItem('ft-style', e.target.value); } catch (e2) {}
     if (FT.motion) FT.motion.grow();
   });
   document.getElementById('show-picker').addEventListener('change', function (e) {
@@ -1935,8 +1933,8 @@ FT.boot = function (data) {
     if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;
     markLang();
     var savedView = null;
-    try { savedView = localStorage.getItem('ft-view'); } catch (e) {}
-    FT.setView(FT.views[savedView] ? savedView : 'poster');
+    try { savedView = localStorage.getItem('ft-style'); } catch (e) {}
+    FT.setView(FT.views[savedView] ? savedView : 'living');
   };
   if (FT.motion) FT.motion.attach();
 };
@@ -2958,7 +2956,7 @@ FT.views.living = {
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.6.2';
+    version.textContent = 'Version 1.7.0';
     document.getElementById('menu').appendChild(version);
   }
 

@@ -64,14 +64,14 @@ class TestDetailSheet(unittest.TestCase):
 
 
 class TestTreeStyles(unittest.TestCase):
-    def test_cards_and_living_tree_ship_with_cards_as_default(self):
+    def test_cards_and_living_tree_ship_with_living_tree_as_default(self):
         html = _payload_html()
         self.assertIn("FT.views.poster", html)
         self.assertIn("FT.views.living", html)
         self.assertNotIn("FT.views.classic", html)
         self.assertNotIn("FT.views.horizontal", html)
         self.assertIn('id="view-picker"', html)
-        self.assertIn(": 'poster');", html)
+        self.assertIn(": 'living');", html)
 
 
 class TestReadableDefaultDepth(unittest.TestCase):

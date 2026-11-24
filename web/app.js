@@ -966,10 +966,7 @@ FT.boot = function (data) {
     if (!FT.views[id]) return;
     FT.state.viewId = id;
     var picker = document.getElementById('view-picker');
-    if (picker.querySelector('option[value="' + id + '"]')) {
-      picker.value = id;
-      try { localStorage.setItem('ft-view', id); } catch (e) {}
-    }
+    if (picker.querySelector('option[value="' + id + '"]')) picker.value = id;
     FT.clearPicks();
     FT.state.depthCap = null;
     FT.render();
@@ -1447,6 +1444,7 @@ FT.boot = function (data) {
   };
   document.getElementById('view-picker').addEventListener('change', function (e) {
     FT.setView(e.target.value);
+    try { localStorage.setItem('ft-style', e.target.value); } catch (e2) {}
     if (FT.motion) FT.motion.grow();
   });
   document.getElementById('show-picker').addEventListener('change', function (e) {
@@ -1527,8 +1525,8 @@ FT.boot = function (data) {
     if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;
     markLang();
     var savedView = null;
-    try { savedView = localStorage.getItem('ft-view'); } catch (e) {}
-    FT.setView(FT.views[savedView] ? savedView : 'poster');
+    try { savedView = localStorage.getItem('ft-style'); } catch (e) {}
+    FT.setView(FT.views[savedView] ? savedView : 'living');
   };
   if (FT.motion) FT.motion.attach();
 };
