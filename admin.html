@@ -303,8 +303,6 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
   .card,.edge,.poster-leaf,.chart-label{transition:opacity .35s;}
   .edge.fam{stroke:var(--leaf-1);}
   .card.ft-lit{filter:drop-shadow(0 0 10px rgba(200,107,42,.85));}
-  .ft-tag{pointer-events:none;}
-  .ft-tag text{fill:#fff;font-size:13px;font-weight:700;font-family:var(--font);}
   .ft-pulse{fill:#FFD27A;stroke:var(--hl);stroke-width:2.5;pointer-events:none;filter:drop-shadow(0 0 6px #FFB347);}
   .edge.ft-hover{stroke:var(--hl);}
   .ft-tip{position:absolute;pointer-events:none;background:var(--name-ink);color:#fff;font-size:13px;
@@ -749,7 +747,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.10.0';
+    version.textContent = 'Version 1.10.1';
     document.getElementById('menu').appendChild(version);
   }
 

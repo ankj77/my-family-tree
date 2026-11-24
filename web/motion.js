@@ -1,16 +1,6 @@
 (function () {
   var NS = 'http://www.w3.org/2000/svg';
-  var TAGS = {
-    self: ['चयनित · Selected', '#8A5A33'],
-    father: ['पिता · Father', '#4F7CAC'],
-    mother: ['माता · Mother', '#C2577A'],
-    son: ['पुत्र · Son', '#3F7D32'],
-    daughter: ['पुत्री · Daughter', '#3F7D32'],
-    husband: ['पति · Husband', '#2F6A2A'],
-    wife: ['पत्नी · Wife', '#2F6A2A']
-  };
   var GROW_STEP = 450;
-  var TAG_H = 24;
 
   function byGender(gender, male, female) { return gender === 'female' ? female : male; }
 
@@ -111,8 +101,6 @@
   function unfocus() {
     if (!vp()) return;
     Array.prototype.forEach.call(vp().querySelectorAll('.fam'), function (e) { e.classList.remove('fam'); });
-    var tags = vp().querySelector('.ft-tags');
-    if (tags) tags.remove();
     stopPulse();
   }
 
@@ -121,7 +109,6 @@
     owner = owner || FT.ownerOf(id);
     if (!owner || !cardOf(owner.id)) return;
     var rels = relations(owner, id, FT.parentOf[owner.id], FT.spouseOf(owner)).filter(drawn);
-    var layer = el('g', { 'class': 'ft-tags' }, vp());
     var box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
     rels.forEach(function (rel) {
       var n = rel.node;
@@ -131,14 +118,8 @@
         if (e) e.classList.add('fam');
       }
       var x = n.x + (rel.spouse ? spouseX() : 0), y = n.y;
-      var tag = TAGS[rel.key];
-      var w = tag[0].length * 7 + 22;
-      var g = el('g', { 'class': 'ft-tag', transform: 'translate(' + (x + 14) + ',' + (y - 28 - TAG_H) + ')' }, layer);
-      el('rect', { width: w, height: TAG_H, rx: TAG_H / 2, fill: tag[1] }, g);
-      el('text', { x: w / 2, y: 16.5, 'text-anchor': 'middle' }, g).textContent = tag[0];
-      if (animate && !reduce) g.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 450, fill: 'backwards' });
       box.x0 = Math.min(box.x0, x); box.x1 = Math.max(box.x1, x + FT.CARD_W);
-      box.y0 = Math.min(box.y0, y - 30 - TAG_H); box.y1 = Math.max(box.y1, y + FT.nodeH(n));
+      box.y0 = Math.min(box.y0, y - 30); box.y1 = Math.max(box.y1, y + FT.nodeH(n));
     });
     if (!animate) return;
     glide(fitBox(box));
