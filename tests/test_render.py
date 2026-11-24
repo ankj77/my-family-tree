@@ -63,14 +63,15 @@ class TestDetailSheet(unittest.TestCase):
 
 
 
-class TestOrganicOnly(unittest.TestCase):
-    def test_only_the_organic_view_ships(self):
+class TestTreeStyles(unittest.TestCase):
+    def test_cards_and_living_tree_ship_with_cards_as_default(self):
         html = _payload_html()
         self.assertIn("FT.views.poster", html)
+        self.assertIn("FT.views.living", html)
         self.assertNotIn("FT.views.classic", html)
         self.assertNotIn("FT.views.horizontal", html)
-        self.assertNotIn('id="view-picker"', html)
-        self.assertIn("FT.setView('poster');", html)
+        self.assertIn('id="view-picker"', html)
+        self.assertIn(": 'poster');", html)
 
 
 class TestReadableDefaultDepth(unittest.TestCase):

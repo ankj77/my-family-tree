@@ -5,7 +5,7 @@ from family_tree.tree import Summary
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WEB_DIR = os.path.join(ROOT_DIR, "web")
-VIEW_FILES = ("poster.js", "chart.js")
+VIEW_FILES = ("poster.js", "chart.js", "living.js")
 
 
 def _read(*parts) -> str:

@@ -132,10 +132,16 @@ FT.boot = function (data) {
     return { male: 'son', female: 'daughter' }[n.gender] || 'child';
   };
   FT.spouseOf = function (n) { return FT.state.bloodline ? null : (n.spouses || [])[0] || null; };
+  FT.dotSize = function () {
+    var view = FT.views[FT.state.viewId];
+    return view && view.dot;
+  };
   FT.nodeW = function (n) {
+    if (FT.dotSize()) return FT.dotSize();
     return FT.spouseOf(n) ? 2 * FT.CARD_W + FT.COUPLE_GAP : FT.CARD_W;
   };
   FT.nodeH = function (n) {
+    if (FT.dotSize()) return FT.dotSize();
     var view = FT.views[FT.state.viewId];
     if (view && view.cardStyle === 'parents') return FT.cardH(n, 2);
     return FT.rows(n) * FT.ROW_H;
@@ -811,6 +817,7 @@ FT.boot = function (data) {
   FT.drawNode = function (parent, n) {
     if (n.hidden) return null;
     var view = FT.views[FT.state.viewId];
+    if (view && view.drawNode) return view.drawNode(parent, n);
     if (view && view.cardStyle === 'parents') return FT.drawParentCard(parent, n);
     var g = el('g', {
       'class': 'card', 'data-id': n.id,
@@ -958,6 +965,11 @@ FT.boot = function (data) {
   FT.setView = function (id) {
     if (!FT.views[id]) return;
     FT.state.viewId = id;
+    var picker = document.getElementById('view-picker');
+    if (picker.querySelector('option[value="' + id + '"]')) {
+      picker.value = id;
+      try { localStorage.setItem('ft-view', id); } catch (e) {}
+    }
     FT.clearPicks();
     FT.state.depthCap = null;
     FT.render();
@@ -1433,6 +1445,10 @@ FT.boot = function (data) {
     FT.render();
     FT.fit();
   };
+  document.getElementById('view-picker').addEventListener('change', function (e) {
+    FT.setView(e.target.value);
+    if (FT.motion) FT.motion.grow();
+  });
   document.getElementById('show-picker').addEventListener('change', function (e) {
     FT.setBloodline(e.target.value === 'bloodline');
   });
@@ -1510,7 +1526,9 @@ FT.boot = function (data) {
     try { savedLang = localStorage.getItem('ft-lang'); } catch (e) {}
     if (LANG_OTHER[savedLang]) FT.state.lang = savedLang;
     markLang();
-    FT.setView('poster');
+    var savedView = null;
+    try { savedView = localStorage.getItem('ft-view'); } catch (e) {}
+    FT.setView(FT.views[savedView] ? savedView : 'poster');
   };
   if (FT.motion) FT.motion.attach();
 };
