@@ -1,13 +1,13 @@
 (function () {
   var NS = 'http://www.w3.org/2000/svg';
   var TAGS = {
-    self: ['चयनित · Selected', '#C86B2A'],
-    father: ['पिता · Father', '#4A6FA5'],
-    mother: ['माता · Mother', '#C4708A'],
-    son: ['पुत्र · Son', '#5D7F3E'],
-    daughter: ['पुत्री · Daughter', '#5D7F3E'],
-    husband: ['पति · Husband', '#3F7F3F'],
-    wife: ['पत्नी · Wife', '#3F7F3F']
+    self: ['चयनित · Selected', '#8A5A33'],
+    father: ['पिता · Father', '#4F7CAC'],
+    mother: ['माता · Mother', '#C2577A'],
+    son: ['पुत्र · Son', '#3F7D32'],
+    daughter: ['पुत्री · Daughter', '#3F7D32'],
+    husband: ['पति · Husband', '#2F6A2A'],
+    wife: ['पत्नी · Wife', '#2F6A2A']
   };
   var GROW_STEP = 450;
   var TAG_H = 24;
@@ -105,7 +105,7 @@
 
   function drawn(rel) {
     if (!cardOf(rel.node.id)) return false;
-    return !rel.spouse || !!FT.spouseOf(rel.node);
+    return !rel.spouse || (!!FT.spouseOf(rel.node) && !FT.dotSize());
   }
 
   function unfocus() {

@@ -5,33 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jain Parivar Online · Admin</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#F7F2E4">
+<meta name="theme-color" content="#FFFDF8">
 <link rel="icon" href="web/icons/icon-192.png">
 <link rel="apple-touch-icon" href="web/icons/apple-touch-icon.png">
 <style>:root{
-  --canvas:#F7F2E4;
-  --card:#FFFDF7;
-  --edge:#B9C6A4;
-  --rule:#DEE4CC;
-  --rail-m:#4A6FA5;
-  --rail-f:#C4708A;
-  --rail-unknown:#A89880;
-  --card-m:#E3ECF8;
-  --card-f:#F9E3EB;
-  --ink:#3A3A2E;
-  --ink-muted:#6F6A57;
-  --name-ink:#234A21;
-  --living:#4A8C4A;
-  --connector:#A8935F;
-  --bark:#8A6240;
-  --bark-trunk:#6B4A2E;
-  --leaf-1:#6F9C52;
-  --leaf-2:#8FBA6C;
-  --leaf-3:#BCD79C;
-  --leaf-spouse:#E7C4D3;
-  --hl:#C86B2A;
-  --warn:#B5432F;
-  --band:#EFE7D2;
+  --canvas:#F7F4EE;
+  --card:#FFFDF8;
+  --edge:#E2D8C6;
+  --rule:#EFE8DB;
+  --rail-m:#4F7CAC;
+  --rail-f:#C2577A;
+  --rail-unknown:#A59A88;
+  --card-m:#EAF0F6;
+  --card-f:#F9E8EE;
+  --ink:#2D2A25;
+  --ink-muted:#7B7264;
+  --name-ink:#2F6A2A;
+  --living:#3F7D32;
+  --connector:#B9AB95;
+  --bark:#8A5A33;
+  --bark-trunk:#5A3920;
+  --leaf-1:#3F7D32;
+  --leaf-2:#6FB24C;
+  --leaf-3:#86C062;
+  --leaf-spouse:#F28FB4;
+  --hl:#3F7D32;
+  --warn:#B4492A;
+  --band:#F3EEE4;
   --font:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari","Nirmala UI",sans-serif;
   --serif:"Iowan Old Style",Georgia,"Times New Roman","Noto Serif Devanagari",serif;
   --shadow-card:0 1px 2px rgba(70,60,30,.07),0 4px 10px rgba(70,60,30,.06);
@@ -44,7 +44,7 @@
   #toolbar .top-row{display:flex;align-items:center;gap:10px;}
   #toolbar .brand{flex:1 1 auto;min-width:0;}
   #toolbar .title{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;
-    line-height:1.15;color:#7A1F1F;display:flex;align-items:center;gap:8px;}
+    line-height:1.15;color:var(--ink);display:flex;align-items:center;gap:8px;}
   .brand-logo{width:44px;height:44px;flex:0 0 auto;mix-blend-mode:multiply;}
   #toolbar .who{margin:2px 0 0;min-height:1.3em;font-size:13px;color:var(--ink-muted);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -197,8 +197,8 @@
   .chart-married{text-anchor:middle;font-size:15px;fill:var(--rail-f);}
   .spouse-card{cursor:pointer;}
   .gap-bg{fill:transparent;stroke:var(--ink-muted);stroke-width:1.6px;stroke-dasharray:7 5;cursor:pointer;}
-  .card .place-hit .card-bg{stroke:#D9731A;stroke-width:3px;}
-  .sg-place .sg-name::before{content:'\2302  ';color:#D9731A;}
+  .card .place-hit .card-bg{stroke:var(--hl);stroke-width:3px;}
+  .sg-place .sg-name::before{content:'\2302  ';color:var(--hl);}
   .sg-place.area .sg-name::before,.sg-place.city .sg-name::before{content:'\25C9  ';color:var(--rail-m);}
   .spouse-card.male .card-bg{fill:var(--card-m);stroke:var(--rail-m);}
   .spouse-card.female .card-bg{fill:var(--card-f);stroke:var(--rail-f);}
@@ -217,7 +217,7 @@
     color:var(--name-ink);}
   .pick button{min-width:34px;min-height:34px;border:0;border-radius:50%;
     background:none;font-size:18px;line-height:1;color:var(--ink-muted);cursor:pointer;}
-  .pick-place{border-color:#D9731A;}
+  .pick-place{border-color:var(--hl);}
   .pick button:hover{background:var(--card);color:var(--warn);}
   .pick-clear{min-height:38px;padding:0 14px;border:1px solid var(--edge);
     border-radius:999px;background:var(--card);font-family:var(--font);
@@ -311,9 +311,10 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     padding:6px 10px;border-radius:8px;white-space:nowrap;transform:translate(-50%,calc(-100% - 14px));z-index:6;}
   @media (prefers-reduced-motion: reduce){.card,.edge,.poster-leaf,.chart-label{transition:none;}}
   #stage[data-view="living"]{background:linear-gradient(#cfe8f6,#f6f8ea);}
+  #toolbar .title,#infoCard h3,#sheet h3{font-weight:650;}
   .living-ground{fill:#6fa84d;opacity:.55;}
-  .living-bark path,.living-knot{fill:#6b4423;}
-  .living-branch{fill:#7a4f2b;stroke:none;}
+  .living-bark path,.living-branch{fill:url(#ft-bark);stroke:#3d2614;stroke-width:.8px;stroke-opacity:.45;}
+  .living-knot{fill:url(#ft-bark);}
   .living-branch.hl,.living-branch.ft-hover{fill:var(--hl);stroke:none;}
   .living-leaves .living-leaf{opacity:.93;}
   .living-leaves.sway .living-cluster{animation:living-sway 5s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center;}
@@ -335,7 +336,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
   body{display:block;overflow:auto;}
   #admin{max-width:960px;margin:0 auto;padding:16px;box-sizing:border-box;color:var(--ink);}
   #admin a{color:var(--hl);}
-  #admin h1{font-family:var(--serif);font-size:26px;margin:8px 0 12px;color:#7A1F1F;
+  #admin h1{font-family:var(--serif);font-size:26px;margin:8px 0 12px;color:var(--ink);
     display:flex;align-items:center;gap:8px;}
   #tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
   #tabs button{min-height:44px;padding:6px 14px;font-size:14px;cursor:pointer;border:1px solid var(--edge);
@@ -749,7 +750,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.8.0';
+    version.textContent = 'Version 1.9.0';
     document.getElementById('menu').appendChild(version);
   }
 
