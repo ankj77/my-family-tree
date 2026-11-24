@@ -316,18 +316,11 @@ class TestPlaceOnTheCard(unittest.TestCase):
         self.assertIn("a.locality || a.city || a.state || a.country", html)
 
 
-class TestCommonFather(unittest.TestCase):
-    def test_common_ancestor_helper_exists(self):
-        self.assertIn("FT.commonAncestor = function (ids)", _payload_html())
-
-    def test_at_most_three_people(self):
+class TestSearchOpensFamily(unittest.TestCase):
+    def test_search_shows_the_family_of_the_chosen_person(self):
         html = _payload_html()
-        self.assertIn("FT.MAX_PICKS = 3;", html)
-        self.assertIn("FT.state.picks.length >= FT.MAX_PICKS", html)
-
-    def test_the_bar_names_the_common_father(self):
-        html = _payload_html()
-        self.assertIn("Common father:", html)
+        self.assertIn("FT.showFamilyOf(id);", html)
+        self.assertNotIn("FT.MAX_PICKS", html)
         self.assertIn('<div id="picks"></div>', html)
 
 

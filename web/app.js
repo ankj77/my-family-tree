@@ -363,22 +363,6 @@ FT.boot = function (data) {
     return keep;
   };
 
-  FT.MAX_PICKS = 3;
-
-  FT.commonAncestor = function (ids) {
-    if (!ids.length) return null;
-    var common = FT.lineage(ids[0]);
-    ids.slice(1).forEach(function (id) {
-      var line = FT.lineage(id);
-      Object.keys(common).forEach(function (k) { if (!line[k]) delete common[k]; });
-    });
-    var best = null;
-    Object.keys(common).forEach(function (k) {
-      if (best === null || FT.depthOf(k) > FT.depthOf(best)) best = k;
-    });
-    return best;
-  };
-
   FT.FOCUS_SCALE = 0.85;
 
   FT.focus = function (id) {
@@ -423,6 +407,13 @@ FT.boot = function (data) {
     FT.renderPicks();
     FT.render();
     FT.fit();
+  };
+
+  FT.showFamilyOf = function (id) {
+    var owner = FT.ownerOf(id);
+    if (!owner) return;
+    if (owner === tree) { FT.showPlace(null); } else { FT.showBranch(owner.id); }
+    FT.select(id, owner);
   };
 
   FT.branchUp = function () {
@@ -1275,11 +1266,6 @@ FT.boot = function (data) {
         (FT.who && FT.who[id] ? ' <small class="pick-who">' + esc(FT.who[id]) + '</small>' : '') +
         '<button data-drop="' + esc(id) + '" aria-label="Remove">×</button></span>';
     }).join('');
-    if (ids.length > 1) {
-      var a = FT.commonAncestor(ids);
-      html += '<span class="pick-note">Common father: <b>' +
-        (a ? esc(FT.label(FT.byId[a])[0]) : '—') + '</b></span>';
-    }
     if (pickNote) html += '<span class="pick-note">' + esc(pickNote) + '</span>';
     if (ids.length) html += '<button class="pick-clear">Clear</button>';
     picksBar.innerHTML = html;
@@ -1336,16 +1322,8 @@ FT.boot = function (data) {
     searchBox.value = '';
     searchBox.blur();
     if (FT.onLink && FT.state.ends.length && FT.state.ends[0] !== id) { FT.onLink(FT.state.ends[0], id); return; }
-    if (FT.state.picks.indexOf(id) < 0) {
-      if (FT.state.picks.length >= FT.MAX_PICKS) {
-        pickNote = 'Up to ' + FT.MAX_PICKS + ' people — remove one first.';
-        FT.renderPicks();
-        return;
-      }
-      FT.state.picks = FT.state.picks.concat([id]);
-    }
     pickNote = '';
-    FT.showPicks();
+    FT.showFamilyOf(id);
   }
 
   searchBox.addEventListener('input', renderSuggest);
