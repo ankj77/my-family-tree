@@ -173,8 +173,16 @@ async function familyParamPicksTheTree() {
   assert.ok(calls.indexOf('GET /families/f1/tree') >= 0);
 }
 
+async function otherTreeShowsWholeTree() {
+  reset('', { id: 'a', name: 'Asha', username: 'asha', roles: [], is_admin: false, is_global: false, home_family: 'f2' });
+  FT.api.start();
+  await settle();
+  assert.deepStrictEqual(opened, []);
+}
+
 (async function () {
   await loggedInBoots();
+  await otherTreeShowsWholeTree();
   await adminSeesAdminItem();
   await loggedOutShowsLogin();
   await serverErrorShowsMessage();

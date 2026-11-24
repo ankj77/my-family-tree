@@ -470,7 +470,7 @@
         if (param('nolink')) document.getElementById('summary').textContent = 'No link found in the records between those two people.';
         var person = param('person');
         if (person) FT.openPerson(person);
-        else {
+        else if (api.familyId === me.home_family) {
           var grandfather = FT.grandfatherOf(me.id);
           if (grandfather) FT.showBranch(grandfather.id);
         }
