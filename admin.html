@@ -300,10 +300,6 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
   animation:api-busy-show .3s .25s both;pointer-events:none;}
 @keyframes api-busy{from{background-position:-40% 0}to{background-position:140% 0}}
 @keyframes api-busy-show{from{opacity:0}to{opacity:1}}
-  #stage.ft-focus .card:not(.fam):not(.hl),
-  #stage.ft-focus .edge:not(.hl):not(.fam),
-  #stage.ft-focus .poster-leaf,
-  #stage.ft-focus .chart-label{opacity:.25;transition:opacity .35s;}
   .card,.edge,.poster-leaf,.chart-label{transition:opacity .35s;}
   .edge.fam{stroke:var(--leaf-1);}
   .card.ft-lit{filter:drop-shadow(0 0 10px rgba(200,107,42,.85));}
@@ -749,7 +745,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.6.1';
+    version.textContent = 'Version 1.6.2';
     document.getElementById('menu').appendChild(version);
   }
 

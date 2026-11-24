@@ -109,9 +109,7 @@
   }
 
   function unfocus() {
-    var s = stage();
-    if (!s) return;
-    s.classList.remove('ft-focus');
+    if (!vp()) return;
     Array.prototype.forEach.call(vp().querySelectorAll('.fam'), function (e) { e.classList.remove('fam'); });
     var tags = vp().querySelector('.ft-tags');
     if (tags) tags.remove();
@@ -123,7 +121,6 @@
     owner = owner || FT.ownerOf(id);
     if (!owner || !cardOf(owner.id)) return;
     var rels = relations(owner, id, FT.parentOf[owner.id], FT.spouseOf(owner)).filter(drawn);
-    stage().classList.add('ft-focus');
     var layer = el('g', { 'class': 'ft-tags' }, vp());
     var box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
     rels.forEach(function (rel) {
