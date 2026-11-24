@@ -350,7 +350,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
     <button id="login-enter" type="submit">Log in</button>
     <button class="install-app hidden" type="button">Install app on this phone</button>
     <p id="login-msg" role="alert"></p>
-    <p class="login-version">Version 1.6.0</p>
+    <p class="login-version">Version 1.6.1</p>
   </form>
 </div>
 <div id="toolbar">
@@ -401,7 +401,7 @@ html.api-busy::after{content:"Loading…";position:fixed;top:8px;left:50%;transf
       <button id="expand-all" type="button">Expand all</button>
     </div>
   </div>
-  <p id="ornament-motto">Generations grow,<br>roots stay forever<small class="motto-version">Version 1.6.0</small></p>
+  <p id="ornament-motto">Generations grow,<br>roots stay forever<small class="motto-version">Version 1.6.1</small></p>
   <p id="ornament-story">Our Roots<br>Our Family<br>Our Story</p>
 </div>
 <div id="unlinked"></div>
@@ -2865,11 +2865,10 @@ FT.views.living = {
       hideList();
       place.value = v.name;
       if (v !== chosen) {
-        location.assign(location.pathname + api.urlFor(v.families[0].id) + '&village=' + encodeURIComponent(v.id));
+        go(v.families[0].id);
         return;
       }
       place.blur();
-      api.showVillage(v.id);
     }
 
     place.addEventListener('focus', function () {
@@ -2966,7 +2965,7 @@ FT.views.living = {
     });
     var version = document.createElement('p');
     version.className = 'menu-version';
-    version.textContent = 'Version 1.6.0';
+    version.textContent = 'Version 1.6.1';
     document.getElementById('menu').appendChild(version);
   }
 
@@ -3058,7 +3057,6 @@ FT.views.living = {
         api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
         if (me.login_ends) countDown(me);
         loadOthers(me, api.familyId);
-        if (param('village')) api.showVillage(param('village'));
         if (param('nolink')) document.getElementById('summary').textContent = 'No link found in the records between those two people.';
         var person = param('person');
         if (person) FT.openPerson(person);

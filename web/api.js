@@ -271,11 +271,10 @@
       hideList();
       place.value = v.name;
       if (v !== chosen) {
-        location.assign(location.pathname + api.urlFor(v.families[0].id) + '&village=' + encodeURIComponent(v.id));
+        go(v.families[0].id);
         return;
       }
       place.blur();
-      api.showVillage(v.id);
     }
 
     place.addEventListener('focus', function () {
@@ -464,7 +463,6 @@
         api.onLoggedOut = function () { showLogin('Your login has ended. Please log in again.'); };
         if (me.login_ends) countDown(me);
         loadOthers(me, api.familyId);
-        if (param('village')) api.showVillage(param('village'));
         if (param('nolink')) document.getElementById('summary').textContent = 'No link found in the records between those two people.';
         var person = param('person');
         if (person) FT.openPerson(person);
