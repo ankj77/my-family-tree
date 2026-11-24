@@ -348,13 +348,7 @@ FT.boot = function (data) {
     if (FT.onSheet) FT.onSheet(person, node, sheetBody);
   };
 
-  FT.openPerson = function (id) {
-    var owner = FT.ownerOf(id);
-    if (!owner) return;
-    FT.state.picks = [owner.id];
-    FT.showPicks();
-    FT.select(id, owner);
-  };
+  FT.openPerson = function (id) { FT.showFamilyOf(id); };
 
   FT.lineage = function (id) {
     var keep = {};
@@ -365,10 +359,7 @@ FT.boot = function (data) {
 
   FT.FOCUS_SCALE = 0.85;
 
-  FT.focus = function (id) {
-    if (FT.state.picks.indexOf(id) < 0) FT.state.picks = [id];
-    FT.showPicks();
-  };
+  FT.focus = function (id) { FT.showFamilyOf(id); };
 
   FT.clearPicks = function () {
     FT.state.picks = [];
@@ -450,7 +441,7 @@ FT.boot = function (data) {
   function branchControls(parent) {
     if (!FT.state.branch) return;
     var top = FT.top(), up = FT.parentOf[top.id];
-    var x = top.x + FT.jointX(top), y = top.y + FT.nodeH(top) + 50;
+    var x = top.x + FT.jointX(top), y = top.y + FT.nodeH(top) + (FT.dotSize() ? 110 : 50);
     if (up) y = branchButton(parent, x, y, '+ Show father: ' + FT.label(up)[0], FT.branchUp);
     if (top.id !== FT.state.branchFocus) branchButton(parent, x, y, '\u2212 Hide ' + FT.label(top)[0], FT.branchDown);
   }
